@@ -7,26 +7,6 @@ dependencies {
 }
 
 /**
- * Task for running rmiregistry on server host
- */
-task rmiregistry(type: Exec) {
-    doFirst {
-        // Set the working directory to the classpath
-        workingDir "${sourceSets.main.java.outputDir}"
-
-        // Check if running on windows
-        if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
-            throw new GradleException('The program was not tested on Windows.\nPlease start rmiregistry manually: ' +
-                    "start rmiregistry ${serverPort}")
-        } else {
-            println "Starting rmiregistry at port ${serverPort} ..."
-        }
-    }
-
-    commandLine "rmiregistry", serverPort
-}
-
-/**
  * Configure application run task
  */
 run {
