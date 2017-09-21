@@ -16,18 +16,15 @@ run {
         copy {
             from "${rootDir}/etc/policy/"
             into "${buildDir}"
-            include 'server.policy'
+            include 'rm.policy'
             expand('classpath': "${sourceSets.main.java.outputDir}")
         }
     }
 
     // Set the application and JVM arguments
-    args "${serverPort}"
+    args "${rm_rmiRegistry_port}"
     jvmArgs([
-            "-Djava.security.policy=${project.buildDir}/server.policy",
+            "-Djava.security.policy=${project.buildDir}/rm.policy",
             "-Djava.rmi.server.codebase=file:${sourceSets.main.java.outputDir}"
     ])
 }
-
-// Managing dependencies
-//run.dependsOn(rmiregistry)

@@ -1,23 +1,17 @@
-version = '1.0'
-
-/**
- * Task for running rmiregistry on server host
- */
-task rmiregistry(type: Exec) {
-    doFirst {
-        // Set the working directory to the classpath
-        workingDir "${sourceSets.main.java.outputDir}"
-
-        // Check if running on windows
-        if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
-            throw new GradleException('The program was not tested on Windows.\nPlease start rmiregistry manually: ' +
-                    "start rmiregistry ${serverPort}")
-        } else {
-            println "Starting rmiregistry at port ${serverPort} ..."
-        }
-    }
-    commandLine "rmiregistry", serverPort
+task rmRMIRegistry(type: RMIRegistry) {
+    group "RMI Registry"
+    description "Run RMI Registry on RMs host"
+    workingDir "${sourceSets.main.java.outputDir}"
+    port midServer_rmiRegistry_port
 }
 
-// Build jar before running rmiregistry
-rmiregistry.dependsOn(jar)
+task midServerRMIRegistry(type: RMIRegistry) {
+    group "RMI Registry"
+    description "Run RMI Registry on Middleware Server host"
+    workingDir "${sourceSets.main.java.outputDir}"
+    port midServer_rmiRegistry_port
+}
+
+// Build jar before running RMI Registry
+rmRMIRegistry.dependsOn(jar)
+midServerRMIRegistry.dependsOn(jar)

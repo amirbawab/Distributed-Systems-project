@@ -1,6 +1,19 @@
+apply plugin: 'groovy'
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+}
+
 ext {
-    serverPort="2000"
-    serverIP="localhost"
+
+    // Middleware server RMI Registry address
+    midServer_rmiRegistry_port="2000"
+    midServer_rmiRegistry_ip="localhost"
+
+    // RM RMI Registry address
+    rm_rmiRegistry_port="2001"
+    rm_rmiRegistry_ip="localhost"
 }
 
 subprojects {
