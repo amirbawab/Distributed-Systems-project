@@ -2,6 +2,22 @@ apply plugin: 'application'
 version = '1.0'
 mainClassName = "ResImpl/ResourceManagerImpl"
 
+task rmiregistry(type: Exec) {
+
+    // Set the working directory to the classpath
+    workingDir "${sourceSets.main.java.outputDir}"
+
+    // Check if running on windows
+    if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+        println "WARNING: The program was not tested on Windows."
+        println "Please start rmiregistry manually: start rmiregistry ${serverPort}"
+    } else {
+
+        // Start rmiregistry
+        commandLine "rmiregistry", serverPort
+    }
+}
+
 run {
     doFirst {
         copy {
