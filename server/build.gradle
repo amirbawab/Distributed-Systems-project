@@ -3,19 +3,20 @@ version = '1.0'
 mainClassName = "ResImpl/ResourceManagerImpl"
 
 task rmiregistry(type: Exec) {
+    doFirst {
+        // Set the working directory to the classpath
+        workingDir "${sourceSets.main.java.outputDir}"
 
-    // Set the working directory to the classpath
-    workingDir "${sourceSets.main.java.outputDir}"
-
-    // Check if running on windows
-    if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
-        println "WARNING: The program was not tested on Windows."
-        println "Please start rmiregistry manually: start rmiregistry ${serverPort}"
-    } else {
-
-        // Start rmiregistry
-        commandLine "rmiregistry", serverPort
+        // Check if running on windows
+        if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+            throw new GradleException('The program was not tested on Windows.\nPlease start rmiregistry manually: ' +
+                    "start rmiregistry ${serverPort}")
+        } else {
+            println "Starting rmiregistry at port ${serverPort} ..."
+        }
     }
+
+    commandLine "rmiregistry", serverPort
 }
 
 run {
@@ -34,3 +35,6 @@ run {
             "-Djava.rmi.server.codebase=file:${sourceSets.main.java.outputDir}"
     ])
 }
+
+// Managing dependencies
+//run.dependsOn(rmiregistry)
