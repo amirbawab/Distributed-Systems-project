@@ -1,0 +1,5 @@
+grant codeBase "file:${classpath}" {
+    permission java.security.AllPermission;
+};
+
+

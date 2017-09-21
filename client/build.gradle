@@ -1,3 +1,27 @@
 apply plugin: 'application'
 version = '1.0'
-mainClassName = "Client"
+mainClassName = "application.Client"
+
+dependencies {
+    compile project(':remote')
+}
+
+/**
+ * Configure application run task
+ */
+run {
+
+    // Configure server.policy file
+    doFirst {
+        copy {
+            from "${rootDir}/etc/policy/"
+            into "${buildDir}"
+            include 'client.policy'
+            expand('classpath': "${sourceSets.main.java.outputDir}")
+        }
+    }
+
+    // Set the application and JVM arguments
+    args([serverIP, serverPort])
+    jvmArgs(["-Djava.security.policy=${project.buildDir}/client.policy"])
+}
