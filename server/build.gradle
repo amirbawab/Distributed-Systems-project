@@ -1,3 +1,20 @@
 apply plugin: 'application'
 version = '1.0'
-mainClassName = "Server"
+mainClassName = "ResImpl/ResourceManagerImpl"
+
+run {
+    doFirst {
+        copy {
+            from "${rootDir}/etc/policy/"
+            into "${buildDir}"
+            include 'server.policy'
+            expand('classpath': "${sourceSets.main.java.outputDir}")
+        }
+    }
+
+    args "2000"
+    jvmArgs([
+            "-Djava.security.policy=${project.buildDir}/java.policys",
+            "-Djava.rmi.server.codebase=file:${sourceSets.main.java.outputDir}"
+    ])
+}
