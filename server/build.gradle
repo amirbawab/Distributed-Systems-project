@@ -44,7 +44,7 @@ run {
     // Set the application and JVM arguments
     args "${serverPort}"
     jvmArgs([
-            "-Djava.security.policy=${project.buildDir}/java.policys",
+            "-Djava.security.policy=${project.buildDir}/server.policy",
             "-Djava.rmi.server.codebase=file:${sourceSets.main.java.outputDir}"
     ])
 }
