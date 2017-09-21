@@ -21,6 +21,9 @@ run {
         }
     }
 
+    // Read input from System input
+    standardInput = System.in
+
     // Set the application and JVM arguments
     args([serverIP, serverPort])
     jvmArgs(["-Djava.security.policy=${project.buildDir}/client.policy"])
