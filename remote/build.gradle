@@ -2,7 +2,7 @@ task rmRMIRegistry(type: RMIRegistry) {
     group "RMI Registry"
     description "Run RMI Registry on RMs host"
     workingDir "${sourceSets.main.java.outputDir}"
-    port midServer_rmiRegistry_port
+    port rm_rmiRegistry_port
 }
 
 task midServerRMIRegistry(type: RMIRegistry) {
