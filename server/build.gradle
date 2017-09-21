@@ -1,7 +1,14 @@
 apply plugin: 'application'
 version = '1.0'
-mainClassName = "ResImpl/ResourceManagerImpl"
+mainClassName = "application.ResourceManagerImpl"
 
+dependencies {
+    compile project(':remote')
+}
+
+/**
+ * Task for running rmiregistry on server host
+ */
 task rmiregistry(type: Exec) {
     doFirst {
         // Set the working directory to the classpath
@@ -19,7 +26,12 @@ task rmiregistry(type: Exec) {
     commandLine "rmiregistry", serverPort
 }
 
+/**
+ * Configure application run task
+ */
 run {
+
+    // Configure server.policy file
     doFirst {
         copy {
             from "${rootDir}/etc/policy/"
@@ -29,6 +41,7 @@ run {
         }
     }
 
+    // Set the application and JVM arguments
     args "${serverPort}"
     jvmArgs([
             "-Djava.security.policy=${project.buildDir}/java.policys",
