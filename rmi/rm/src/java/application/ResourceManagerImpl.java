@@ -22,17 +22,14 @@ public class ResourceManagerImpl implements ResourceManager
 
     public static void main(String args[]) {
         // Figure out where server is running
-        String server = "localhost";
-        int port = 1099;
-
-        if (args.length == 1) {
-            server = server + ":" + args[0];
-            port = Integer.parseInt(args[0]);
-        } else if (args.length != 0 &&  args.length != 1) {
+        if (args.length != 2) {
             System.err.println ("Wrong usage");
-            System.out.println("Usage: java ResImpl.ResourceManagerImpl [port]");
+            System.out.println("Usage: java ResImpl.ResourceManagerImpl [port] [obj-ref]");
             System.exit(1);
         }
+
+        int port = Integer.parseInt(args[0]);
+        String objRef = args[1];
 
         try {
             // create a new Server object
@@ -42,7 +39,7 @@ public class ResourceManagerImpl implements ResourceManager
 
             // Bind the remote object's stub in the registry
             Registry registry = LocateRegistry.getRegistry(port);
-            registry.rebind(ResourceManager.MID_SERVER_REF, rm);
+            registry.rebind(objRef, rm);
 
             System.err.println("Server ready");
         } catch (Exception e) {
