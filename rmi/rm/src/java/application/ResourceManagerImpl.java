@@ -42,7 +42,7 @@ public class ResourceManagerImpl implements ResourceManager
 
             // Bind the remote object's stub in the registry
             Registry registry = LocateRegistry.getRegistry(port);
-            registry.rebind("V4Vim", rm);
+            registry.rebind(ResourceManager.MID_SERVER_REF, rm);
 
             System.err.println("Server ready");
         } catch (Exception e) {

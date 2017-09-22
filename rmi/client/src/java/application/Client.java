@@ -54,7 +54,7 @@ public class Client
             // get a reference to the rmiregistry
             Registry registry = LocateRegistry.getRegistry(server, port);
             // get the proxy and the remote reference by rmiregistry lookup
-            rm = (ResourceManager) registry.lookup("V4Vim");
+            rm = (ResourceManager) registry.lookup(ResourceManager.MID_SERVER_REF);
             if(rm!=null)
             {
                 System.out.println("Successful");

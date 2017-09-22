@@ -25,10 +25,10 @@ class MiddlewareServer implements ResourceManager {
         int rmRMIRegistryPort = Integer.parseInt(args[2]);
 
         // Connect
-        bindRM("mid-server", serverRMIRegistryPort);
-        ResourceManager carRM = connectToRM("car-rm", rmRMIRegistryIP, rmRMIRegistryPort);
-        ResourceManager flightRM = connectToRM("flight-rm", rmRMIRegistryIP, rmRMIRegistryPort);
-        ResourceManager roomRM = connectToRM("room-rm", rmRMIRegistryIP, rmRMIRegistryPort);
+        bindRM(ResourceManager.MID_SERVER_REF, serverRMIRegistryPort);
+        ResourceManager carRM = connectToRM(ResourceManager.RM_CAR_REF, rmRMIRegistryIP, rmRMIRegistryPort);
+        ResourceManager flightRM = connectToRM(ResourceManager.RM_FLIGHT_REF, rmRMIRegistryIP, rmRMIRegistryPort);
+        ResourceManager roomRM = connectToRM(ResourceManager.RM_ROOM_REF, rmRMIRegistryIP, rmRMIRegistryPort);
 
         // Create and install a security manager
         if (System.getSecurityManager() == null) {

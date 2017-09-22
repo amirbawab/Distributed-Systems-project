@@ -21,8 +21,14 @@ import java.util.*;
  * has succeeded.
  */
 
-public interface ResourceManager extends Remote 
-{
+public interface ResourceManager extends Remote {
+
+    // RM object reference
+    String MID_SERVER_REF = "mid-server";
+    String RM_CAR_REF = "car";
+    String RM_ROOM_REF = "room";
+    String RM_FLIGHT_REF = "flight";
+
     /* Add seats to a flight.  In general this will be used to create a new
      * flight, but it should be possible to add seats to an existing flight.
      * Adding to an existing flight should overwrite the current price of the

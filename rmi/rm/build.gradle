@@ -16,7 +16,11 @@ run {
         }
     }
 
-    args "${rm_rmiRegistry_port}"
+    String rmName = System.properties['rmName']
+    if(rmName == null) {
+        throw new GradleException("Property 'rmName' is missing. (e.g. -PrmName=...")
+    }
+    args([rm_rmiRegistry_port, rmName])
     jvmArgs([
             "-Djava.security.policy=${project.buildDir}/rm.policy",
             "-Djava.rmi.server.codebase=file:${sourceSets.main.java.outputDir}"
