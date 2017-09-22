@@ -6,12 +6,7 @@ dependencies {
     compile project(':remote')
 }
 
-/**
- * Configure application run task
- */
 run {
-
-    // Configure server.policy file
     doFirst {
         copy {
             from "${rootDir}/etc/policy/"
@@ -21,10 +16,7 @@ run {
         }
     }
 
-    // Read input from System input
     standardInput = System.in
-
-    // Set the application and JVM arguments
     args([midServer_rmiRegistry_ip, midServer_rmiRegistry_port])
     jvmArgs(["-Djava.security.policy=${project.buildDir}/client.policy"])
 }
