@@ -14,9 +14,9 @@ run {
             include 'client.policy'
             expand('classpath': "${sourceSets.main.java.outputDir}")
         }
-    }
 
-    standardInput = System.in
-    args([midServer_rmiRegistry_ip, midServer_rmiRegistry_port])
-    jvmArgs(["-Djava.security.policy=${project.buildDir}/client.policy"])
+        standardInput = System.in
+        args([midServer_rmiRegistry_ip, midServer_rmiRegistry_port])
+        jvmArgs(["-Djava.security.policy=${project.buildDir}/client.policy"])
+    }
 }
