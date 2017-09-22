@@ -17,7 +17,7 @@ run {
 
         String rmName = System.properties['rmName']
         if(rmName == null) {
-            throw new GradleException("Property 'rmName' is missing. (e.g. -PrmName=...)")
+            throw new GradleException("Property 'rmName' is missing. (e.g. -DrmName=...)")
         }
         args([rm_rmiRegistry_port, rmName])
         jvmArgs([
