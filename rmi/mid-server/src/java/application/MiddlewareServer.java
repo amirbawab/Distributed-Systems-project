@@ -13,15 +13,32 @@ class MiddlewareServer implements ResourceManager {
     public static void main(String[] args) {
 
         // Figure out where server is running
-        if (args.length != 1) {
+        if (args.length != 3) {
             System.err.println ("Wrong usage");
             System.out.println("Usage: java ResImpl.ResourceManagerImpl [port]");
             System.exit(1);
         }
 
         // Set server port
-        int port = Integer.parseInt(args[0]);
+        int serverRMIRegistryPort = Integer.parseInt(args[0]);
+        String rmRMIRegistryIP = args[1];
+        int rmRMIRegistryPort = Integer.parseInt(args[2]);
 
+        // Connect
+        bindRM("mid-server", serverRMIRegistryPort);
+        ResourceManager carRM = connectToRM("car-rm", rmRMIRegistryIP, rmRMIRegistryPort);
+        ResourceManager flightRM = connectToRM("flight-rm", rmRMIRegistryIP, rmRMIRegistryPort);
+        ResourceManager roomRM = connectToRM("room-rm", rmRMIRegistryIP, rmRMIRegistryPort);
+
+        // Create and install a security manager
+        if (System.getSecurityManager() == null) {
+            System.setSecurityManager(new RMISecurityManager());
+        }
+
+    }
+
+    private static void bindRM(String key, int port) {
+        // Bind server object
         try {
             // create a new Server object
             MiddlewareServer obj = new MiddlewareServer();
@@ -31,17 +48,38 @@ class MiddlewareServer implements ResourceManager {
             // Bind the remote object's stub in the registry
             Registry registry = LocateRegistry.getRegistry(port);
             //TODO Store in remote project
-            registry.rebind("mid-server", rm);
+            registry.rebind(key, rm);
             System.err.println("Server ready");
         } catch (Exception e) {
             System.err.println("Server exception: " + e.toString());
             e.printStackTrace();
+            throw new RuntimeException("Binding failure: Terminating program ...");
         }
+    }
 
-        // Create and install a security manager
-        if (System.getSecurityManager() == null) {
-            System.setSecurityManager(new RMISecurityManager());
+    /**
+     * Connect to RM
+     * @param key
+     */
+    private static ResourceManager connectToRM(String key, String server, int port) {
+        try
+        {
+            // get a reference to the rmiregistry
+            Registry registry = LocateRegistry.getRegistry(server, port);
+            // get the proxy and the remote reference by rmiregistry lookup
+            ResourceManager rm = (ResourceManager) registry.lookup(key);
+            if(rm!=null) {
+                System.out.println("Successful");
+                System.out.println("Connected to RM");
+            } else {
+                System.out.println("Unsuccessful");
+            }
+            return rm;
+        } catch (Exception e) {
+            System.err.println("Client exception: " + e.toString());
+            e.printStackTrace();
         }
+        throw new RuntimeException("Connection failure: Terminating program ...");
     }
 
     @Override
