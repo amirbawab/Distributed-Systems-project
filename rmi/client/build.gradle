@@ -6,6 +6,11 @@ dependencies {
     compile project(':remote')
 }
 
+test {
+    systemProperty 'server_port', midServer_rmiRegistry_port
+    systemProperty 'server_ip', midServer_rmiRegistry_ip
+}
+
 run {
     doFirst {
         copy {
