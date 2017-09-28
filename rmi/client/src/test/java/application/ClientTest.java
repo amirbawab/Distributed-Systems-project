@@ -42,7 +42,6 @@ public class ClientTest {
             }
         } catch (Exception e) {
             logger.error("Cloud not connect, is registry up on " + server + ":" + port + " ?");
-            logger.error(e.toString());
             throw new RuntimeException("Failed to connect to the middleware server");
         }
     }
