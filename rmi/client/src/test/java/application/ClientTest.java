@@ -49,14 +49,14 @@ public class ClientTest {
     }
 
     @Test
-    public void addFlights() throws RemoteException, InterruptedException {
+    public void flights_test() throws RemoteException, InterruptedException {
 
         // Thread number
         int totalThreads = 5;
-        int testLevel = MED_TEST;
+        int testLevel = LOW_TEST;
 
         // Remove flights if any
-        for(int i=1; i < testLevel * totalThreads; i++) {
+        for(int i=0; i < testLevel * totalThreads; i++) {
             rm.deleteFlight(i, i);
         }
 
@@ -64,20 +64,20 @@ public class ClientTest {
         List<Thread> threadList = new ArrayList<>();
 
         // Start threads
-        for(int t=1; t <= totalThreads; t++) {
+        for(int t=0; t <= totalThreads; t++) {
             // Create thread
             int finalT = t;
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     // Add flights
-                    for(int i = 1 + testLevel*(finalT -1); i < testLevel* finalT; i++) {
+                    for(int i = testLevel*(finalT -1); i < testLevel* finalT; i++) {
                         try {
                             if(!rm.addFlight(i, i, i, i)) {
                                 fail(String.format("Failed to add flight id: %d, number: %d", i, i));
                             }
                         } catch (RemoteException e) {
-                            fail("Failed to add flight caused by remove exception");
+                            fail("Failed to add flight caused by remote exception");
                         }
                     }
                 }
@@ -91,12 +91,68 @@ public class ClientTest {
             thread.join();
         }
 
+        // TODO Reserve flights
+
         // Query flights
-        for(int i=1; i < testLevel; i++) {
+        for(int i=0; i < testLevel * totalThreads; i++) {
             if(rm.queryFlight(i, i) != i || rm.queryFlightPrice(i, i) != i) {
                 fail(String.format("Flight id: %d, number: %d was not added!", i, i));
             }
         }
-
     }
+
+    @Test
+    public void cars_test() throws RemoteException, InterruptedException {
+
+        // Thread number
+        int totalThreads = 5;
+        int testLevel = LOW_TEST;
+        String testLocation = "test-location-";
+
+        // Remove cars if any
+        for(int i=0; i < testLevel * totalThreads; i++) {
+            rm.deleteCars(i, testLocation+i);
+        }
+
+        // Prepare thread list
+        List<Thread> threadList = new ArrayList<>();
+
+        // Start threads
+        for(int t=0; t <= totalThreads; t++) {
+            // Create thread
+            int finalT = t;
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    // Add cars
+                    for(int i = testLevel*(finalT -1); i < testLevel* finalT; i++) {
+                        try {
+                            if(!rm.addCars(i, testLocation+i, i, i)) {
+                                fail(String.format("Failed to add car id: %d", i));
+                            }
+                        } catch (RemoteException e) {
+                            fail("Failed to add car caused by remote exception");
+                        }
+                    }
+                }
+            });
+            thread.start();
+            threadList.add(thread);
+        }
+
+        // Wait until all threads terminate
+        for(Thread thread : threadList) {
+            thread.join();
+        }
+
+        // TODO Reserve cars
+
+        // Query cars
+        for(int i=0; i < testLevel * totalThreads; i++) {
+            if(rm.queryCars(i, testLocation+i) != i || rm.queryCarsPrice(i, testLocation+i) != i) {
+                fail(String.format("Car id: %d was not added!", i));
+            }
+        }
+    }
+
 }
