@@ -3,7 +3,6 @@ import inter.ResourceManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.rmi.RemoteException;
@@ -81,18 +80,15 @@ public class ClientTest {
         for(int t=1; t <= totalThreads; t++) {
             // Create thread
             int finalT = t;
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    // Add flights
-                    for(int i = testLevel*(finalT -1); i < testLevel* finalT; i++) {
-                        try {
-                            if(!rm.addFlight(i, i, i, i)) {
-                                fail(String.format("Failed to add flight id: %d, number: %d", i, i));
-                            }
-                        } catch (RemoteException e) {
-                            fail("Failed to add flight caused by remote exception");
+            Thread thread = new Thread(() -> {
+                // Add flights
+                for(int i = testLevel*(finalT -1); i < testLevel* finalT; i++) {
+                    try {
+                        if(!rm.addFlight(i, i, i, i)) {
+                            fail(String.format("Failed to add flight id: %d, number: %d", i, i));
                         }
+                    } catch (RemoteException e) {
+                        fail("Failed to add flight caused by remote exception");
                     }
                 }
             });
@@ -144,21 +140,18 @@ public class ClientTest {
         // Start threads
         for(int t=1; t <= totalThreads; t++) {
             int finalT = t;
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    for(int i=testLevel*(finalT -1); i < testLevel*finalT; i++) {
-                        try {
+            Thread thread = new Thread(() -> {
+                for(int i=testLevel*(finalT -1); i < testLevel*finalT; i++) {
+                    try {
 
-                            // Reserve i seats
-                            for(int k=0; k < i; k++) {
-                                if(!rm.reserveFlight(i, cid, i)) {
-                                    fail(String.format("Could not reserve seats in flight %d", i));
-                                }
+                        // Reserve i seats
+                        for(int k=0; k < i; k++) {
+                            if(!rm.reserveFlight(i, cid, i)) {
+                                fail(String.format("Could not reserve seats in flight %d", i));
                             }
-                        } catch (RemoteException e) {
-                            fail("Failed to reserve flight caused by remote exception");
                         }
+                    } catch (RemoteException e) {
+                        fail("Failed to reserve flight caused by remote exception");
                     }
                 }
             });
@@ -201,18 +194,15 @@ public class ClientTest {
         for(int t=1; t <= totalThreads; t++) {
             // Create thread
             int finalT = t;
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    // Add cars
-                    for(int i = testLevel*(finalT -1); i < testLevel* finalT; i++) {
-                        try {
-                            if(!rm.addCars(i, testLocation+i, i, i)) {
-                                fail(String.format("Failed to add car id: %d", i));
-                            }
-                        } catch (RemoteException e) {
-                            fail("Failed to add car caused by remote exception");
+            Thread thread = new Thread(() -> {
+                // Add cars
+                for(int i = testLevel*(finalT -1); i < testLevel* finalT; i++) {
+                    try {
+                        if(!rm.addCars(i, testLocation+i, i, i)) {
+                            fail(String.format("Failed to add car id: %d", i));
                         }
+                    } catch (RemoteException e) {
+                        fail("Failed to add car caused by remote exception");
                     }
                 }
             });
@@ -264,21 +254,18 @@ public class ClientTest {
         // Start threads
         for(int t=1; t <= totalThreads; t++) {
             int finalT = t;
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    for(int i=testLevel*(finalT -1); i < testLevel*finalT; i++) {
-                        try {
+            Thread thread = new Thread(() -> {
+                for(int i=testLevel*(finalT -1); i < testLevel*finalT; i++) {
+                    try {
 
-                            // Reserve i cars
-                            for(int k=0; k < i; k++) {
-                                if(!rm.reserveCar(i, cid, testLocation+i)) {
-                                    fail(String.format("Could not reserve cars at location %d", testLocation+i));
-                                }
+                        // Reserve i cars
+                        for(int k=0; k < i; k++) {
+                            if(!rm.reserveCar(i, cid, testLocation+i)) {
+                                fail(String.format("Could not reserve cars at location %s", testLocation+i));
                             }
-                        } catch (RemoteException e) {
-                            fail("Failed to reserve car caused by remote exception");
                         }
+                    } catch (RemoteException e) {
+                        fail("Failed to reserve car caused by remote exception");
                     }
                 }
             });
@@ -295,6 +282,120 @@ public class ClientTest {
         for(int i=0; i < testLevel * totalThreads; i++) {
             if(rm.queryCars(i, testLocation+i) != 0) {
                 fail(String.format("Cars id: %d were not fully reserved!", i));
+            }
+        }
+    }
+
+    @Test
+    public void rooms_test_1() throws RemoteException, InterruptedException {
+
+        // Thread number
+        int totalThreads = LOW_THREAD;
+        int testLevel = LOW_TEST;
+
+        // Delete customer
+        rm.deleteCustomer(id, cid);
+
+        // Remove rooms if any
+        for(int i=0; i < testLevel * totalThreads; i++) {
+            rm.deleteRooms(i, testLocation+i);
+        }
+
+        // Prepare thread list
+        List<Thread> threadList = new ArrayList<>();
+
+        // Start threads
+        for(int t=1; t <= totalThreads; t++) {
+            // Create thread
+            int finalT = t;
+            Thread thread = new Thread(() -> {
+                // Add cars
+                for(int i = testLevel*(finalT -1); i < testLevel* finalT; i++) {
+                    try {
+                        if(!rm.addRooms(i, testLocation+i, i, i)) {
+                            fail(String.format("Failed to add room id: %d", i));
+                        }
+                    } catch (RemoteException e) {
+                        fail("Failed to add room caused by remote exception");
+                    }
+                }
+            });
+            thread.start();
+            threadList.add(thread);
+        }
+
+        // Wait until all threads terminate
+        for(Thread thread : threadList) {
+            thread.join();
+        }
+
+        // Query rooms
+        for(int i=0; i < testLevel * totalThreads; i++) {
+            if(rm.queryRooms(i, testLocation+i) != i || rm.queryRoomsPrice(i, testLocation+i) != i) {
+                fail(String.format("Room id: %d was not added!", i));
+            }
+        }
+    }
+
+    @Test
+    public void rooms_test_2() throws RemoteException, InterruptedException {
+
+        // Thread number
+        int totalThreads = LOW_THREAD;
+        int testLevel = LOW_TEST;
+
+        // Delete customer
+        rm.deleteCustomer(id, cid);
+
+        // Remove cars if any
+        for(int i=0; i < testLevel * totalThreads; i++) {
+            rm.deleteRooms(i, testLocation+i);
+        }
+
+        // Add rooms
+        for(int i = 0; i < testLevel * totalThreads; i++) {
+            if(!rm.addRooms(i, testLocation+i, i, i)) {
+                fail(String.format("Failed to add room id: %d", i));
+            }
+        }
+
+        // Create customer
+        rm.newCustomer(id, cid);
+
+        // Prepare thread list
+        List<Thread> threadList = new ArrayList<>();
+
+        // Start threads
+        for(int t=1; t <= totalThreads; t++) {
+            int finalT = t;
+            Thread thread = new Thread(() -> {
+                for(int i=testLevel*(finalT -1); i < testLevel*finalT; i++) {
+                    try {
+
+                        // Reserve i rooms
+                        for(int k=0; k < i; k++) {
+                            if(!rm.reserveRoom(i, cid, testLocation+i)) {
+                                fail(String.format("Could not reserve rooms at location %s", testLocation+i));
+                            }
+                        }
+                    } catch (RemoteException e) {
+                        fail("Failed to reserve room caused by remote exception");
+                    }
+                }
+            });
+            thread.start();
+            threadList.add(thread);
+        }
+
+        // Wait until all threads terminate
+        for(Thread thread : threadList) {
+            thread.join();
+        }
+
+        // Query rooms
+        for(int i=0; i < testLevel * totalThreads; i++) {
+            if(rm.queryRooms(i, testLocation+i) != 0) {
+                fail(String.format("Rooms id: %d were not fully reserved!", i));
             }
         }
     }
