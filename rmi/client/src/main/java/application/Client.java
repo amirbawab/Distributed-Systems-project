@@ -610,7 +610,7 @@ public class Client {
         System.out.println("deletecustomer\nqueryflight\nquerycar\nqueryroom\nquerycustomer");
         System.out.println("queryflightprice\nquerycarprice\nqueryroomprice");
         System.out.println("reserveflight\nreservecar\nreserveroom\nitinerary");
-        System.out.println("nquit");
+        System.out.println("quit");
         System.out.println("\ntype help, <commandname> for detailed info(NOTE the use of comma).");
     }
 
