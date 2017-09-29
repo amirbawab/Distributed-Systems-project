@@ -1,5 +1,5 @@
 # V4Vim
-## Architecture
+## RMI - Architecture
 <pre>
 Each client can       Hosted on machine A   Hosted on machine B
 run on a separate     running registry on   running registry on
@@ -12,6 +12,23 @@ V                     V                     V
 | Client 2 | <-----> |   Server   | <-----> RM - Car    |
 +--------            |            |       |             |
 +----------+         |            |       |             |
+| Client N | <-----> +------------+ <-----> RM - Room   |
++----------+                              +-------------+
+</pre>
+
+## TCP - Architecture
+<pre>
+Each client can       Hosted on machine A   Hosted on machine B
+run on a separate     running registry on   running registry on
+machine               port: 2000            port: 2001
+V                     V                     V
++----------+                              +-------------+
+| Client 1 | <-----> +------------+ <-----> RM - Flight |
++----------+         |            |       +-------------+
++----------+         | Middleware |       +-------------+
+| Client 2 | <-----> |   Server   | <-----> RM - Car    |
++--------            |            |       +-------------+
++----------+         |            |       +-------------+
 | Client N | <-----> +------------+ <-----> RM - Room   |
 +----------+                              +-------------+
 </pre>
