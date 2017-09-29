@@ -27,9 +27,15 @@ public class ClientTest {
     private final int MED_TEST = 100;
     private final int HIGH_TEST = 1000;
 
-    // Customer info
-    int id = 1;
-    int cid = 1;
+    // Thread level
+    private final int LOW_THREAD = 2;
+    private final int MED_THREAD = 4;
+    private final int HIGH_THREAD = 6;
+
+    // Objects details
+    private final int id = 1;
+    private final int cid = 1;
+    private final String testLocation = "test-location-";
 
     @BeforeClass
     public static void connectToServer() {
@@ -57,7 +63,7 @@ public class ClientTest {
     public void flights_test_1() throws RemoteException, InterruptedException {
 
         // Thread number
-        int totalThreads = 5;
+        int totalThreads = LOW_THREAD;
         int testLevel = LOW_TEST;
 
         // Delete customer
@@ -111,7 +117,7 @@ public class ClientTest {
     public void flights_test_2() throws RemoteException, InterruptedException {
 
         // Thread number
-        int totalThreads = 2;
+        int totalThreads = LOW_THREAD;
         int testLevel = LOW_TEST;
 
         // Delete customer
@@ -177,9 +183,8 @@ public class ClientTest {
     public void cars_test_1() throws RemoteException, InterruptedException {
 
         // Thread number
-        int totalThreads = 5;
+        int totalThreads = LOW_THREAD;
         int testLevel = LOW_TEST;
-        String testLocation = "test-location-";
 
         // Delete customer
         rm.deleteCustomer(id, cid);
@@ -224,6 +229,72 @@ public class ClientTest {
         for(int i=0; i < testLevel * totalThreads; i++) {
             if(rm.queryCars(i, testLocation+i) != i || rm.queryCarsPrice(i, testLocation+i) != i) {
                 fail(String.format("Car id: %d was not added!", i));
+            }
+        }
+    }
+
+    @Test
+    public void cars_test_2() throws RemoteException, InterruptedException {
+
+        // Thread number
+        int totalThreads = LOW_THREAD;
+        int testLevel = LOW_TEST;
+
+        // Delete customer
+        rm.deleteCustomer(id, cid);
+
+        // Remove cars if any
+        for(int i=0; i < testLevel * totalThreads; i++) {
+            rm.deleteCars(i, testLocation+i);
+        }
+
+        // Add cars
+        for(int i = 0; i < testLevel * totalThreads; i++) {
+            if(!rm.addCars(i, testLocation+i, i, i)) {
+                fail(String.format("Failed to add car id: %d", i));
+            }
+        }
+
+        // Create customer
+        rm.newCustomer(id, cid);
+
+        // Prepare thread list
+        List<Thread> threadList = new ArrayList<>();
+
+        // Start threads
+        for(int t=1; t <= totalThreads; t++) {
+            int finalT = t;
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    for(int i=testLevel*(finalT -1); i < testLevel*finalT; i++) {
+                        try {
+
+                            // Reserve i cars
+                            for(int k=0; k < i; k++) {
+                                if(!rm.reserveCar(i, cid, testLocation+i)) {
+                                    fail(String.format("Could not reserve cars at location %d", testLocation+i));
+                                }
+                            }
+                        } catch (RemoteException e) {
+                            fail("Failed to reserve car caused by remote exception");
+                        }
+                    }
+                }
+            });
+            thread.start();
+            threadList.add(thread);
+        }
+
+        // Wait until all threads terminate
+        for(Thread thread : threadList) {
+            thread.join();
+        }
+
+        // Query cars
+        for(int i=0; i < testLevel * totalThreads; i++) {
+            if(rm.queryCars(i, testLocation+i) != 0) {
+                fail(String.format("Cars id: %d were not fully reserved!", i));
             }
         }
     }
