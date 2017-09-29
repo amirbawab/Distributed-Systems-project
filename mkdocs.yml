@@ -3,4 +3,7 @@ theme: 'readthedocs'
 extra_css:
     - css/v4vim.css
 extra_javascript:
+    - js/Client.js
+    - js/MidServer.js
+    - js/RM.js
     - js/v4vim.js

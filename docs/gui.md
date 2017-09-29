@@ -1,5 +1,5 @@
 <div>
-    <h3>Step 1 - Connect to Middleware Server</h3>
+    <h3>Connect to Middleware Server</h3>
     <table>
         <tr>
             <th>Server IP</th>
@@ -14,4 +14,7 @@
             <td><button class="connect" onClick="connect()">Connect</button></td>
         </tr>
     </table>
+
+    <h3>Architecture</h3>
+    <canvas style="overflow: auto;" id="arch" width="700" height="500" style="border:1px solid #000000;"></canvas>
 </div>
