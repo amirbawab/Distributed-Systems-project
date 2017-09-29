@@ -8,12 +8,14 @@ branches:
         - master
           
 before_script:
-    - ./gradlew remote:midServerRMIRegistry
-    - ./gradlew remote:rmRMIRegistry
-    - ./gradlew rmi:rm:build rmi:rm:run -DrmName=car
-    - ./gradlew rmi:rm:build rmi:rm:run -DrmName=flight
-    - ./gradlew rmi:rm:build rmi:rm:run -DrmName=room
-    - ./gradlew rmi:mid-server:build rmi:mid-server:run
+    - ./gradlew remote:midServerRMIRegistry &
+    - ./gradlew remote:rmRMIRegistry &
+    - sleep 15
+    - ./gradlew rmi:rm:build rmi:rm:run -DrmName=car &
+    - ./gradlew rmi:rm:build rmi:rm:run -DrmName=flight &
+    - ./gradlew rmi:rm:build rmi:rm:run -DrmName=room &
+    - sleep 15
+    - ./gradlew rmi:mid-server:build rmi:mid-server:run &
 
 script:
     - ./gradlew clean build test
