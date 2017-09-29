@@ -1,0 +1,31 @@
+Extract the content of Tutorial512
+==================================
+[yourSOCSAccount]@open-15 ~/[somewhere]/Tutorial512 $ tar -xvf Tutorial512.tar
+
+
+Server's instructions on machine open-15
+=======================================
+1-compile the server socket
+[yourSOCSAccount]@open-15 ~/[somewhere]/Tutorial512 $ javac serverSocket.java 
+2- Run the server socket
+[yourSOCSAccount]@open-15 ~/[somewhere]/Tutorial512 $ java serverSocket
+
+
+Client's instructions on machine open-18
+========================================
+1-compile the client socket 
+[yourSOCSAccount]@open-18 ~/[somewhere]/Tutorial512 $ javac clientSocket.java 
+2- Run the server socket
+[yourSOCSAccount]@open-18 ~/[somewhere]/Tutorial512 $ java clientSocket open-15
+
+Clients commands examples:
+===========================
+mul,3,4
+result: hello client from server THREAD, your result is: 12
+mul,5,5
+result: hello client from server THREAD, your result is: 25
+add,2,9
+result: hello client from server THREAD, your result is: 11
+add,-4,-5
+result: hello client from server THREAD, your result is: -9
+
