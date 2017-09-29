@@ -1,2 +1,4 @@
 site_name: V4Vim
 theme: 'readthedocs'
+extra_javascript:
+    - js/v4vim.js
