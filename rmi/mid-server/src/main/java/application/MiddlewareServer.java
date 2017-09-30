@@ -1,6 +1,8 @@
 package application;
 
 import inter.ResourceManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
@@ -10,17 +12,25 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.Vector;
 
 class MiddlewareServer implements ResourceManager {
+
+    // RM components
     private ResourceManager m_carRM;
     private ResourceManager m_flightRM;
     private ResourceManager m_roomRM;
+
+    // Program exit codes
+    private static final int CODE_ERROR=1;
+
+    // Logger
+    private static final Logger logger = LogManager.getLogger(MiddlewareServer.class);
 
     public static void main(String[] args) {
 
         // Figure out where server is running
         if (args.length != 3) {
             System.err.println ("Wrong usage");
-            System.out.println("Usage: java ResImpl.ResourceManagerImpl [port]");
-            System.exit(1);
+            System.out.println("    Usage: java ResImpl.ResourceManagerImpl [server port] [registry ip] [registry port]");
+            System.exit(MiddlewareServer.CODE_ERROR);
         }
 
         // Set server port
@@ -38,27 +48,25 @@ class MiddlewareServer implements ResourceManager {
         if (System.getSecurityManager() == null) {
             System.setSecurityManager(new RMISecurityManager());
         }
-
     }
 
     private static MiddlewareServer bindRM(String key, int port) {
         // Bind server object
         try {
-            // create a new Server object
+            // Create a new Server object
             MiddlewareServer obj = new MiddlewareServer();
-            // dynamically generate the stub (client proxy)
+            // Dynamically generate the stub (client proxy)
             ResourceManager rm = (ResourceManager) UnicastRemoteObject.exportObject(obj, 0);
 
             // Bind the remote object's stub in the registry
             Registry registry = LocateRegistry.getRegistry(port);
             registry.rebind(key, rm);
-            System.out.println("Middleware server ready!");
+            logger.info("Middleware server ready!");
             return obj;
         } catch (Exception e) {
-            System.err.println("Middleware server exception: " + e.toString());
-            e.printStackTrace();
-            throw new RuntimeException("Binding failure: Terminating program ...");
+            logger.error("Middleware server exception: " + e.toString());
         }
+        throw new RuntimeException("Binding failure: Terminating program ...");
     }
 
     /**
@@ -66,21 +74,19 @@ class MiddlewareServer implements ResourceManager {
      * @param key
      */
     private static ResourceManager connectToRM(String key, String server, int port) {
-        try
-        {
+        try {
             // get a reference to the rmiregistry
             Registry registry = LocateRegistry.getRegistry(server, port);
             // get the proxy and the remote reference by rmiregistry lookup
             ResourceManager rm = (ResourceManager) registry.lookup(key);
             if(rm!=null) {
-                System.out.println("Connected to RM: " + key);
+                logger.info("Connected to RM: " + key);
             } else {
-                System.err.println("Could not connect to RM: " + key);
+                logger.error("Could not connect to RM: " + key);
             }
             return rm;
         } catch (Exception e) {
-            System.err.println("Client exception: " + e.toString());
-            e.printStackTrace();
+            logger.error("Exception while connecting to RM: "+ e.toString());
         }
         throw new RuntimeException("Connection failure: Terminating program ...");
     }
