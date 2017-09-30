@@ -3,7 +3,8 @@ version = '1.0'
 mainClassName = "application.ResourceManagerImpl"
 
 dependencies {
-    compile project(':remote')
+    compile project(':common:remote')
+    compile project(':common:rm')
 }
 
 run {
