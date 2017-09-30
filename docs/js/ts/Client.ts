@@ -12,4 +12,7 @@ class Client {
         }
         return "#555";
     }
+    public getTextColor(){
+        return "#fff";
+    }
 }

@@ -12,6 +12,9 @@ var Client = (function () {
         }
         return "#555";
     };
+    Client.prototype.getTextColor = function () {
+        return "#fff";
+    };
     Client.uid = 0;
     return Client;
 })();

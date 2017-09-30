@@ -23,13 +23,13 @@ run on a separate     running registry on   running registry on
 machine               port: 2000            port: 2001
 V                     V                     V
 +----------+                              +-------------+
-| Client 1 | <-----> +------------+ <-----> RM - Flight |
+| Client 1 | <-----> +------------+ <---->| RM - Flight |
 +----------+         |            |       +-------------+
 +----------+         | Middleware |       +-------------+
-| Client 2 | <-----> |   Server   | <-----> RM - Car    |
+| Client 2 | <-----> |   Server   | <---->| RM - Car    |
 +--------            |            |       +-------------+
 +----------+         |            |       +-------------+
-| Client N | <-----> +------------+ <-----> RM - Room   |
+| Client N | <-----> +------------+ <---->| RM - Room   |
 +----------+                              +-------------+
 </pre>
 
