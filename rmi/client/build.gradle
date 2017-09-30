@@ -3,7 +3,7 @@ version = '1.0'
 mainClassName = "application.Client"
 
 dependencies {
-    compile project(':remote')
+    compile project(':common:remote')
 }
 
 test {
