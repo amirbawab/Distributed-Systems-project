@@ -5,6 +5,7 @@
 package application;
 
 import inter.ResourceManager;
+import rm.*;
 
 import java.util.*;
 

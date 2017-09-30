@@ -2,7 +2,7 @@
 // adapted Kevin T. Manley
 // CSE 593
 // -------------------------------
-package application;
+package rm;
 
 import java.io.*;
 
