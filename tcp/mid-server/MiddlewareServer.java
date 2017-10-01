@@ -15,33 +15,159 @@ class MiddlewareServer implements ResourceManager {
     public static void main(String[] args) {
 
         // Figure out where server is running
-        /*
         if (args.length != 3) {
             System.err.println ("Wrong usage");
             System.out.println("Usage: java ResImpl.ResourceManagerImpl [port]");
             System.exit(1);
         }
-        */
 
-        // hardcode hostname/ports of the three RMs
 
         // Set server port
         //int serverRMIRegistryPort = Integer.parseInt(args[0]);
         //String rmRMIRegistryIP = args[1];
         //int rmRMIRegistryPort = Integer.parseInt(args[2]);
 
-        // Connect to the three RMs; hardcode machine names and port numbers
-        Socket socketRM1 = new Socket("RM1", 9090);
-        PrintWriter outToRM1 = new PrintWriter(socketRM1.getOutputStream(), true); // open an output stream to the server
-        BufferedReader inFromRM1 = new BufferedReader(new InputStreamReader(socketRM1.getInputStream())); // open an input stream from the server
+        // socket for client
+        Socket socketClient = new Socket("Client", 9090);
+        PrintWriter outToClient = new PrintWriter(socketClient.getOutputStream(), true); // open an output stream to the client
+        BufferedReader inFromClient = new BufferedReader(new InputStreamReader(socketClient.getInputStream())); // open an input stream from the server
 
-        Socket socketRM2 = new Socket("RM2", 9091);
-        PrintWriter outToRM2 = new PrintWriter(socketRM2.getOutputStream(), true); // open an output stream to the server
-        BufferedReader inFromRM2 = new BufferedReader(new InputStreamReader(socketRM2.getInputStream())); // open an input stream from the server
+        // Connect to the three RMs; hardcode machine names and port numbers or use gradle
+        Socket socketRMFlight = new Socket("RM1", 9090);
+        PrintWriter outToRMFlight = new PrintWriter(socketRMFlight.getOutputStream(), true); // open an output stream to the server
+        BufferedReader inFromRMFlight = new BufferedReader(new InputStreamReader(socketRMFlight.getInputStream())); // open an input stream from the server
 
-        Socket socketRM3 = new Socket("RM3", 9092);
-        PrintWriter outToRM3 = new PrintWriter(socketRM3.getOutputStream(), true); // open an output stream to the server
-        BufferedReader inFromRM3 = new BufferedReader(new InputStreamReader(socketRM3.getInputStream())); // open an input stream from the server
+        Socket socketRMCar = new Socket("RM2", 9091);
+        PrintWriter outToRMCar = new PrintWriter(socketRMCar.getOutputStream(), true); // open an output stream to the server
+        BufferedReader inFromRMCar = new BufferedReader(new InputStreamReader(socketRMCar.getInputStream())); // open an input stream from the server
+
+        Socket socketRMRoom = new Socket("RM3", 9092);
+        PrintWriter outToRMRoom = new PrintWriter(socketRMRoom.getOutputStream(), true); // open an output stream to the server
+        BufferedReader inFromRMRoom = new BufferedReader(new InputStreamReader(socketRMRoom.getInputStream())); // open an input stream from the server
+
+        // read messages from client
+        String message = null;
+        while ((message = inFromClient.readLine())!=null)
+        {
+            // split message with comma, and call that function
+            String[] params =  message.split(",");
+            if (params[0] == "addFlight") {
+                outToRMFlight.println(message);
+                outToClient.println(inFromRMFlight.readline());
+            }
+            else if (params[0] == "addCars") {
+                outToRMCar.println(message);
+                outToClient.println(inFromRMCar.readline());
+            }
+            else if (params[0] == "addRooms") {
+                outToRMRoom.println(message);
+                outToClient.println(inFromRMRoom.readline());
+            }
+            else if (params[0] == "newCustomer") {
+                if (params.length == 1) {
+                    outToRMCar.println(message);
+                    int cid = Integer.parseInt(inFromRMCar.readline());
+                    outToRMRoom.println(params[0] + "," + cid);
+                    outToRMFlight.println(params[0] + "," + cid);
+                    outToClient.println(cid);
+                }
+                else { // params.length == 2
+                    outToRMRoom.println(message);
+                    boolean res1 = Boolean.parseBoolean(inFromRMRoom.readline());
+                    outToRMCar.println(message);
+                    boolean res2 = Boolean.parseBoolean(inFromRMCar.readline());
+                    outToRMFlight.println(message);
+                    boolean res3 = Boolean.parseBoolean(inFromRMFlight.readline());
+                    if (res1 && res2 && res3)
+                        outToClient.println("true");
+                    else
+                        outToClient.println("false");
+                }
+            }
+            else if (params[0] == "deleteFlight") {
+                outToRMFlight.println(message);
+                outToClient.println(inFromRMFlight.readline());
+            }
+            else if (params[0] == "deleteCars") {
+                outToRMCar.println(message);
+                outToClient.println(inFromRMCar.readline());
+            }
+            else if (params[0] == "deleteRooms") {
+                outToRMRoom.println(message);
+                outToClient.println(inFromRMRoom.readline());
+            }
+            else if (params[0] == "deleteCustomer") {
+                outToRMRoom.println(message);
+                boolean res1 = Boolean.parseBoolean(inFromRMRoom.readline());
+                outToRMCar.println(message);
+                boolean res2 = Boolean.parseBoolean(inFromRMCar.readline());
+                outToRMFlight.println(message);
+                boolean res3 = Boolean.parseBoolean(inFromRMFlight.readline());
+                if (res1 && res2 && res3)
+                    outToClient.println("true");
+                else
+                    outToClient.println("false");
+            }
+            else if (params[0] == "queryFlight") {
+                outToRMFlight.println(message);
+                outToClient.println(inFromRMFlight.readline());
+            }
+            else if (params[0] == "queryCars") {
+                outToRMCar.println(message);
+                outToClient.println(inFromRMCar.readline());
+            }
+            else if (params[0] == "queryRooms") {
+                outToRMRoom.println(message);
+                outToClient.println(inFromRMRoom.readline());
+            }
+            else if (params[0] == "queryCustomerInfo") {
+                StringBuilder sb = new StringBuilder();
+                outToRMCar.println(message);
+                sb.append("\nCar info:\n").append(inFromRMCar.readline());
+                outToRMFlight.println(message);
+                sb.append("\nFlight info:\n").append(inFromRMFlight.readline());
+                outToRMRoom.println(message);
+                sb.append("\nRoom info:\n").append(inFromRMRoom.readline());
+                outToClient.println(sb.toString());
+            }
+            else if (params[0] == "queryFlightPrice") {
+                outToRMFlight.println(message);
+                outToClient.println(inFromRMFlight.readline());
+            }
+            else if (params[0] == "queryCarsPrice") {
+                outToRMCar.println(message);
+                outToClient.println(inFromRMCar.readline());
+            }
+            else if (params[0] == "queryRoomsPrice") {
+                outToRMRoom.println(message);
+                outToClient.println(inFromRMRoom.readline());
+            }
+            else if (params[0] == "reserveFlight") {
+                outToRMFlight.println(message);
+                outToClient.println(inFromRMFlight.readline());
+            }
+            else if (params[0] == "reserveCar") {
+                outToRMCar.println(message);
+                outToClient.println(inFromRMCar.readline());
+            }
+            else if (params[0] == "reserveRoom") {
+                outToRMRoom.println(message);
+                outToClient.println(inFromRMRoom.readline());
+            }
+            else if (params[0] == "itinerary") {
+                outToRMRoom.println(message);
+                boolean res1 = Boolean.parseBoolean(inFromRMRoom.readline());
+                outToRMCar.println(message);
+                boolean res2 = Boolean.parseBoolean(inFromRMCar.readline());
+                outToRMFlight.println(message);
+                boolean res3 = Boolean.parseBoolean(inFromRMFlight.readline());
+                if (res1 && res2 && res3)
+                    outToClient.println("true");
+                else
+                    outToClient.println("false");
+            }
+        }
+
 
         /*
         MiddlewareServer ms = bindRM(ResourceManager.MID_SERVER_REF, serverRMIRegistryPort);
@@ -50,6 +176,7 @@ class MiddlewareServer implements ResourceManager {
         ms.m_roomRM = connectToRM(ResourceManager.RM_ROOM_REF, rmRMIRegistryIP, rmRMIRegistryPort);
         */
 
+        /*
         serverSocket midServer = new serverSocket();
         try
         {
@@ -59,6 +186,7 @@ class MiddlewareServer implements ResourceManager {
         {
 
         }
+        */
 
         // Create and install a security manager
         /*if (System.getSecurityManager() == null) {
@@ -93,6 +221,7 @@ class MiddlewareServer implements ResourceManager {
      * Connect to RM
      * @param key
      */
+    /*
     private static ResourceManager connectToRM(String key, String server, int port) {
         try
         {
@@ -112,7 +241,8 @@ class MiddlewareServer implements ResourceManager {
         }
         throw new RuntimeException("Connection failure: Terminating program ...");
     }
-
+    */
+/*
     @Override
     public boolean addFlight(int id, int flightNum, int flightSeats, int flightPrice) throws RemoteException {
         return m_flightRM.addFlight(id, flightNum, flightSeats, flightPrice);
@@ -226,3 +356,4 @@ class MiddlewareServer implements ResourceManager {
                 m_roomRM.itinerary(id, customer, flightNumbers, location, Car, Room);
     }
 }
+*/
