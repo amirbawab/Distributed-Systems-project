@@ -1,6 +1,16 @@
+// Common projects
 include 'common:remote'
 include 'common:rm'
+
+// RMI projects
 include 'rmi:client'
-include 'rmi:rm'
 include 'rmi:mid-server'
+include 'rmi:rm'
+
+// TCP projects
+include 'tcp:client'
+include 'tcp:mid-server'
+include 'tcp:rm'
+
+// Root project
 rootProject.name = 'V4Vim'

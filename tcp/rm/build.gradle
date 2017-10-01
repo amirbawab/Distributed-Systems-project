@@ -1,0 +1,29 @@
+apply plugin: 'application'
+version = '1.0'
+mainClassName = "application.ResourceManagerImpl"
+
+dependencies {
+    compile project(':common:remote')
+    compile project(':common:rm')
+}
+
+run {
+    doFirst {
+        copy {
+            from "${rootDir}/etc/policy/"
+            into "${buildDir}"
+            include 'rm.policy'
+            expand('classpath': "${sourceSets.main.java.outputDir}")
+        }
+
+        String rmName = System.properties['rmName']
+        if(rmName == null) {
+            throw new GradleException("Property 'rmName' is missing. (e.g. -DrmName=...)")
+        }
+        args([rm_rmiRegistry_port, rmName])
+        jvmArgs([
+                "-Djava.security.policy=${project.buildDir}/rm.policy",
+                "-Djava.rmi.server.codebase=file:${sourceSets.main.java.outputDir}"
+        ])
+    }
+}

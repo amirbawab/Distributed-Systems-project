@@ -1,0 +1,19 @@
+apply plugin: 'application'
+version = '1.0'
+mainClassName = "application.Client"
+
+dependencies {
+    compile project(':common:remote')
+}
+
+test {
+    systemProperty 'server_port', midServer_tcp_port
+    systemProperty 'server_ip', midServer_tcp_ip
+}
+
+run {
+    doFirst {
+        standardInput = System.in
+        args([midServer_tcp_ip, midServer_tcp_port])
+    }
+}

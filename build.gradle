@@ -5,15 +5,34 @@ dependencies {
     compile localGroovy()
 }
 
+// RMI variables
 ext {
-
-    // Middleware server RMI Registry address
+    // Middleware server RMI Registry network information
     midServer_rmiRegistry_port="2000"
     midServer_rmiRegistry_ip="localhost"
 
-    // RM RMI Registry address
+    // RM RMI Registry network information
     rm_rmiRegistry_port="2001"
     rm_rmiRegistry_ip="localhost"
+}
+
+// TCP variables
+ext {
+    // Middleware server TCP network information
+    midServer_tcp_port="2002"
+    midServer_tcp_ip="localhost"
+
+    // Flight RM network information
+    rmFlight_tcp_port="2003"
+    rmFlight_tcp_ip="localhost"
+
+    // Flight RM network information
+    rmRoom_tcp_port="2004"
+    rmRoom_tcp_ip="localhost"
+    
+    // Flight RM network information
+    rmCar_tcp_port="2005"
+    rmCar_tcp_ip="localhost"
 }
 
 subprojects {
