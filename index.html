@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="./css/theme.css" type="text/css" />
   <link rel="stylesheet" href="./css/theme_extra.css" type="text/css" />
   <link rel="stylesheet" href="./css/highlight.css">
+  <link href="./css/v4vim.css" rel="stylesheet">
   
   <script>
     // Current page data
@@ -56,7 +57,9 @@
     
         <ul>
         
-            <li><a class="toctree-l3" href="#architecture">Architecture</a></li>
+            <li><a class="toctree-l3" href="#rmi-architecture">RMI - Architecture</a></li>
+        
+            <li><a class="toctree-l3" href="#tcp-architecture">TCP - Architecture</a></li>
         
             <li><a class="toctree-l3" href="#building-project">Building project</a></li>
         
@@ -66,6 +69,11 @@
     
 
     </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="gui/">Gui</a>
 	    </li>
           
         </ul>
@@ -101,7 +109,7 @@
             <div class="section">
               
                 <h1 id="v4vim">V4Vim</h1>
-<h2 id="architecture">Architecture</h2>
+<h2 id="rmi-architecture">RMI - Architecture</h2>
 <p><pre>
 Each client can       Hosted on machine A   Hosted on machine B
 run on a separate     running registry on   running registry on
@@ -115,6 +123,22 @@ V                     V                     V
 +--------            |            |       |             |
 +----------+         |            |       |             |
 | Client N | &lt;-----&gt; +------------+ &lt;-----&gt; RM - Room   |
++----------+                              +-------------+
+</pre></p>
+<h2 id="tcp-architecture">TCP - Architecture</h2>
+<p><pre>
+Each client can       Hosted on machine A   Hosted on machine B
+run on a separate     running registry on   running registry on
+machine               port: 2000            port: 2001
+V                     V                     V
++----------+                              +-------------+
+| Client 1 | &lt;-----&gt; +------------+ &lt;----&gt;| RM - Flight |
++----------+         |            |       +-------------+
++----------+         | Middleware |       +-------------+
+| Client 2 | &lt;-----&gt; |   Server   | &lt;----&gt;| RM - Car    |
++--------            |            |       +-------------+
++----------+         |            |       +-------------+
+| Client N | &lt;-----&gt; +------------+ &lt;----&gt;| RM - Room   |
 +----------+                              +-------------+
 </pre></p>
 <h2 id="building-project">Building project</h2>
@@ -154,6 +178,13 @@ The project is composed of several Gradle sub-projects each of which can be star
           </div>
           <footer>
   
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="gui/" class="btn btn-neutral float-right" title="Gui">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+    </div>
+  
 
   <hr/>
 
@@ -177,14 +208,20 @@ The project is composed of several Gradle sub-projects each of which can be star
       
       
       
+        <span style="margin-left: 15px"><a href="gui/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
     </span>
 </div>
     <script src="./js/theme.js"></script>
+      <script src="./js/Client.js"></script>
+      <script src="./js/MidServer.js"></script>
+      <script src="./js/RM.js"></script>
+      <script src="./js/v4vim.js"></script>
 
 </body>
 </html>
 
 <!--
 MkDocs version : 0.16.3
-Build Date UTC : 2017-09-22 21:56:09
+Build Date UTC : 2017-10-01 17:12:15
 -->
