@@ -5,12 +5,12 @@ include 'common:client'
 
 // RMI projects
 include 'rmi:client'
-include 'rmi:mid-server'
+include 'rmi:midserver'
 include 'rmi:rm'
 
 // TCP projects
 include 'tcp:client'
-include 'tcp:mid-server'
+include 'tcp:midserver'
 include 'tcp:rm'
 
 // Root project

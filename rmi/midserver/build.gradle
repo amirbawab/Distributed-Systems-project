@@ -1,6 +1,6 @@
 apply plugin: 'application'
 version = '1.0'
-mainClassName = "application.MiddlewareServer"
+mainClassName = "midserver.MiddlewareServer"
 
 dependencies {
     compile project(':common:remote')
@@ -16,10 +16,10 @@ run {
             expand('classpath': "${sourceSets.main.java.outputDir}")
         }
 
-        args ([midServer_rmiRegistry_port, rm_rmiRegistry_ip, rm_rmiRegistry_port])
-        jvmArgs([
+        args = [midServer_rmiRegistry_port, rm_rmiRegistry_ip, rm_rmiRegistry_port]
+        jvmArgs = [
                 "-Djava.security.policy=${project.buildDir}/mid-server.policy",
                 "-Djava.rmi.server.codebase=file:${sourceSets.main.java.outputDir}"
-        ])
+            ]
     }
 }

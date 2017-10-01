@@ -2,12 +2,11 @@
 // adapted from Kevin T. Manley
 // CSE 593
 //
-package application;
+package rm;
 
 import inter.ResourceManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import rm.*;
 
 import java.util.*;
 

@@ -1,4 +1,4 @@
-package application;
+package midserver;
 
 import inter.ResourceManager;
 import org.apache.logging.log4j.LogManager;

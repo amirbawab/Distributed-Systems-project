@@ -1,4 +1,4 @@
-package application;
+package client;
 import inter.ResourceManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,7 +16,7 @@ import static org.junit.Assert.*;
 public class ClientTest {
 
     // Logger
-    private static final Logger logger = LogManager.getLogger(Client.class);
+    private static final Logger logger = LogManager.getLogger(ClientTest.class);
 
     // Declare a static RM
     private static ResourceManager rm = null;

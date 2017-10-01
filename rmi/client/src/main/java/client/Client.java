@@ -1,6 +1,5 @@
-package application;
+package client;
 
-import client.CLI;
 import inter.ResourceManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

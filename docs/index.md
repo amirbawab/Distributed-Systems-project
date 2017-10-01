@@ -61,7 +61,7 @@ The project is composed of several Gradle sub-projects each of which can be star
 
 ### Start Middleware Server on machine A
 ```
-./gradlew rmi:mid-server:build rmi:mid-server:run
+./gradlew rmi:midserver:build rmi:midserver:run
 ```
 
 ### Start a Client on any machine

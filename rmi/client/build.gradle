@@ -1,6 +1,6 @@
 apply plugin: 'application'
 version = '1.0'
-mainClassName = "application.Client"
+mainClassName = "client.Client"
 
 dependencies {
     compile project(':common:client')
@@ -21,7 +21,7 @@ run {
         }
 
         standardInput = System.in
-        args([midServer_rmiRegistry_ip, midServer_rmiRegistry_port])
-        jvmArgs(["-Djava.security.policy=${project.buildDir}/client.policy"])
+        args = [midServer_rmiRegistry_ip, midServer_rmiRegistry_port]
+        jvmArgs = ["-Djava.security.policy=${project.buildDir}/client.policy"]
     }
 }
