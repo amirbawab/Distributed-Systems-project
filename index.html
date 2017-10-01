@@ -127,19 +127,20 @@ V                     V                     V
 </pre></p>
 <h2 id="tcp-architecture">TCP - Architecture</h2>
 <p><pre>
-Each client can       Hosted on machine A   Hosted on machine B
-run on a separate     running registry on   running registry on
-machine               port: 2000            port: 2001
-V                     V                     V
-+----------+                              +-------------+
-| Client 1 | &lt;-----&gt; +------------+ &lt;----&gt;| RM - Flight |
-+----------+         |            |       +-------------+
-+----------+         | Middleware |       +-------------+
-| Client 2 | &lt;-----&gt; |   Server   | &lt;----&gt;| RM - Car    |
-+--------            |            |       +-------------+
-+----------+         |            |       +-------------+
-| Client N | &lt;-----&gt; +------------+ &lt;----&gt;| RM - Room   |
-+----------+                              +-------------+
+                                            Hosted on any machine
+Each client can       Hosted on machine A   port: 2003
+run on a separate     listening on          |  port: 2004
+machine               port: 2002            |  |  port: 2005
+V                     V                     |  |  V
++----------+                                |  |  +-------------+
+| Client 1 | &lt;-----&gt; +------------+ &lt;-------+--+-&gt;| RM - Flight |
++----------+         |            |         |  V  +-------------+
++----------+         | Middleware |         |  +-------------+
+| Client 2 | &lt;-----&gt; |   Server   | &lt;-------+-&gt;| RM - Car    |
++--------            |            |         V  +-------------+
++----------+         |            |         +-------------+
+| Client N | &lt;-----&gt; +------------+ &lt;------&gt;| RM - Room   |
++----------+                                +-------------+
 </pre></p>
 <h2 id="building-project">Building project</h2>
 <p>Distributed systems require a lot of dependencies between components especially when using RMI technology.
@@ -223,5 +224,5 @@ The project is composed of several Gradle sub-projects each of which can be star
 
 <!--
 MkDocs version : 0.16.3
-Build Date UTC : 2017-10-01 17:12:15
+Build Date UTC : 2017-10-01 20:04:16
 -->
