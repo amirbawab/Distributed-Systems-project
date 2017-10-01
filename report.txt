@@ -1,0 +1,73 @@
+COMP 512 Distributed Systems
+Project Report
+
+Amir Bawab
+Archit Agnihotri
+
+RMI
+
+As we know from the assignment instructions, the clients are only aware of the middleware server, which provides the same interface as the original Resource Managers. 
+All RMs have the same implementation, but the middleware calls a specific one for flight, car, or room, as required.
+Handling customers: our design choice handles customers by storing data in each individual RM, and then the middleware server collects and deals with the data as necessary. For instance, one call by the client to the middleware server may result in three calls (one to each RM), and then the middleware server would aggregate the data before returning it to the client.
+
+Concurrent requests: The RMI functionality, which is built on top of TCP, handles concurrent requests automatically.
+
+TCP
+For our communication paradigm, we basically reimplement the RMI functionality on top of sockets. That is, we still use the model with clients, middleware, and RM servers, but now we use TCP instead of RMI.
+
+Instead of the more complex serialization of objects before sending them through the socket, we chose a simpler design where we pass the function name as the first argument, and then the rest of the arguments, where all of them are concatenated by commas. At the receiving end, they are then split into an array in such a way that the separator character is the comma.
+
+Concurrent requests: Only the client process blocks after it sends a request and waits for a reply. We use threads to accept concurrent connections on the middleware server and the RM servers to ensure that they can handle requests from multiple clients.
+
+Building and running project
+We are using the build tool Gradle in order to facilitate managing complex architectures and dependencies. The project is composed of several Gradle sub-projects, which are started with a Gradle task. Relevant Gradle features include:
+    -manage dependencies (which is important for a complex distributed project, such as this one)
+    -it allows easy integration with third party libraries e.g. JUnit, Apache Logger
+    -easy to build the project by configuring tasks in the Gradle configuration
+    -easy network configuration e.g. variables: host/ip/port, which propagates through code upon change
+
+    The commands for executing the project are listed in the documentation:
+
+*Note: The following commands must be executed from the root directory of the repository.*  
+*Note: Refer to [Architecture](#architecture) section to identify machines A and B*
+### Start Registry on machine A
+```
+./gradlew midServerRMIRegistry
+```
+
+### Start Registry on machine B
+```
+./gradlew rmRMIRegistry
+```
+
+### Start RMs on machine B
+```
+./gradlew rmi:rm:build rmi:rm:run -DrmName=car
+./gradlew rmi:rm:build rmi:rm:run -DrmName=flight
+./gradlew rmi:rm:build rmi:rm:run -DrmName=room
+```
+
+### Start Middleware Server on machine A
+```
+./gradlew rmi:midserver:build rmi:midserver:run
+```
+
+### Start a Client on any machine
+```
+./gradlew rmi:client:build rmi:client:run
+```
+
+## Configure network settings
+To configure the IP and Port values for machine A and B, edit the corresponding variables in:
+`build.gradle` located at the root of the repository.
+
+
+Testing
+
+
+
+GUI
+
+The GUI interface shows the status of the midlayer server, including:
+-which clients are currently connected
+-which Resource Managers are currently connected
