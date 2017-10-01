@@ -1,6 +1,7 @@
 // Common projects
 include 'common:remote'
 include 'common:rm'
+include 'common:client'
 
 // RMI projects
 include 'rmi:client'
