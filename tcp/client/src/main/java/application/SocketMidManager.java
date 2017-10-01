@@ -1,124 +1,200 @@
 package application;
 
-import java.net.ServerSocket;
+import inter.ResourceManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
 import java.net.Socket;
 import java.io.PrintWriter;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.Vector;
 
-public class SocketMidManager {
+public class SocketMidManager implements ResourceManager {
 
-    // establish a socket with the mid level server and port; change the values to something configurable with gradle
-	Socket socket = new Socket("localhost", 9090);
+    // Logger
+    private static final Logger logger = LogManager.getLogger(Client.class);
 
-    // open an output stream to the middle layer server
-	PrintWriter outToServer = new PrintWriter(socket.getOutputStream(), true); 
+    // Client socket
+    private Socket m_socket;
 
-    // open an input stream from the middle layer server
-	BufferedReader inFromServer = new BufferedReader(new InputStreamReader(socket.getInputStream())); 
+    // Open an output stream to the middle layer server
+    private PrintWriter m_outToServer;
 
-    // for each method, send the function name and arguments as one string, each arg concatenated with a comma ","
-    // then block and wait for response
-    // then convert return value from a string, and return it
-    public boolean addFlight(int Id,int flightNum,int flightSeats,int flightPrice) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ Integer.toString(flightNum) +","+ Integer.toString(flightSeats) + "," + Integer.toString(flightPrice));
-        return Boolean.parseBoolean(inFromServer.readLine());
+    // Open an input stream from the middle layer server
+    private BufferedReader m_inFromServer;
+
+    /**
+     * Construct a client to middleware server socket manager
+     * @param server
+     * @param port
+     * @throws IOException
+     */
+	public SocketMidManager(String server, int port) throws IOException {
+        m_socket = new Socket(server, port);
+        m_outToServer = new PrintWriter(m_socket.getOutputStream(), true);
+        m_inFromServer = new BufferedReader(new InputStreamReader(m_socket.getInputStream()));
     }
-    public boolean addCars(int Id,String location,int numCars,int price) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ location +","+ Integer.toString(numCars) + "," + Integer.toString(price));
-        return Boolean.parseBoolean(inFromServer.readLine());
+
+    /**
+     * Send command to the middleware server
+     * @param commandName
+     * @param args
+     * @return message returned from the server
+     */
+    private String sendCommand(String commandName, Object ... args) {
+
+        // Join command and arguments
+        StringBuilder command = new StringBuilder();
+        command.append(commandName);
+        for(Object arg : args) {
+            command.append(",");
+            command.append(arg.toString());
+        }
+
+        // Sent command
+        m_outToServer.println(command.toString());
+
+        // Return the message sent back from the middleware server
+        try {
+            return m_inFromServer.readLine();
+        } catch (IOException e) {
+            logger.error("Error reading return value from the middleware server: " + e.getMessage());
+        }
+        return "";
     }
-    public boolean addRooms(int Id,String location,int numRooms,int price) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ location +","+ Integer.toString(numRooms) + "," + Integer.toString(price));
-        return Boolean.parseBoolean(inFromServer.readLine());
+
+    /**
+     * Read boolean string
+     * @param returnStr
+     * @return boolean string or false by default
+     */
+    private boolean boolOrDefault(String returnStr) {
+        try {
+            return Boolean.parseBoolean(returnStr);
+        } catch (RuntimeException e) {
+            logger.error("Error parsing return value to boolean, will return false");
+            return false;
+        }
     }
-    public int newCustomer(int Id) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id));
-        return Integer.parseInt(inFromServer.readLine());
+
+    /**
+     * Read int string
+     * @param returnStr
+     * @return int string or -1 by default
+     */
+    private int intOrDefault(String returnStr) {
+        try {
+            return Integer.parseInt(returnStr);
+        } catch (RuntimeException e) {
+            logger.error("Error parsing return value to int, will return -1");
+            return -1;
+        }
     }
-    public boolean deleteFlight(int Id,int flightNum) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ Integer.toString(flightNum));
-        return Boolean.parseBoolean(inFromServer.readLine());
+
+    /*************************
+     * COMMAND LINE FUNCTIONS
+     *************************/
+
+    @Override
+    public boolean addFlight(int id,int flightNum,int flightSeats,int flightPrice) {
+        return boolOrDefault(sendCommand("addFlight", id, flightNum, flightSeats, flightPrice));
     }
-    public boolean deleteCars(int Id,String location) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ location);
-        return Boolean.parseBoolean(inFromServer.readLine());
+
+    @Override
+    public boolean addCars(int id,String location,int numCars,int price) {
+        return boolOrDefault(sendCommand("addCars", id, location, numCars, price));
     }
-    public boolean deleteRooms(int Id,String location) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ location);
-        return Boolean.parseBoolean(inFromServer.readLine());
+
+    @Override
+    public boolean addRooms(int id,String location,int numRooms,int price) {
+        return boolOrDefault(sendCommand("addRooms", id, location, numRooms, price));
     }
-    public boolean deleteCustomer(int Id,int customer) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ Integer.toString(customer));
-        return Boolean.parseBoolean(inFromServer.readLine());
+
+    @Override
+    public int newCustomer(int id) {
+        return intOrDefault(sendCommand("newCustomer", id));
     }
-    public int queryFlight(int Id,int flightNum) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ Integer.toString(flightNum));
-        return Integer.parseInt(inFromServer.readLine());
+
+    @Override
+    public boolean deleteFlight(int id,int flightNum) {
+        return boolOrDefault(sendCommand("deleteFlight", id, flightNum));
     }
-    public int queryCars(int Id,String location) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ location);
-        return Integer.parseInt(inFromServer.readLine());
+
+    @Override
+    public boolean deleteCars(int id,String location) {
+        return boolOrDefault(sendCommand("deleteCars", id, location));
     }
-    public int queryRooms(int Id,String location) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ location);
-        return Integer.parseInt(inFromServer.readLine());
+
+    @Override
+    public boolean deleteRooms(int id,String location) {
+        return boolOrDefault(sendCommand("deleteRooms", id, location));
     }
-    public String queryCustomerInfo(int Id,int customer) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ Integer.toString(customer));
-        return inFromServer.readLine();
+
+    @Override
+    public boolean deleteCustomer(int id,int customer) {
+        return boolOrDefault(sendCommand("deleteCustomer", id, customer));
     }
-    public int queryFlightPrice(int Id,int flightNum) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ Integer.toString(flightNum));
-        return Integer.parseInt(inFromServer.readLine());
+
+    @Override
+    public int queryFlight(int id,int flightNum) {
+        return intOrDefault(sendCommand("deleteCustomer", id, flightNum));
     }
-    public int queryCarsPrice(int Id,String location) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ location);
-        return Integer.parseInt(inFromServer.readLine());
+
+    @Override
+    public int queryCars(int id,String location) {
+        return intOrDefault(sendCommand("queryCars", id, location));
     }
-    public int queryRoomsPrice(int Id,String location) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ location);
-        return Integer.parseInt(inFromServer.readLine());
+
+    @Override
+    public int queryRooms(int id,String location) {
+        return intOrDefault(sendCommand("queryRooms", id, location));
     }
-    public boolean reserveFlight(int Id,int customer,int flightNum) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ Integer.toString(customer) + "," + Integer.toString(flightNum));
-        return Boolean.parseBoolean(inFromServer.readLine());
+
+    @Override
+    public String queryCustomerInfo(int id,int customer) {
+        return sendCommand("queryCustomerInfo", id, customer);
     }
-    public boolean reserveCar(int Id,int customer,String location) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ Integer.toString(customer) + "," + location);
-        return Boolean.parseBoolean(inFromServer.readLine());
+
+    @Override
+    public int queryFlightPrice(int id,int flightNum) {
+        return intOrDefault(sendCommand("queryFlightPrice", id, flightNum));
     }
-    public boolean reserveRoom(int Id,int customer,String location) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ Integer.toString(customer) + "," + location);
-        return Boolean.parseBoolean(inFromServer.readLine());
+
+    @Override
+    public int queryCarsPrice(int id,String location) {
+        return intOrDefault(sendCommand("queryCarsPrice", id, location));
     }
-    public boolean itinerary(int Id,int customer,int flightNumbers,String location,int Car,int Room) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ Integer.toString(customer) +","+ Integer.toString(flightNumbers) + "," + location + "," + Integer.toString(Car) + "," + Integer.toString(Room));
-        return Boolean.parseBoolean(inFromServer.readLine());
+
+    @Override
+    public int queryRoomsPrice(int id,String location) {
+        return intOrDefault(sendCommand("queryRoomsPrice", id, location));
     }
-    public boolean newCustomer(int Id,int Cid) {
-        String functionName = Thread.currentThread().getStackTrace()[1].getMethodName();
-        outToServer.println(functionName + "," + Integer.toString(Id) +","+ Integer.toString(Cid));
-        return Boolean.parseBoolean(inFromServer.readLine());
+
+    @Override
+    public boolean reserveFlight(int id,int customer,int flightNum) {
+        return boolOrDefault(sendCommand("reserveFlight", id, customer, flightNum));
+    }
+
+    @Override
+    public boolean reserveCar(int id,int customer,String location) {
+        return boolOrDefault(sendCommand("reserveCar", id, customer, location));
+    }
+
+    @Override
+    public boolean reserveRoom(int id,int customer,String location) {
+        return boolOrDefault(sendCommand("reserveRoom", id, customer, location));
+    }
+
+    @Override
+    public boolean itinerary(int id, int customer, Vector flightNumbers, String location, boolean car, boolean room) {
+        return boolOrDefault(sendCommand("itinerary", id, customer, flightNumbers, location, car, room));
+    }
+
+    @Override
+    public boolean newCustomer(int id,int cid) {
+        return boolOrDefault(sendCommand("newCustomer", id, cid));
     }
 }
 
