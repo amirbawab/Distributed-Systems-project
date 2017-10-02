@@ -63,6 +63,10 @@
         
             <li><a class="toctree-l3" href="#building-project">Building project</a></li>
         
+            <li><a class="toctree-l3" href="#run-using-rmi">Run using RMI</a></li>
+        
+            <li><a class="toctree-l3" href="#run-using-tcp">Run using TCP</a></li>
+        
             <li><a class="toctree-l3" href="#configure-network-settings">Configure network settings</a></li>
         
         </ul>
@@ -149,6 +153,7 @@ The project is composed of several Gradle sub-projects each of which can be star
 (Order of starting the sub-projects is imported).</p>
 <p><em>Note: The following commands must be executed from the root directory of the repository.</em><br />
 <em>Note: Refer to <a href="#architecture">Architecture</a> section to identify machines A and B</em></p>
+<h2 id="run-using-rmi">Run using RMI</h2>
 <h3 id="start-registry-on-machine-a">Start Registry on machine A</h3>
 <pre><code>./gradlew midServerRMIRegistry
 </code></pre>
@@ -169,6 +174,21 @@ The project is composed of several Gradle sub-projects each of which can be star
 
 <h3 id="start-a-client-on-any-machine">Start a Client on any machine</h3>
 <pre><code>./gradlew rmi:client:build rmi:client:run
+</code></pre>
+
+<h2 id="run-using-tcp">Run using TCP</h2>
+<h3 id="start-rms">Start RMs</h3>
+<pre><code>./gradlew tcp:rm:build tcp:rm:runCar
+./gradlew tcp:rm:build tcp:rm:runFlight
+./gradlew tcp:rm:build tcp:rm:runRoom
+</code></pre>
+
+<h3 id="start-middleware-server">Start Middleware Server</h3>
+<pre><code>./gradlew tcp:midserver:build tcp:midserver:run
+</code></pre>
+
+<h3 id="start-client">Start Client</h3>
+<pre><code>./gradlew tcp:client:build tcp:client:run
 </code></pre>
 
 <h2 id="configure-network-settings">Configure network settings</h2>
@@ -224,5 +244,5 @@ The project is composed of several Gradle sub-projects each of which can be star
 
 <!--
 MkDocs version : 0.16.3
-Build Date UTC : 2017-10-02 13:57:58
+Build Date UTC : 2017-10-02 14:18:44
 -->

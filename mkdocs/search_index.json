@@ -2,7 +2,7 @@
     "docs": [
         {
             "location": "/",
-            "text": "V4Vim\n\n\nRMI - Architecture\n\n\n\nEach client can       Hosted on machine A   Hosted on machine B\nrun on a separate     running registry on   running registry on\nmachine               port: 2000            port: 2001\nV                     V                     V\n+----------+                              +-------------+\n| Client 1 | <-----> +------------+ <-----> RM - Flight |\n+----------+         |            |       |             |\n+----------+         | Middleware |       |             |\n| Client 2 | <-----> |   Server   | <-----> RM - Car    |\n+--------            |            |       |             |\n+----------+         |            |       |             |\n| Client N | <-----> +------------+ <-----> RM - Room   |\n+----------+                              +-------------+\n\n\n\nTCP - Architecture\n\n\n\n                                            Hosted on any machine\nEach client can       Hosted on machine A   port: 2003\nrun on a separate     listening on          |  port: 2004\nmachine               port: 2002            |  |  port: 2005\nV                     V                     |  |  V\n+----------+                                |  |  +-------------+\n| Client 1 | <-----> +------------+ <-------+--+->| RM - Flight |\n+----------+         |            |         |  V  +-------------+\n+----------+         | Middleware |         |  +-------------+\n| Client 2 | <-----> |   Server   | <-------+->| RM - Car    |\n+--------            |            |         V  +-------------+\n+----------+         |            |         +-------------+\n| Client N | <-----> +------------+ <------>| RM - Room   |\n+----------+                                +-------------+\n\n\n\nBuilding project\n\n\nDistributed systems require a lot of dependencies between components especially when using RMI technology.\nThis project uses Gradle build tool in order to facilitate  managing complex archtectures and dependencies.\nThe project is composed of several Gradle sub-projects each of which can be started with a Gradle task\n(Order of starting the sub-projects is imported).\n\n\nNote: The following commands must be executed from the root directory of the repository.\n\n\nNote: Refer to \nArchitecture\n section to identify machines A and B\n\n\nStart Registry on machine A\n\n\n./gradlew midServerRMIRegistry\n\n\n\n\nStart Registry on machine B\n\n\n./gradlew rmRMIRegistry\n\n\n\n\nStart RMs on machine B\n\n\n./gradlew rmi:rm:build rmi:rm:runCar\n./gradlew rmi:rm:build rmi:rm:runFlight\n./gradlew rmi:rm:build rmi:rm:runRoom\n\n\n\n\nStart Middleware Server on machine A\n\n\n./gradlew rmi:midserver:build rmi:midserver:run\n\n\n\n\nStart a Client on any machine\n\n\n./gradlew rmi:client:build rmi:client:run\n\n\n\n\nConfigure network settings\n\n\nTo configure the IP and Port values for machine A and B, edit the corresponding variables in:\n\nbuild.gradle\n located at the root of the repository.",
+            "text": "V4Vim\n\n\nRMI - Architecture\n\n\n\nEach client can       Hosted on machine A   Hosted on machine B\nrun on a separate     running registry on   running registry on\nmachine               port: 2000            port: 2001\nV                     V                     V\n+----------+                              +-------------+\n| Client 1 | <-----> +------------+ <-----> RM - Flight |\n+----------+         |            |       |             |\n+----------+         | Middleware |       |             |\n| Client 2 | <-----> |   Server   | <-----> RM - Car    |\n+--------            |            |       |             |\n+----------+         |            |       |             |\n| Client N | <-----> +------------+ <-----> RM - Room   |\n+----------+                              +-------------+\n\n\n\nTCP - Architecture\n\n\n\n                                            Hosted on any machine\nEach client can       Hosted on machine A   port: 2003\nrun on a separate     listening on          |  port: 2004\nmachine               port: 2002            |  |  port: 2005\nV                     V                     |  |  V\n+----------+                                |  |  +-------------+\n| Client 1 | <-----> +------------+ <-------+--+->| RM - Flight |\n+----------+         |            |         |  V  +-------------+\n+----------+         | Middleware |         |  +-------------+\n| Client 2 | <-----> |   Server   | <-------+->| RM - Car    |\n+--------            |            |         V  +-------------+\n+----------+         |            |         +-------------+\n| Client N | <-----> +------------+ <------>| RM - Room   |\n+----------+                                +-------------+\n\n\n\nBuilding project\n\n\nDistributed systems require a lot of dependencies between components especially when using RMI technology.\nThis project uses Gradle build tool in order to facilitate  managing complex archtectures and dependencies.\nThe project is composed of several Gradle sub-projects each of which can be started with a Gradle task\n(Order of starting the sub-projects is imported).\n\n\nNote: The following commands must be executed from the root directory of the repository.\n\n\nNote: Refer to \nArchitecture\n section to identify machines A and B\n\n\nRun using RMI\n\n\nStart Registry on machine A\n\n\n./gradlew midServerRMIRegistry\n\n\n\n\nStart Registry on machine B\n\n\n./gradlew rmRMIRegistry\n\n\n\n\nStart RMs on machine B\n\n\n./gradlew rmi:rm:build rmi:rm:runCar\n./gradlew rmi:rm:build rmi:rm:runFlight\n./gradlew rmi:rm:build rmi:rm:runRoom\n\n\n\n\nStart Middleware Server on machine A\n\n\n./gradlew rmi:midserver:build rmi:midserver:run\n\n\n\n\nStart a Client on any machine\n\n\n./gradlew rmi:client:build rmi:client:run\n\n\n\n\nRun using TCP\n\n\nStart RMs\n\n\n./gradlew tcp:rm:build tcp:rm:runCar\n./gradlew tcp:rm:build tcp:rm:runFlight\n./gradlew tcp:rm:build tcp:rm:runRoom\n\n\n\n\nStart Middleware Server\n\n\n./gradlew tcp:midserver:build tcp:midserver:run\n\n\n\n\nStart Client\n\n\n./gradlew tcp:client:build tcp:client:run\n\n\n\n\nConfigure network settings\n\n\nTo configure the IP and Port values for machine A and B, edit the corresponding variables in:\n\nbuild.gradle\n located at the root of the repository.",
             "title": "Home"
         },
         {
@@ -24,6 +24,11 @@
             "location": "/#building-project",
             "text": "Distributed systems require a lot of dependencies between components especially when using RMI technology.\nThis project uses Gradle build tool in order to facilitate  managing complex archtectures and dependencies.\nThe project is composed of several Gradle sub-projects each of which can be started with a Gradle task\n(Order of starting the sub-projects is imported).  Note: The following commands must be executed from the root directory of the repository.  Note: Refer to  Architecture  section to identify machines A and B",
             "title": "Building project"
+        },
+        {
+            "location": "/#run-using-rmi",
+            "text": "",
+            "title": "Run using RMI"
         },
         {
             "location": "/#start-registry-on-machine-a",
@@ -49,6 +54,26 @@
             "location": "/#start-a-client-on-any-machine",
             "text": "./gradlew rmi:client:build rmi:client:run",
             "title": "Start a Client on any machine"
+        },
+        {
+            "location": "/#run-using-tcp",
+            "text": "",
+            "title": "Run using TCP"
+        },
+        {
+            "location": "/#start-rms",
+            "text": "./gradlew tcp:rm:build tcp:rm:runCar\n./gradlew tcp:rm:build tcp:rm:runFlight\n./gradlew tcp:rm:build tcp:rm:runRoom",
+            "title": "Start RMs"
+        },
+        {
+            "location": "/#start-middleware-server",
+            "text": "./gradlew tcp:midserver:build tcp:midserver:run",
+            "title": "Start Middleware Server"
+        },
+        {
+            "location": "/#start-client",
+            "text": "./gradlew tcp:client:build tcp:client:run",
+            "title": "Start Client"
         },
         {
             "location": "/#configure-network-settings",
