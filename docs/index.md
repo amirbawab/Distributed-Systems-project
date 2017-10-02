@@ -42,6 +42,8 @@ The project is composed of several Gradle sub-projects each of which can be star
 
 *Note: The following commands must be executed from the root directory of the repository.*  
 *Note: Refer to [Architecture](#architecture) section to identify machines A and B*
+
+## Run using RMI
 ### Start Registry on machine A
 ```
 ./gradlew midServerRMIRegistry
@@ -67,6 +69,24 @@ The project is composed of several Gradle sub-projects each of which can be star
 ### Start a Client on any machine
 ```
 ./gradlew rmi:client:build rmi:client:run
+```
+
+## Run using TCP
+### Start RMs
+```
+./gradlew tcp:rm:build tcp:rm:runCar
+./gradlew tcp:rm:build tcp:rm:runFlight
+./gradlew tcp:rm:build tcp:rm:runRoom
+```
+
+### Start Middleware Server
+```
+./gradlew tcp:midserver:build tcp:midserver:run
+```
+
+### Start Client
+```
+./gradlew tcp:client:build tcp:client:run
 ```
 
 ## Configure network settings
