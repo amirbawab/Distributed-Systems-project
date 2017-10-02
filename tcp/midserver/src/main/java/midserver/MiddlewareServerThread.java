@@ -44,32 +44,34 @@ public class MiddlewareServerThread extends Thread {
     }
 
     /**
-     * Set flight socket
-     * @param socketRMFlight
+     * Connect flight socket
+     * @param server
+     * @param port
      */
-    public void setFlightSocket(Socket socketRMFlight) {
-        this.m_socketRMFlight = socketRMFlight;
+    public void connectFlightSocket(String server, int port) throws IOException {
+        this.m_socketRMFlight = new Socket(server, port);
     }
 
     /**
-     * Set car socket
-     * @param socketRMCar
+     * Connect car socket
+     * @param server
+     * @param port
      */
-    public void setCarSocket(Socket socketRMCar) {
-        this.m_socketRMCar = socketRMCar;
+    public void connectCarSocket(String server, int port) throws IOException {
+        this.m_socketRMCar = new Socket(server, port);
     }
 
     /**
-     * Set room socket
-     * @param socketRMRoom
+     * Connect room socket
+     * @param server
+     * @param port
      */
-    public void setRoomSocket(Socket socketRMRoom) {
-        this.m_socketRMRoom = socketRMRoom;
+    public void connectRoomSocket(String server, int port) throws IOException {
+        this.m_socketRMRoom = new Socket(server, port);
     }
 
     @Override
     public void run() {
-        // FIXME Racing problem, to solve either assign each client a unique id and prepend it tothe message, or use multiple sockets
         try {
 
             // Flight streams
@@ -166,7 +168,12 @@ public class MiddlewareServerThread extends Thread {
                         break;
                 }
             }
+
+            // Close sockets
             m_socket.close();
+            m_socketRMRoom.close();
+            m_socketRMCar.close();
+            m_socketRMFlight.close();
         } catch (IOException e) {
             logger.error("Error communicating with one or more RM servers");
         }

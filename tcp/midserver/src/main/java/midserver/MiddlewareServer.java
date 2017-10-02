@@ -37,39 +37,17 @@ class MiddlewareServer {
         int roomPort = Integer.parseInt(args[5]);
         String roomIP = args[6];
 
-        // Connect to RMs
-        Socket socketRMFlight = null;
-        Socket socketRMCar = null;
-        Socket socketRMRoom = null;
-        try {
-            socketRMFlight = new Socket(flightIP, flightPort);
-            socketRMCar = new Socket(carIP, carPort);
-            socketRMRoom = new Socket(roomIP, roomPort);
-        } catch (IOException e) {
-            logger.error("Failed to connect to one or more RM. Terminating program ...");
-            System.exit(CODE_ERROR);
-        }
-
         // Start listening ...
-        listen(serverPort, socketRMFlight, socketRMCar, socketRMRoom);
-
-        // Exit with error code when the server stops listening
-        System.exit(CODE_ERROR);
-    }
-
-    /**
-     * Listen on the provided port and start accepting clients
-     */
-    private static void listen(int port, Socket socketRMFlight, Socket socketRMCar, Socket socketRMRoom) {
         boolean acceptClients = true;
         ServerSocket serverSocket = null;
         try {
-            serverSocket = new ServerSocket(port);
+            serverSocket = new ServerSocket(serverPort);
         } catch (IOException e) {
-            logger.error("Server failed to listen on port: " + port);
+            logger.error("Server failed to listen on port: " + serverPort);
             System.exit(CODE_ERROR);
         }
 
+        // Start accepting clients
         while (acceptClients) {
             try {
 
@@ -79,9 +57,15 @@ class MiddlewareServer {
 
                 // Create an configure thread
                 MiddlewareServerThread thread = new MiddlewareServerThread(socket);
-                thread.setFlightSocket(socketRMFlight);
-                thread.setCarSocket(socketRMCar);
-                thread.setRoomSocket(socketRMRoom);
+                try {
+                    thread.connectFlightSocket(flightIP, flightPort);
+                    thread.connectCarSocket(carIP, carPort);
+                    thread.connectRoomSocket(roomIP, roomPort);
+
+                } catch (IOException e) {
+                    logger.error("Failed to connect to one or more RM. Terminating program ...");
+                    System.exit(CODE_ERROR);
+                }
                 thread.start();
                 logger.info("Server ready to serve a new client ...");
             } catch (IOException e) {
@@ -89,7 +73,9 @@ class MiddlewareServer {
                 acceptClients = false;
             }
         }
-    }
 
+        // Exit with error code when the server stops listening
+        System.exit(CODE_ERROR);
+    }
 }
 
