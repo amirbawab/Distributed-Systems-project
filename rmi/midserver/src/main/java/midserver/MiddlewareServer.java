@@ -13,6 +13,9 @@ import java.util.Vector;
 
 class MiddlewareServer implements ResourceManager {
 
+    // Sync lock
+    private final static Object lock = new Object();
+
     // RM components
     private ResourceManager m_carRM;
     private ResourceManager m_flightRM;
@@ -93,128 +96,194 @@ class MiddlewareServer implements ResourceManager {
 
     @Override
     public boolean addFlight(int id, int flightNum, int flightSeats, int flightPrice) throws RemoteException {
-        return m_flightRM.addFlight(id, flightNum, flightSeats, flightPrice);
+        synchronized (lock) {
+            return m_flightRM.addFlight(id, flightNum, flightSeats, flightPrice);
+        }
     }
 
     @Override
     public boolean addCars(int id, String location, int numCars, int price) throws RemoteException {
-        return m_carRM.addCars(id, location, numCars, price);
+        synchronized (lock) {
+            return m_carRM.addCars(id, location, numCars, price);
+        }
     }
 
     @Override
     public boolean addRooms(int id, String location, int numRooms, int price) throws RemoteException {
-        return m_roomRM.addRooms(id, location, numRooms, price);
+        synchronized (lock){
+            return m_roomRM.addRooms(id, location, numRooms, price);
+        }
     }
 
     @Override
     public int newCustomer(int id) throws RemoteException {
-        int cid = m_carRM.newCustomer(id);
-        m_roomRM.newCustomer(id, cid);
-        m_flightRM.newCustomer(id, cid);
-        return cid;
+        synchronized (lock) {
+            int cid = m_carRM.newCustomer(id);
+            m_roomRM.newCustomer(id, cid);
+            m_flightRM.newCustomer(id, cid);
+            return cid;
+        }
     }
 
     @Override
     public boolean newCustomer(int id, int cid) throws RemoteException {
-        return m_flightRM.newCustomer(id, cid) &&
-                m_carRM.newCustomer(id, cid) &&
-                m_roomRM.newCustomer(id, cid);
+        synchronized (lock) {
+            return m_flightRM.newCustomer(id, cid) &&
+                    m_carRM.newCustomer(id, cid) &&
+                    m_roomRM.newCustomer(id, cid);
+        }
     }
 
     @Override
     public boolean deleteFlight(int id, int flightNum) throws RemoteException {
-        return m_flightRM.deleteFlight(id, flightNum);
+        synchronized (lock) {
+            return m_flightRM.deleteFlight(id, flightNum);
+        }
     }
 
     @Override
     public boolean deleteCars(int id, String location) throws RemoteException {
-        return m_carRM.deleteCars(id, location);
+        synchronized (lock) {
+            return m_carRM.deleteCars(id, location);
+        }
     }
 
     @Override
     public boolean deleteRooms(int id, String location) throws RemoteException {
-        return m_roomRM.deleteRooms(id, location);
+        synchronized (lock) {
+            return m_roomRM.deleteRooms(id, location);
+        }
     }
 
     @Override
     public boolean deleteCustomer(int id, int customer) throws RemoteException {
-        return m_roomRM.deleteCustomer(id, customer) &&
-                m_carRM.deleteCustomer(id, customer) &&
-                m_flightRM.deleteCustomer(id, customer);
+        synchronized (lock) {
+            return m_roomRM.deleteCustomer(id, customer) &&
+                    m_carRM.deleteCustomer(id, customer) &&
+                    m_flightRM.deleteCustomer(id, customer);
+        }
     }
 
     @Override
     public int queryFlight(int id, int flightNumber) throws RemoteException {
-        return m_flightRM.queryFlight(id, flightNumber);
+        synchronized (lock) {
+            return m_flightRM.queryFlight(id, flightNumber);
+        }
     }
 
     @Override
     public int queryCars(int id, String location) throws RemoteException {
-        return m_carRM.queryCars(id, location);
+        synchronized (lock) {
+            return m_carRM.queryCars(id, location);
+        }
     }
 
     @Override
     public int queryRooms(int id, String location) throws RemoteException {
-        return m_roomRM.queryRooms(id, location);
+        synchronized (lock) {
+            return m_roomRM.queryRooms(id, location);
+        }
     }
 
     @Override
     public String queryCustomerInfo(int id, int customer) throws RemoteException {
-        StringBuilder sb = new StringBuilder();
-        sb.append("\nCar info:\n").append(m_carRM.queryCustomerInfo(id, customer))
-                .append("\nFlight info:\n").append(m_flightRM.queryCustomerInfo(id, customer))
-                .append("\nRoom info:\n").append(m_roomRM.queryCustomerInfo(id, customer));
-        return sb.toString();
+        synchronized (lock) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\nCar info:\n").append(m_carRM.queryCustomerInfo(id, customer))
+                    .append("\nFlight info:\n").append(m_flightRM.queryCustomerInfo(id, customer))
+                    .append("\nRoom info:\n").append(m_roomRM.queryCustomerInfo(id, customer));
+            return sb.toString();
+        }
     }
 
     @Override
     public int queryFlightPrice(int id, int flightNumber) throws RemoteException {
-        return m_flightRM.queryFlightPrice(id, flightNumber);
+        synchronized (lock) {
+            return m_flightRM.queryFlightPrice(id, flightNumber);
+        }
     }
 
     @Override
     public int queryCarsPrice(int id, String location) throws RemoteException {
-        return m_carRM.queryCarsPrice(id, location);
+        synchronized (lock) {
+            return m_carRM.queryCarsPrice(id, location);
+        }
     }
 
     @Override
     public int queryRoomsPrice(int id, String location) throws RemoteException {
-        return m_roomRM.queryRoomsPrice(id, location);
+        synchronized (lock) {
+            return m_roomRM.queryRoomsPrice(id, location);
+        }
     }
 
     @Override
     public boolean reserveFlight(int id, int customer, int flightNumber) throws RemoteException {
-        return m_flightRM.reserveFlight(id, customer, flightNumber);
+        synchronized (lock) {
+            return m_flightRM.reserveFlight(id, customer, flightNumber);
+        }
     }
 
     @Override
     public boolean reserveCar(int id, int customer, String location) throws RemoteException {
-        return m_carRM.reserveCar(id, customer, location);
+        synchronized (lock) {
+            return m_carRM.reserveCar(id, customer, location);
+        }
     }
 
     @Override
     public boolean reserveRoom(int id, int customer, String locationd) throws RemoteException {
-        return m_roomRM.reserveRoom(id, customer, locationd);
+        synchronized (lock) {
+            return m_roomRM.reserveRoom(id, customer, locationd);
+        }
     }
 
     @Override
     public boolean itinerary(int id, int customer, Vector flightNumbers, String location, boolean car, boolean room)
             throws RemoteException {
-        boolean success = true;
-        // Reserve flights
-        for(Object fNum : flightNumbers) {
-            success &= reserveFlight(id, customer, Integer.parseInt(fNum.toString()));
-        }
+        synchronized (lock) {
 
-        // If should reserve a car
-        if(car) {
-            success &= reserveCar(id, customer, location);
-        }
+            // Check if can reserve flight
+            for(Object fNum : flightNumbers) {
+                if(queryFlight(id, Integer.parseInt(fNum.toString())) == 0) {
+                    return false;
+                }
+            }
 
-        // If should reserve a room
-        if(room) {
-            success &= reserveRoom(id, customer, location);
+            // Check if can reserve a car
+            if(car && queryCars(id, location) == 0) {
+                return false;
+            }
+
+            // Check if can reserve room
+            if(room && queryRooms(id, location) == 0) {
+                return false;
+            }
+
+            // Start reserving
+            boolean success = true;
+
+            // Reserve flights
+            for(Object fNum : flightNumbers) {
+                success &= reserveFlight(id, customer, Integer.parseInt(fNum.toString()));
+            }
+
+            // If should reserve a car
+            if(car) {
+                success &= reserveCar(id, customer, location);
+            }
+
+            // If should reserve a room
+            if(room) {
+                success &= reserveRoom(id, customer, location);
+            }
+
+            // If can reserve but was not successful
+            if(!success) {
+                logger.warn("Query showed that the user can reserve but the reservation was not successful. " +
+                        "Further investigation is required");
+            }
+            return success;
         }
-        return success;
     }
 }
