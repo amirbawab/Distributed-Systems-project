@@ -21,6 +21,9 @@ public class MiddlewareServerThread extends Thread {
     // Open an input stream from the middle layer server
     private BufferedReader m_inFromClient;
 
+    // Sync lock
+    private final static Object lock = new Object();
+
     // RM Streams
     private PrintWriter m_pwFlight ;
     private BufferedReader m_brFlight ;
@@ -152,93 +155,140 @@ public class MiddlewareServerThread extends Thread {
                     continue;
                 }
 
-                switch (ResourceManager.Command.getFunctionByName(params[0])) {
-                    case ADD_FLIGHT:
-                    case DELETE_FLIGHT:
-                    case QUERY_FLIGHT:
-                    case QUERY_FLIGHT_PRICE:
-                    case RESERVE_FLIGHT:
-                        sendToClient(sendToFlightRM(message));
-                        break;
+                // Synchronize command calls
+                synchronized (lock) {
 
-                    case ADD_CARS:
-                    case DELETE_CARS:
-                    case QUERY_CARS:
-                    case QUERY_CARS_PRICE:
-                    case RESERVE_CAR:
-                        sendToClient(sendToCarRM(message));
-                        break;
+                    // Check command
+                    switch (ResourceManager.Command.getFunctionByName(params[0])) {
+                        case ADD_FLIGHT:
+                        case DELETE_FLIGHT:
+                        case QUERY_FLIGHT:
+                        case QUERY_FLIGHT_PRICE:
+                        case RESERVE_FLIGHT:
+                            sendToClient(sendToFlightRM(message));
+                            break;
 
-                    case ADD_ROOMS:
-                    case RESERVE_ROOM:
-                    case DELETE_ROOMS:
-                    case QUERY_ROOMS:
-                    case QUERY_ROOMS_PRICE:
-                        sendToClient(sendToRoomRM(message));
-                        break;
+                        case ADD_CARS:
+                        case DELETE_CARS:
+                        case QUERY_CARS:
+                        case QUERY_CARS_PRICE:
+                        case RESERVE_CAR:
+                            sendToClient(sendToCarRM(message));
+                            break;
 
-                    case NEW_CUSTOMER:
-                        // TODO Refactor code
-                        String cid = sendToCarRM(message);
-                        String newCommand = String.format("%s,%s,%s",
-                                ResourceManager.Command.NEW_CUSTOMER_ID.getName(),
-                                params[1], cid);
-                        sendToFlightRM(newCommand);
-                        sendToRoomRM(newCommand);
-                        sendToClient(cid);
-                        break;
+                        case ADD_ROOMS:
+                        case RESERVE_ROOM:
+                        case DELETE_ROOMS:
+                        case QUERY_ROOMS:
+                        case QUERY_ROOMS_PRICE:
+                            sendToClient(sendToRoomRM(message));
+                            break;
 
-                    case NEW_CUSTOMER_ID:
-                    case DELETE_CUSTOMER:
-                        if(sendToCarRM(message).equals(FALSE)
-                                || sendToFlightRM(message).equals(FALSE)
-                                || sendToRoomRM(message).equals(FALSE)) {
-                            sendToClient(FALSE);
-                        } else {
-                            sendToClient(TRUE);
-                        }
-                        break;
+                        case NEW_CUSTOMER:
+                            // TODO Refactor code
+                            String cid = sendToCarRM(message);
+                            String newCommand = String.format("%s,%s,%s",
+                                    ResourceManager.Command.NEW_CUSTOMER_ID.getName(),
+                                    params[1], cid);
+                            sendToFlightRM(newCommand);
+                            sendToRoomRM(newCommand);
+                            sendToClient(cid);
+                            break;
 
-                    case QUERY_CUSTOMER_INFO:
-                        StringBuilder info = new StringBuilder();
-                        info.append(sendToCarRM(message));
-                        info.append(sendToFlightRM(message));
-                        info.append(sendToRoomRM(message));
-                        m_outToClient.println(info.toString());
-                        break;
-                    case ITINERARY:
-                        String[] fNumSplit = params[3].split(":");
-                        String retStr = TRUE;
-                        for(Object fNum : fNumSplit) {
-                            String reserveFlightCommand = ResourceManager.Command.RESERVE_FLIGHT.getName() + ","
-                                    + params[1] + "," + params[2] + "," + fNum;
-                            String tmpRet = sendToFlightRM(reserveFlightCommand);
-                            if(tmpRet.equals(FALSE)) {
-                                retStr = FALSE;
+                        case NEW_CUSTOMER_ID:
+                        case DELETE_CUSTOMER:
+                            if(sendToCarRM(message).equals(FALSE)
+                                    || sendToFlightRM(message).equals(FALSE)
+                                    || sendToRoomRM(message).equals(FALSE)) {
+                                sendToClient(FALSE);
+                            } else {
+                                sendToClient(TRUE);
                             }
-                        }
+                            break;
 
-                        // If should reserve a car
-                        if(params[5].equals(TRUE)) {
-                            String tmpRet = sendToCarRM(ResourceManager.Command.RESERVE_CAR.getName() + ","
-                                    + params[1] + "," + params[2] + "," + params[4]);
-                            if(tmpRet.equals(FALSE)) {
-                                retStr = FALSE;
+                        case QUERY_CUSTOMER_INFO:
+                            StringBuilder info = new StringBuilder();
+                            info.append(sendToCarRM(message));
+                            info.append(sendToFlightRM(message));
+                            info.append(sendToRoomRM(message));
+                            m_outToClient.println(info.toString());
+                            break;
+
+                        case ITINERARY:
+                            String[] fNumSplit = params[3].split(":");
+
+                            // Check if can access
+                            boolean passCheck = true;
+                            for(Object fNum : fNumSplit) {
+                                String queryFlight = ResourceManager.Command.QUERY_FLIGHT.getName() + "," + params[1]
+                                        + "," + fNum.toString();
+                                if(Integer.parseInt(sendToFlightRM(queryFlight)) > 0) {
+                                    passCheck = false;
+                                    break;
+                                }
                             }
-                        }
 
-                        // If should reserve a room
-                        if(params[6].equals(TRUE)) {
-                            String tmpRet = sendToRoomRM(ResourceManager.Command.RESERVE_ROOM.getName() + ","
-                                    + params[1] +"," + params[2] + "," + params[4]);
-                            if(tmpRet.equals(FALSE)) {
-                                retStr = FALSE;
+                            // Check if can reserve car
+                            if(params[5].equals(TRUE)) {
+                                String queryCar = ResourceManager.Command.QUERY_CARS.getName()+","
+                                        +params[1]+","+params[4];
+                                if(Integer.parseInt(sendToCarRM(queryCar)) == 0) {
+                                    passCheck = false;
+                                }
                             }
-                        }
 
-                        // Return value to client
-                        sendToClient(retStr);
-                        break;
+                            // Check if can reserve room
+                            if(params[6].equals(TRUE)) {
+                                String queryRoom = ResourceManager.Command.QUERY_ROOMS.getName()+","
+                                        +params[1]+","+params[4];
+                                if(Integer.parseInt(sendToRoomRM(queryRoom)) == 0) {
+                                    passCheck = false;
+                                }
+                            }
+
+                            if(!passCheck) {
+                                sendToClient(FALSE);
+                            } else {
+
+                                String success = TRUE;
+                                for(Object fNum : fNumSplit) {
+                                    String reserveFlightCommand = ResourceManager.Command.RESERVE_FLIGHT.getName() + ","
+                                            + params[1] + "," + params[2] + "," + fNum;
+                                    String tmpRet = sendToFlightRM(reserveFlightCommand);
+                                    if(tmpRet.equals(FALSE)) {
+                                        success = FALSE;
+                                    }
+                                }
+
+                                // If should reserve a car
+                                if(params[5].equals(TRUE)) {
+                                    String tmpRet = sendToCarRM(ResourceManager.Command.RESERVE_CAR.getName() + ","
+                                            + params[1] + "," + params[2] + "," + params[4]);
+                                    if(tmpRet.equals(FALSE)) {
+                                        success = FALSE;
+                                    }
+                                }
+
+                                // If should reserve a room
+                                if(params[6].equals(TRUE)) {
+                                    String tmpRet = sendToRoomRM(ResourceManager.Command.RESERVE_ROOM.getName() + ","
+                                            + params[1] +"," + params[2] + "," + params[4]);
+                                    if(tmpRet.equals(FALSE)) {
+                                        success = FALSE;
+                                    }
+                                }
+
+                                // Check if can reserve but not successful
+                                if(success.equals(FALSE)) {
+                                    logger.warn("Query showed that the user can reserve but the reservation was " +
+                                            "not successful. Further investigation is required");
+                                }
+
+                                // Return value to client
+                                sendToClient(success);
+                            }
+                            break;
+                    }
                 }
             }
 
