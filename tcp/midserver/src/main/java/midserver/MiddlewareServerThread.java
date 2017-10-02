@@ -190,7 +190,6 @@ public class MiddlewareServerThread extends Thread {
 
                     case NEW_CUSTOMER_ID:
                     case DELETE_CUSTOMER:
-                    case ITINERARY:
                         if(sendToCarRM(message).equals(FALSE)
                                 || sendToFlightRM(message).equals(FALSE)
                                 || sendToRoomRM(message).equals(FALSE)) {
@@ -206,6 +205,39 @@ public class MiddlewareServerThread extends Thread {
                         info.append(sendToFlightRM(message));
                         info.append(sendToRoomRM(message));
                         m_outToClient.println(info.toString());
+                        break;
+                    case ITINERARY:
+                        String[] fNumSplit = params[3].split(":");
+                        String retStr = TRUE;
+                        for(Object fNum : fNumSplit) {
+                            String reserveFlightCommand = ResourceManager.Command.RESERVE_FLIGHT.getName() + ","
+                                    + params[1] + "," + params[2] + "," + fNum;
+                            String tmpRet = sendToFlightRM(reserveFlightCommand);
+                            if(tmpRet.equals(FALSE)) {
+                                retStr = FALSE;
+                            }
+                        }
+
+                        // If should reserve a car
+                        if(params[5].equals(TRUE)) {
+                            String tmpRet = sendToCarRM(ResourceManager.Command.RESERVE_CAR.getName() + ","
+                                    + params[1] + "," + params[2] + "," + params[4]);
+                            if(tmpRet.equals(FALSE)) {
+                                retStr = FALSE;
+                            }
+                        }
+
+                        // If should reserve a room
+                        if(params[6].equals(TRUE)) {
+                            String tmpRet = sendToRoomRM(ResourceManager.Command.RESERVE_ROOM.getName() + ","
+                                    + params[1] +"," + params[2] + "," + params[4]);
+                            if(tmpRet.equals(FALSE)) {
+                                retStr = FALSE;
+                            }
+                        }
+
+                        // Return value to client
+                        sendToClient(retStr);
                         break;
                 }
             }

@@ -189,7 +189,14 @@ public class SocketMidManager implements ResourceManager {
 
     @Override
     public boolean itinerary(int id, int customer, Vector flightNumbers, String location, boolean car, boolean room) {
-        return boolOrDefault(sendCommand(Command.ITINERARY, id, customer, flightNumbers, location, car, room));
+        StringBuilder vectorBuilder = new StringBuilder();
+        for(int i=0; i < flightNumbers.size(); i++) {
+            if(i > 0) {
+                vectorBuilder.append(":"); // Use : as delimiter
+            }
+            vectorBuilder.append(flightNumbers.get(i));
+        }
+        return boolOrDefault(sendCommand(Command.ITINERARY, id, customer, vectorBuilder.toString(), location, car, room));
     }
 
     @Override
