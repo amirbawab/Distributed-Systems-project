@@ -54,9 +54,9 @@ The project is composed of several Gradle sub-projects each of which can be star
 
 ### Start RMs on machine B
 ```
-./gradlew rmi:rm:build rmi:rm:run -DrmName=car
-./gradlew rmi:rm:build rmi:rm:run -DrmName=flight
-./gradlew rmi:rm:build rmi:rm:run -DrmName=room
+./gradlew rmi:rm:build rmi:rm:runCar
+./gradlew rmi:rm:build rmi:rm:runFlight
+./gradlew rmi:rm:build rmi:rm:runRoom
 ```
 
 ### Start Middleware Server on machine A
