@@ -385,7 +385,6 @@ public class ResourceManagerImpl implements ResourceManager {
         } else {
                 String s = cust.printBill();
                 logger.info("RM::queryCustomerInfo(" + id + ", " + customerID + "), bill follows..." );
-                System.out.println( s );
                 return s;
         }
     }

@@ -138,8 +138,7 @@ public class RMThread extends Thread {
                         sendToMidServer(m_rm.reserveRoom(Integer.parseInt(params[1]),Integer.parseInt(params[2]),params[3]));
                         break;
                     case ITINERARY:
-                        // FIXME
-                        // m_outToMidServer.println(m_rm.itinerary(Integer.parseInt(params[1]),Integer.parseInt(params[2]),Integer.parseInt(params[3]),Integer.parseInt(params[4])));
+                        // Handled by the middleware server
                         break;
                     case NEW_CUSTOMER_ID:
                         sendToMidServer(m_rm.newCustomer(Integer.parseInt(params[1]),Integer.parseInt(params[2])));
