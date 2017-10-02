@@ -47,6 +47,7 @@ class MiddlewareServer {
             System.exit(CODE_ERROR);
         }
 
+        logger.info("Server on " + serverSocket.getInetAddress().getHostAddress() + ":" + serverPort +" is ready to serve a client ...");
         // Start accepting clients
         while (acceptClients) {
             try {

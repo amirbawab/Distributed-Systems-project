@@ -1,4 +1,4 @@
-String mainClass = "rm.ResourceManagerImpl"
+String mainClass = "rm.RM"
 
 dependencies {
     compile project(':common:rm')

@@ -19,12 +19,10 @@ public class RM {
     // Constants
     private static final int CODE_ERROR=1;
 
-    // Store items in a hash table
-    private final RMHashtable m_itemHT = new RMHashtable();
-
     public static void main(String args[]) {
+
         // Figure out where server is running
-        if (args.length != 2) {
+        if (args.length != 1) {
             System.err.println("Wrong usage");
             System.out.println("Arguments: [port]");
             System.exit(CODE_ERROR);
@@ -47,6 +45,7 @@ public class RM {
         ResourceManagerImpl obj = new ResourceManagerImpl();
 
         // Start accepting clients
+        logger.info("Server on " + serverSocket.getInetAddress().getHostAddress() + ":" + port + " is ready to serve a client ...");
         while (acceptClients) {
             try {
 
@@ -55,7 +54,7 @@ public class RM {
                 logger.info("Connected to a client!");
 
                 // Create an configure thread
-                RMThread thread = new RMThread(socket);
+                RMThread thread = new RMThread(socket, obj);
                 thread.start();
                 logger.info("Server ready to serve a new client ...");
             } catch (IOException e) {
