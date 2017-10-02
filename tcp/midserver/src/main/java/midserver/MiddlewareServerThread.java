@@ -222,7 +222,7 @@ public class MiddlewareServerThread extends Thread {
                             for(Object fNum : fNumSplit) {
                                 String queryFlight = ResourceManager.Command.QUERY_FLIGHT.getName() + "," + params[1]
                                         + "," + fNum.toString();
-                                if(Integer.parseInt(sendToFlightRM(queryFlight)) > 0) {
+                                if(Integer.parseInt(sendToFlightRM(queryFlight)) == 0) {
                                     passCheck = false;
                                     break;
                                 }
