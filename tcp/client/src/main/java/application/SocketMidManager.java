@@ -39,22 +39,22 @@ public class SocketMidManager implements ResourceManager {
 
     /**
      * Send command to the middleware server
-     * @param commandName
+     * @param command
      * @param args
      * @return message returned from the server
      */
-    private String sendCommand(String commandName, Object ... args) {
+    private String sendCommand(ResourceManager.Command command, Object ... args) {
 
         // Join command and arguments
-        StringBuilder command = new StringBuilder();
-        command.append(commandName);
+        StringBuilder commandBuilder = new StringBuilder();
+        commandBuilder.append(command.getName());
         for(Object arg : args) {
-            command.append(",");
-            command.append(arg.toString());
+            commandBuilder.append(",");
+            commandBuilder.append(arg.toString());
         }
 
         // Sent command
-        m_outToServer.println(command.toString());
+        m_outToServer.println(commandBuilder.toString());
 
         // Return the message sent back from the middleware server
         try {
@@ -99,102 +99,102 @@ public class SocketMidManager implements ResourceManager {
 
     @Override
     public boolean addFlight(int id,int flightNum,int flightSeats,int flightPrice) {
-        return boolOrDefault(sendCommand("addFlight", id, flightNum, flightSeats, flightPrice));
+        return boolOrDefault(sendCommand(Command.ADD_FLIGHT, id, flightNum, flightSeats, flightPrice));
     }
 
     @Override
     public boolean addCars(int id,String location,int numCars,int price) {
-        return boolOrDefault(sendCommand("addCars", id, location, numCars, price));
+        return boolOrDefault(sendCommand(Command.ADD_CARS, id, location, numCars, price));
     }
 
     @Override
     public boolean addRooms(int id,String location,int numRooms,int price) {
-        return boolOrDefault(sendCommand("addRooms", id, location, numRooms, price));
+        return boolOrDefault(sendCommand(Command.ADD_ROOMS, id, location, numRooms, price));
     }
 
     @Override
     public int newCustomer(int id) {
-        return intOrDefault(sendCommand("newCustomer", id));
+        return intOrDefault(sendCommand(Command.NEW_CUSTOMER, id));
     }
 
     @Override
     public boolean deleteFlight(int id,int flightNum) {
-        return boolOrDefault(sendCommand("deleteFlight", id, flightNum));
+        return boolOrDefault(sendCommand(Command.DELETE_FLIGHT, id, flightNum));
     }
 
     @Override
     public boolean deleteCars(int id,String location) {
-        return boolOrDefault(sendCommand("deleteCars", id, location));
+        return boolOrDefault(sendCommand(Command.DELETE_CARS, id, location));
     }
 
     @Override
     public boolean deleteRooms(int id,String location) {
-        return boolOrDefault(sendCommand("deleteRooms", id, location));
+        return boolOrDefault(sendCommand(Command.DELETE_ROOMS, id, location));
     }
 
     @Override
     public boolean deleteCustomer(int id,int customer) {
-        return boolOrDefault(sendCommand("deleteCustomer", id, customer));
+        return boolOrDefault(sendCommand(Command.DELETE_CUSTOMER, id, customer));
     }
 
     @Override
     public int queryFlight(int id,int flightNum) {
-        return intOrDefault(sendCommand("deleteCustomer", id, flightNum));
+        return intOrDefault(sendCommand(Command.QUERY_FLIGHT, id, flightNum));
     }
 
     @Override
     public int queryCars(int id,String location) {
-        return intOrDefault(sendCommand("queryCars", id, location));
+        return intOrDefault(sendCommand(Command.QUERY_CARS, id, location));
     }
 
     @Override
     public int queryRooms(int id,String location) {
-        return intOrDefault(sendCommand("queryRooms", id, location));
+        return intOrDefault(sendCommand(Command.QUERY_ROOMS, id, location));
     }
 
     @Override
     public String queryCustomerInfo(int id,int customer) {
-        return sendCommand("queryCustomerInfo", id, customer);
+        return sendCommand(Command.QUERY_CUSTOMER_INFO, id, customer);
     }
 
     @Override
     public int queryFlightPrice(int id,int flightNum) {
-        return intOrDefault(sendCommand("queryFlightPrice", id, flightNum));
+        return intOrDefault(sendCommand(Command.QUERY_FLIGHT_PRICE, id, flightNum));
     }
 
     @Override
     public int queryCarsPrice(int id,String location) {
-        return intOrDefault(sendCommand("queryCarsPrice", id, location));
+        return intOrDefault(sendCommand(Command.QUERY_CARS_PRICE, id, location));
     }
 
     @Override
     public int queryRoomsPrice(int id,String location) {
-        return intOrDefault(sendCommand("queryRoomsPrice", id, location));
+        return intOrDefault(sendCommand(Command.QUERY_ROOMS_PRICE, id, location));
     }
 
     @Override
     public boolean reserveFlight(int id,int customer,int flightNum) {
-        return boolOrDefault(sendCommand("reserveFlight", id, customer, flightNum));
+        return boolOrDefault(sendCommand(Command.RESERVE_FLIGHT, id, customer, flightNum));
     }
 
     @Override
     public boolean reserveCar(int id,int customer,String location) {
-        return boolOrDefault(sendCommand("reserveCar", id, customer, location));
+        return boolOrDefault(sendCommand(Command.RESERVE_CAR, id, customer, location));
     }
 
     @Override
     public boolean reserveRoom(int id,int customer,String location) {
-        return boolOrDefault(sendCommand("reserveRoom", id, customer, location));
+        return boolOrDefault(sendCommand(Command.RESERVE_ROOM, id, customer, location));
     }
 
     @Override
     public boolean itinerary(int id, int customer, Vector flightNumbers, String location, boolean car, boolean room) {
-        return boolOrDefault(sendCommand("itinerary", id, customer, flightNumbers, location, car, room));
+        return boolOrDefault(sendCommand(Command.ITINERARY, id, customer, flightNumbers, location, car, room));
     }
 
     @Override
     public boolean newCustomer(int id,int cid) {
-        return boolOrDefault(sendCommand("newCustomer", id, cid));
+        return boolOrDefault(sendCommand(Command.NEW_CUSTOMER_ID, id, cid));
     }
 }
 
