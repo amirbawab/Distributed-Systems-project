@@ -499,20 +499,35 @@ public class ResourceManagerImpl implements ResourceManager {
     }
     
     /**
-     * TODO Implement this method
      * Reserve an itinerary
      * @param id
      * @param customer
      * @param flightNumbers
      * @param location
-     * @param Car
-     * @param Room
-     * @return
+     * @param car
+     * @param room
+     * @return true if all reservations are successful
      * @throws RemoteException
      */
-    public boolean itinerary(int id,int customer,Vector flightNumbers,String location,boolean Car,boolean Room)
+    public boolean itinerary(int id,int customer, Vector flightNumbers,String location, boolean car, boolean room)
             throws RemoteException  {
-        return false;
+
+        boolean success = true;
+        // Reserve flights
+        for(Object fNum : flightNumbers) {
+            success &= reserveFlight(id, customer, Integer.parseInt(fNum.toString()));
+        }
+
+        // If should reserve a car
+        if(car) {
+            success &= reserveCar(id, customer, location);
+        }
+
+        // If should reserve a room
+        if(room) {
+            success &= reserveRoom(id, customer, location);
+        }
+        return success;
     }
 
 //    Returns the number of reservations for this flight.
