@@ -71,8 +71,8 @@ public class CLI {
             Vector<String> arguments = parse(command);
 
             //decide which of the commands this was
-            switch(findChoice(arguments.elementAt(0))){
-                case 1: //help section
+            switch(ResourceManager.Command.getFunctionByName(arguments.elementAt(0))){
+                case HELP:
                     if(arguments.size()==1)   //command was "help"
                         listCommands();
                     else if (arguments.size()==2)  //command was "help <commandname>"
@@ -81,7 +81,7 @@ public class CLI {
                         System.out.println("Improper use of help command. Type help or help, <commandname>");
                     break;
 
-                case 2:  //new flight
+                case ADD_FLIGHT:
                     if(arguments.size()!=5){
                         wrongNumber();
                         break;
@@ -106,7 +106,7 @@ public class CLI {
                     }
                     break;
 
-                case 3:  //new Car
+                case ADD_CARS:
                     if(arguments.size()!=5){
                         wrongNumber();
                         break;
@@ -130,7 +130,7 @@ public class CLI {
                     }
                     break;
 
-                case 4:  //new Room
+                case ADD_ROOMS:
                     if(arguments.size()!=5){
                         wrongNumber();
                         break;
@@ -154,7 +154,7 @@ public class CLI {
                     }
                     break;
 
-                case 5:  //new Customer
+                case NEW_CUSTOMER:
                     if(arguments.size()!=2){
                         wrongNumber();
                         break;
@@ -170,7 +170,7 @@ public class CLI {
                     }
                     break;
 
-                case 6: //delete Flight
+                case DELETE_FLIGHT:
                     if(arguments.size()!=3){
                         wrongNumber();
                         break;
@@ -190,7 +190,7 @@ public class CLI {
                     }
                     break;
 
-                case 7: //delete Car
+                case DELETE_CARS:
                     if(arguments.size()!=3){
                         wrongNumber();
                         break;
@@ -211,7 +211,7 @@ public class CLI {
                     }
                     break;
 
-                case 8: //delete Room
+                case DELETE_ROOMS:
                     if(arguments.size()!=3){
                         wrongNumber();
                         break;
@@ -231,7 +231,7 @@ public class CLI {
                     }
                     break;
 
-                case 9: //delete Customer
+                case DELETE_CUSTOMER:
                     if(arguments.size()!=3){
                         wrongNumber();
                         break;
@@ -251,7 +251,7 @@ public class CLI {
                     }
                     break;
 
-                case 10: //querying a flight
+                case QUERY_FLIGHT:
                     if(arguments.size()!=3){
                         wrongNumber();
                         break;
@@ -269,7 +269,7 @@ public class CLI {
                     }
                     break;
 
-                case 11: //querying a Car Location
+                case QUERY_CARS:
                     if(arguments.size()!=3){
                         wrongNumber();
                         break;
@@ -287,7 +287,7 @@ public class CLI {
                     }
                     break;
 
-                case 12: //querying a Room location
+                case QUERY_ROOMS:
                     if(arguments.size()!=3){
                         wrongNumber();
                         break;
@@ -305,7 +305,7 @@ public class CLI {
                     }
                     break;
 
-                case 13: //querying Customer Information
+                case QUERY_CUSTOMER_INFO:
                     if(arguments.size()!=3){
                         wrongNumber();
                         break;
@@ -323,7 +323,7 @@ public class CLI {
                     }
                     break;
 
-                case 14: //querying a flight Price
+                case QUERY_FLIGHT_PRICE:
                     if(arguments.size()!=3){
                         wrongNumber();
                         break;
@@ -341,7 +341,7 @@ public class CLI {
                     }
                     break;
 
-                case 15: //querying a Car Price
+                case QUERY_CARS_PRICE:
                     if(arguments.size()!=3){
                         wrongNumber();
                         break;
@@ -359,7 +359,7 @@ public class CLI {
                     }
                     break;
 
-                case 16: //querying a Room price
+                case QUERY_ROOMS_PRICE:
                     if(arguments.size()!=3){
                         wrongNumber();
                         break;
@@ -377,7 +377,7 @@ public class CLI {
                     }
                     break;
 
-                case 17:  //reserve a flight
+                case RESERVE_FLIGHT:
                     if(arguments.size()!=4){
                         wrongNumber();
                         break;
@@ -399,7 +399,7 @@ public class CLI {
                     }
                     break;
 
-                case 18:  //reserve a car
+                case RESERVE_CAR:
                     if(arguments.size()!=4){
                         wrongNumber();
                         break;
@@ -423,7 +423,7 @@ public class CLI {
                     }
                     break;
 
-                case 19:  //reserve a room
+                case RESERVE_ROOM:
                     if(arguments.size()!=4){
                         wrongNumber();
                         break;
@@ -446,7 +446,7 @@ public class CLI {
                     }
                     break;
 
-                case 20:  //reserve an Itinerary
+                case ITINERARY:
                     if(arguments.size()<7){
                         wrongNumber();
                         break;
@@ -479,7 +479,7 @@ public class CLI {
                     }
                     break;
 
-                case 21:  //quit the client
+                case QUIT:
                     if(arguments.size()!=1){
                         wrongNumber();
                         break;
@@ -488,7 +488,7 @@ public class CLI {
                     inputEnabled = false;
                     break;
 
-                case 22:  //new Customer given id
+                case NEW_CUSTOMER_ID:
                     if(arguments.size()!=3){
                         wrongNumber();
                         break;
@@ -514,72 +514,12 @@ public class CLI {
     }
 
     /**
-     * Match request command to its id
-     * @param argument
-     * @return command id
-     */
-    public int findChoice(String argument) {
-        if (argument.equalsIgnoreCase("help"))
-            return 1;
-        else if(argument.equalsIgnoreCase("newflight"))
-            return 2;
-        else if(argument.equalsIgnoreCase("newcar"))
-            return 3;
-        else if(argument.equalsIgnoreCase("newroom"))
-            return 4;
-        else if(argument.equalsIgnoreCase("newcustomer"))
-            return 5;
-        else if(argument.equalsIgnoreCase("deleteflight"))
-            return 6;
-        else if(argument.equalsIgnoreCase("deletecar"))
-            return 7;
-        else if(argument.equalsIgnoreCase("deleteroom"))
-            return 8;
-        else if(argument.equalsIgnoreCase("deletecustomer"))
-            return 9;
-        else if(argument.equalsIgnoreCase("queryflight"))
-            return 10;
-        else if(argument.equalsIgnoreCase("querycar"))
-            return 11;
-        else if(argument.equalsIgnoreCase("queryroom"))
-            return 12;
-        else if(argument.equalsIgnoreCase("querycustomer"))
-            return 13;
-        else if(argument.equalsIgnoreCase("queryflightprice"))
-            return 14;
-        else if(argument.equalsIgnoreCase("querycarprice"))
-            return 15;
-        else if(argument.equalsIgnoreCase("queryroomprice"))
-            return 16;
-        else if(argument.equalsIgnoreCase("reserveflight"))
-            return 17;
-        else if(argument.equalsIgnoreCase("reservecar"))
-            return 18;
-        else if(argument.equalsIgnoreCase("reserveroom"))
-            return 19;
-        else if(argument.equalsIgnoreCase("itinerary"))
-            return 20;
-        else if (argument.equalsIgnoreCase("quit"))
-            return 21;
-        else if (argument.equalsIgnoreCase("newcustomerid"))
-            return 22;
-        else
-            return 666;
-
-    }
-
-    /**
      * Print all commands
      */
-    public void listCommands() {
+    private void listCommands() {
         System.out.println("\nWelcome to the client interface provided to test your project.");
         System.out.println("Commands accepted by the interface are:");
-        System.out.println("help");
-        System.out.println("newflight\nnewcar\nnewroom\nnewcustomer\nnewcusomterid\ndeleteflight\ndeletecar\ndeleteroom");
-        System.out.println("deletecustomer\nqueryflight\nquerycar\nqueryroom\nquerycustomer");
-        System.out.println("queryflightprice\nquerycarprice\nqueryroomprice");
-        System.out.println("reserveflight\nreservecar\nreserveroom\nitinerary");
-        System.out.println("quit");
+        System.out.println(ResourceManager.Command.listCommands());
         System.out.println("\ntype help, <commandname> for detailed info(NOTE the use of comma).");
     }
 
@@ -587,17 +527,17 @@ public class CLI {
      * Print command usage
      * @param command
      */
-    public void listSpecific(String command) {
+    private void listSpecific(String command) {
         System.out.print("Help on: ");
-        switch(findChoice(command))
-        {
-            case 1:
+
+        switch(ResourceManager.Command.getFunctionByName(command)) {
+            case HELP:
                 System.out.println("Help");
                 System.out.println("\nTyping help on the prompt gives a list of all the commands available.");
                 System.out.println("Typing help, <commandname> gives details on how to use the particular command.");
                 break;
 
-            case 2:  //new flight
+            case ADD_FLIGHT:
                 System.out.println("Adding a new Flight.");
                 System.out.println("Purpose:");
                 System.out.println("\tAdd information about a new flight.");
@@ -605,7 +545,7 @@ public class CLI {
                 System.out.println("\tnewflight,<id>,<flightnumber>,<flightSeats>,<flightprice>");
                 break;
 
-            case 3:  //new Car
+            case ADD_CARS:
                 System.out.println("Adding a new Car.");
                 System.out.println("Purpose:");
                 System.out.println("\tAdd information about a new car location.");
@@ -613,7 +553,7 @@ public class CLI {
                 System.out.println("\tnewcar,<id>,<location>,<numberofcars>,<pricepercar>");
                 break;
 
-            case 4:  //new Room
+            case ADD_ROOMS:
                 System.out.println("Adding a new Room.");
                 System.out.println("Purpose:");
                 System.out.println("\tAdd information about a new room location.");
@@ -621,7 +561,7 @@ public class CLI {
                 System.out.println("\tnewroom,<id>,<location>,<numberofrooms>,<priceperroom>");
                 break;
 
-            case 5:  //new Customer
+            case NEW_CUSTOMER:
                 System.out.println("Adding a new Customer.");
                 System.out.println("Purpose:");
                 System.out.println("\tGet the system to provide a new customer id. (same as adding a new customer)");
@@ -630,7 +570,7 @@ public class CLI {
                 break;
 
 
-            case 6: //delete Flight
+            case DELETE_FLIGHT:
                 System.out.println("Deleting a flight");
                 System.out.println("Purpose:");
                 System.out.println("\tDelete a flight's information.");
@@ -638,7 +578,7 @@ public class CLI {
                 System.out.println("\tdeleteflight,<id>,<flightnumber>");
                 break;
 
-            case 7: //delete Car
+            case DELETE_CARS:
                 System.out.println("Deleting a Car");
                 System.out.println("Purpose:");
                 System.out.println("\tDelete all cars from a location.");
@@ -646,7 +586,7 @@ public class CLI {
                 System.out.println("\tdeletecar,<id>,<location>,<numCars>");
                 break;
 
-            case 8: //delete Room
+            case DELETE_ROOMS:
                 System.out.println("Deleting a Room");
                 System.out.println("\nPurpose:");
                 System.out.println("\tDelete all rooms from a location.");
@@ -654,7 +594,7 @@ public class CLI {
                 System.out.println("\tdeleteroom,<id>,<location>,<numRooms>");
                 break;
 
-            case 9: //delete Customer
+            case DELETE_CUSTOMER:
                 System.out.println("Deleting a Customer");
                 System.out.println("Purpose:");
                 System.out.println("\tRemove a customer from the database.");
@@ -662,7 +602,7 @@ public class CLI {
                 System.out.println("\tdeletecustomer,<id>,<customerid>");
                 break;
 
-            case 10: //querying a flight
+            case QUERY_FLIGHT:
                 System.out.println("Querying flight.");
                 System.out.println("Purpose:");
                 System.out.println("\tObtain Seat information about a certain flight.");
@@ -670,7 +610,7 @@ public class CLI {
                 System.out.println("\tqueryflight,<id>,<flightnumber>");
                 break;
 
-            case 11: //querying a Car Location
+            case QUERY_CARS:
                 System.out.println("Querying a Car location.");
                 System.out.println("Purpose:");
                 System.out.println("\tObtain number of cars at a certain car location.");
@@ -678,7 +618,7 @@ public class CLI {
                 System.out.println("\tquerycar,<id>,<location>");
                 break;
 
-            case 12: //querying a Room location
+            case QUERY_ROOMS:
                 System.out.println("Querying a Room Location.");
                 System.out.println("Purpose:");
                 System.out.println("\tObtain number of rooms at a certain room location.");
@@ -686,7 +626,7 @@ public class CLI {
                 System.out.println("\tqueryroom,<id>,<location>");
                 break;
 
-            case 13: //querying Customer Information
+            case QUERY_CUSTOMER_INFO:
                 System.out.println("Querying Customer Information.");
                 System.out.println("Purpose:");
                 System.out.println("\tObtain information about a customer.");
@@ -694,7 +634,7 @@ public class CLI {
                 System.out.println("\tquerycustomer,<id>,<customerid>");
                 break;
 
-            case 14: //querying a flight for price
+            case QUERY_FLIGHT_PRICE:
                 System.out.println("Querying flight.");
                 System.out.println("Purpose:");
                 System.out.println("\tObtain price information about a certain flight.");
@@ -702,7 +642,7 @@ public class CLI {
                 System.out.println("\tqueryflightprice,<id>,<flightnumber>");
                 break;
 
-            case 15: //querying a Car Location for price
+            case QUERY_CARS_PRICE:
                 System.out.println("Querying a Car location.");
                 System.out.println("Purpose:");
                 System.out.println("\tObtain price information about a certain car location.");
@@ -710,7 +650,7 @@ public class CLI {
                 System.out.println("\tquerycarprice,<id>,<location>");
                 break;
 
-            case 16: //querying a Room location for price
+            case QUERY_ROOMS_PRICE:
                 System.out.println("Querying a Room Location.");
                 System.out.println("Purpose:");
                 System.out.println("\tObtain price information about a certain room location.");
@@ -718,7 +658,7 @@ public class CLI {
                 System.out.println("\tqueryroomprice,<id>,<location>");
                 break;
 
-            case 17:  //reserve a flight
+            case RESERVE_FLIGHT:
                 System.out.println("Reserving a flight.");
                 System.out.println("Purpose:");
                 System.out.println("\tReserve a flight for a customer.");
@@ -726,7 +666,7 @@ public class CLI {
                 System.out.println("\treserveflight,<id>,<customerid>,<flightnumber>");
                 break;
 
-            case 18:  //reserve a car
+            case RESERVE_CAR:
                 System.out.println("Reserving a Car.");
                 System.out.println("Purpose:");
                 System.out.println("\tReserve a given number of cars for a customer at a particular location.");
@@ -734,7 +674,7 @@ public class CLI {
                 System.out.println("\treservecar,<id>,<customerid>,<location>,<nummberofCars>");
                 break;
 
-            case 19:  //reserve a room
+            case RESERVE_ROOM:
                 System.out.println("Reserving a Room.");
                 System.out.println("Purpose:");
                 System.out.println("\tReserve a given number of rooms for a customer at a particular location.");
@@ -742,7 +682,7 @@ public class CLI {
                 System.out.println("\treserveroom,<id>,<customerid>,<location>,<nummberofRooms>");
                 break;
 
-            case 20:  //reserve an Itinerary
+            case ITINERARY:
                 System.out.println("Reserving an Itinerary.");
                 System.out.println("Purpose:");
                 System.out.println("\tBook one or more flights.Also book zero or more cars/rooms at a location.");
@@ -751,7 +691,7 @@ public class CLI {
                 break;
 
 
-            case 21:  //quit the client
+            case QUIT:
                 System.out.println("Quitting client.");
                 System.out.println("Purpose:");
                 System.out.println("\tExit the client application.");
@@ -759,7 +699,7 @@ public class CLI {
                 System.out.println("\tquit");
                 break;
 
-            case 22:  //new customer with id
+            case NEW_CUSTOMER_ID:
                 System.out.println("Create new customer providing an id");
                 System.out.println("Purpose:");
                 System.out.println("\tCreates a new customer with the id provided");
@@ -777,7 +717,7 @@ public class CLI {
     /**
      * Print error message
      */
-    public void wrongNumber() {
+    private void wrongNumber() {
         System.out.println("The number of arguments provided in this command are wrong.");
         System.out.println("Type help, <commandname> to check usage of this command.");
     }
