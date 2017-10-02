@@ -64,7 +64,9 @@ To configure the IP and Port values for machine A and B, edit the corresponding 
 
 Testing
 
-
+We have throughly tested the function calls by stress testing both the number of tests, as well as the number of concurrent clients using the system at a given instance.
+In particular, we have three test levels of {10, 100, 1000} and three thread levels of {2,4,6} and each combination is tested. The most stressful test of 1000 function calls with 6 threads successfully completes in approximately 3 minutes.
+Functions involving flights, cars, and rooms, are all included in these tests.
 
 GUI
 
