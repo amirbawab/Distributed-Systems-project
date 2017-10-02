@@ -29,6 +29,79 @@ public interface ResourceManager extends Remote {
     String RM_ROOM_REF = "room";
     String RM_FLIGHT_REF = "flight";
 
+    // Function names
+    public enum Command {
+        HELP("help"),
+        QUIT("quit"),
+        NOT_FOUND(""),
+        ADD_FLIGHT("addFlight"),
+        ADD_CARS("addCars"),
+        ADD_ROOMS("addRooms"),
+        NEW_CUSTOMER("newCustomer"),
+        NEW_CUSTOMER_ID("newCustomerId"),
+        DELETE_FLIGHT("deleteFlight"),
+        DELETE_CARS("deleteCars"),
+        DELETE_ROOMS("deleteRooms"),
+        DELETE_CUSTOMER("deleteCustomer"),
+        QUERY_FLIGHT("queryFlight"),
+        QUERY_CARS("queryCars"),
+        QUERY_ROOMS("queryRooms"),
+        QUERY_CUSTOMER_INFO("queryCustomerInfo"),
+        QUERY_FLIGHT_PRICE("queryFlightPrice"),
+        QUERY_CARS_PRICE("queryCarsPrice"),
+        QUERY_ROOMS_PRICE("queryRoomsPrice"),
+        RESERVE_FLIGHT("reserveFlight"),
+        RESERVE_CAR("reserveCar"),
+        RESERVE_ROOM("reserveRoom"),
+        ITINERARY("itinerary"),
+        ;
+        private String m_functionName;
+        private int m_id = 0;
+        private int uid = 1;
+        Command(String functionName) {
+            this.m_functionName = functionName;
+            this.m_id = uid++;
+        }
+
+        /**
+         * Get function name
+         * @return function name
+         */
+        public String getName() {
+            return this.m_functionName;
+        }
+
+        /**
+         * Get function unique id
+         * @return function unique id
+         */
+        public int getId() {
+            return this.m_id;
+        }
+
+        public static String listCommands() {
+            StringBuilder stringBuilder = new StringBuilder();
+            for(Command command : values()) {
+                stringBuilder.append(command.getName()+"\n");
+            }
+            return stringBuilder.toString();
+        }
+
+        /**
+         * Get Function by name
+         * @param functionName
+         * @return Function
+         */
+        public static Command getFunctionByName(String functionName) {
+            for(ResourceManager.Command function : Command.values()) {
+                if(function.getName().equalsIgnoreCase(functionName)) {
+                    return function;
+                }
+            }
+            return NOT_FOUND;
+        }
+    }
+
     /* Add seats to a flight.  In general this will be used to create a new
      * flight, but it should be possible to add seats to an existing flight.
      * Adding to an existing flight should overwrite the current price of the
@@ -36,30 +109,30 @@ public interface ResourceManager extends Remote {
      *
      * @return success.
      */
-    public boolean addFlight(int id, int flightNum, int flightSeats, int flightPrice) 
+    boolean addFlight(int id, int flightNum, int flightSeats, int flightPrice)
 	throws RemoteException; 
     
     /* Add cars to a location.  
      * This should look a lot like addFlight, only keyed on a string location
      * instead of a flight number.
      */
-    public boolean addCars(int id, String location, int numCars, int price) 
+    boolean addCars(int id, String location, int numCars, int price)
 	throws RemoteException; 
    
     /* Add rooms to a location.  
      * This should look a lot like addFlight, only keyed on a string location
      * instead of a flight number.
      */
-    public boolean addRooms(int id, String location, int numRooms, int price) 
+    boolean addRooms(int id, String location, int numRooms, int price)
 	throws RemoteException; 			    
 
 			    
     /* new customer just returns a unique customer identifier */
-    public int newCustomer(int id) 
+    int newCustomer(int id)
 	throws RemoteException; 
     
     /* new customer with providing id */
-    public boolean newCustomer(int id, int cid)
+    boolean newCustomer(int id, int cid)
     throws RemoteException;
 
     /**
@@ -70,7 +143,7 @@ public interface ResourceManager extends Remote {
      *
      * @return success.
      */   
-    public boolean deleteFlight(int id, int flightNum) 
+    boolean deleteFlight(int id, int flightNum)
 	throws RemoteException; 
     
     /* Delete all Cars from a location.
@@ -78,7 +151,7 @@ public interface ResourceManager extends Remote {
      *
      * @return success
      */		    
-    public boolean deleteCars(int id, String location) 
+    boolean deleteCars(int id, String location)
 	throws RemoteException; 
 
     /* Delete all Rooms from a location.
@@ -86,56 +159,56 @@ public interface ResourceManager extends Remote {
      *
      * @return success
      */
-    public boolean deleteRooms(int id, String location) 
+    boolean deleteRooms(int id, String location)
 	throws RemoteException; 
     
     /* deleteCustomer removes the customer and associated reservations */
-    public boolean deleteCustomer(int id,int customer) 
+    boolean deleteCustomer(int id,int customer)
 	throws RemoteException; 
 
     /* queryFlight returns the number of empty seats. */
-    public int queryFlight(int id, int flightNumber) 
+    int queryFlight(int id, int flightNumber)
 	throws RemoteException; 
 
     /* return the number of cars available at a location */
-    public int queryCars(int id, String location) 
+    int queryCars(int id, String location)
 	throws RemoteException; 
 
     /* return the number of rooms available at a location */
-    public int queryRooms(int id, String location) 
+    int queryRooms(int id, String location)
 	throws RemoteException; 
 
     /* return a bill */
-    public String queryCustomerInfo(int id,int customer) 
+    String queryCustomerInfo(int id,int customer)
 	throws RemoteException; 
     
     /* queryFlightPrice returns the price of a seat on this flight. */
-    public int queryFlightPrice(int id, int flightNumber) 
+    int queryFlightPrice(int id, int flightNumber)
 	throws RemoteException; 
 
     /* return the price of a car at a location */
-    public int queryCarsPrice(int id, String location) 
+    int queryCarsPrice(int id, String location)
 	throws RemoteException; 
 
     /* return the price of a room at a location */
-    public int queryRoomsPrice(int id, String location) 
+    int queryRoomsPrice(int id, String location)
 	throws RemoteException; 
 
     /* Reserve a seat on this flight*/
-    public boolean reserveFlight(int id, int customer, int flightNumber) 
+    boolean reserveFlight(int id, int customer, int flightNumber)
 	throws RemoteException; 
 
     /* reserve a car at this location */
-    public boolean reserveCar(int id, int customer, String location) 
+    boolean reserveCar(int id, int customer, String location)
 	throws RemoteException; 
 
     /* reserve a room certain at this location */
-    public boolean reserveRoom(int id, int customer, String locationd) 
+    boolean reserveRoom(int id, int customer, String locationd)
 	throws RemoteException; 
 
 
     /* reserve an itinerary */
-    public boolean itinerary(int id,int customer,Vector flightNumbers,String location, boolean Car, boolean Room)
+    boolean itinerary(int id,int customer,Vector flightNumbers,String location, boolean Car, boolean Room)
 	throws RemoteException; 
     			
 }
