@@ -671,7 +671,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tReserve a given number of cars for a customer at a particular location.");
                 System.out.println("\nUsage:");
-                System.out.println("\t" + command.getName() + ",<id>,<customerid>,<location>,<nummberofCars>");
+                System.out.println("\t" + command.getName() + ",<id>,<customerid>,<location>");
                 break;
 
             case RESERVE_ROOM:
@@ -679,7 +679,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tReserve a given number of rooms for a customer at a particular location.");
                 System.out.println("\nUsage:");
-                System.out.println("\t" + command.getName() + ",<id>,<customerid>,<location>,<nummberofRooms>");
+                System.out.println("\t" + command.getName() + ",<id>,<customerid>,<location>");
                 break;
 
             case ITINERARY:
