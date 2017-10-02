@@ -132,7 +132,8 @@ public class MiddlewareServerThread extends Thread {
                         // TODO Refactor code
                         pwCar.println(message);
                         int cid = Integer.parseInt(brCar.readLine());
-                        String newCommand = String.format("%s,%d,%d", ResourceManager.Command.NEW_CUSTOMER_ID,
+                        String newCommand = String.format("%s,%d,%d",
+                                ResourceManager.Command.NEW_CUSTOMER_ID.getName(),
                                 Integer.parseInt(params[1]), cid);
                         pwRoom.println(newCommand);
                         pwFlight.println(newCommand);
