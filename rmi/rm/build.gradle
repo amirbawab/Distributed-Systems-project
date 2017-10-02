@@ -1,13 +1,10 @@
-apply plugin: 'application'
-version = '1.0'
-mainClassName = "rm.ResourceManagerImpl"
+String mainClass = "rm.RM"
 
 dependencies {
-    compile project(':common:remote')
     compile project(':common:rm')
 }
 
-run {
+task runCar(type: JavaExec){
     doFirst {
         copy {
             from "${rootDir}/etc/policy/"
@@ -15,15 +12,52 @@ run {
             include 'rm.policy'
             expand('classpath': "${sourceSets.main.java.outputDir}")
         }
-
-        String rmName = System.properties['rmName']
-        if(rmName == null) {
-            throw new GradleException("Property 'rmName' is missing. (e.g. -DrmName=...)")
-        }
-        args = [rm_rmiRegistry_port, rmName]
-        jvmArgs = [
-                "-Djava.security.policy=${project.buildDir}/rm.policy",
-                "-Djava.rmi.server.codebase=file:${sourceSets.main.java.outputDir}"
-            ]
     }
+
+    classpath = sourceSets.main.runtimeClasspath
+    main = mainClass
+    args = [rm_rmiRegistry_port, "car"]
+    jvmArgs = [
+            "-Djava.security.policy=${project.buildDir}/rm.policy",
+            "-Djava.rmi.server.codebase=file:${sourceSets.main.java.outputDir}"
+    ]
 }
+
+task runFlight(type: JavaExec){
+    doFirst {
+        copy {
+            from "${rootDir}/etc/policy/"
+            into "${buildDir}"
+            include 'rm.policy'
+            expand('classpath': "${sourceSets.main.java.outputDir}")
+        }
+    }
+
+    classpath = sourceSets.main.runtimeClasspath
+    main = mainClass
+    args = [rm_rmiRegistry_port, "flight"]
+    jvmArgs = [
+            "-Djava.security.policy=${project.buildDir}/rm.policy",
+            "-Djava.rmi.server.codebase=file:${sourceSets.main.java.outputDir}"
+    ]
+}
+
+task runRoom(type: JavaExec){
+    doFirst {
+        copy {
+            from "${rootDir}/etc/policy/"
+            into "${buildDir}"
+            include 'rm.policy'
+            expand('classpath': "${sourceSets.main.java.outputDir}")
+        }
+    }
+
+    classpath = sourceSets.main.runtimeClasspath
+    main = mainClass
+    args = [rm_rmiRegistry_port, "room"]
+    jvmArgs = [
+            "-Djava.security.policy=${project.buildDir}/rm.policy",
+            "-Djava.rmi.server.codebase=file:${sourceSets.main.java.outputDir}"
+    ]
+}
+
