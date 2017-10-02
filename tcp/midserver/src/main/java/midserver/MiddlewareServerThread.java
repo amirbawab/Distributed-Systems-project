@@ -79,7 +79,7 @@ public class MiddlewareServerThread extends Thread {
     }
 
     /**
-     * Send value to middleware server
+     * Send value to client
      * @param value
      */
     private void sendToClient(String value) throws IOException {
