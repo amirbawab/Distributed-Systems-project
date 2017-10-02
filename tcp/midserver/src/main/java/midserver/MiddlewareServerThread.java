@@ -185,7 +185,7 @@ public class MiddlewareServerThread extends Thread {
                                 params[1], cid);
                         sendToFlightRM(newCommand);
                         sendToRoomRM(newCommand);
-                        sendToClient(cid+"");
+                        sendToClient(cid);
                         break;
 
                     case NEW_CUSTOMER_ID:

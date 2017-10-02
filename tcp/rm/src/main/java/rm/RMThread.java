@@ -47,6 +47,20 @@ public class RMThread extends Thread {
         this.m_outToMidServer.println(value);
     }
 
+    /**
+     * @see #sendToMidServer(String)
+     */
+    private void sendToMidServer(boolean value) throws IOException {
+        sendToMidServer(""+value);
+    }
+
+    /**
+     * @see #sendToMidServer(String)
+     */
+    private void sendToMidServer(int value) throws IOException {
+        sendToMidServer(""+value);
+    }
+
     public void run() {
         try {
 
@@ -67,68 +81,68 @@ public class RMThread extends Thread {
                 // Parse command
                 switch (ResourceManager.Command.getFunctionByName(params[0])) {
                     case ADD_FLIGHT:
-                        m_outToMidServer.println(m_rm.addFlight(Integer.parseInt(params[1]),Integer.parseInt(params[2]),
+                        sendToMidServer(m_rm.addFlight(Integer.parseInt(params[1]), Integer.parseInt(params[2]),
                                 Integer.parseInt(params[3]),Integer.parseInt(params[4])));
                         break;
                     case ADD_CARS:
-                        m_outToMidServer.println(m_rm.addCars(Integer.parseInt(params[1]), params[2],
+                        sendToMidServer(m_rm.addCars(Integer.parseInt(params[1]), params[2],
                                 Integer.parseInt(params[3]), Integer.parseInt(params[4])));
                         break;
                     case ADD_ROOMS:
-                        m_outToMidServer.println(m_rm.addRooms(Integer.parseInt(params[1]), params[2], Integer.parseInt(params[3]),
+                        sendToMidServer(m_rm.addRooms(Integer.parseInt(params[1]), params[2], Integer.parseInt(params[3]),
                                 Integer.parseInt(params[4])));
                         break;
                     case NEW_CUSTOMER:
-                        m_outToMidServer.println(m_rm.newCustomer(Integer.parseInt(params[1])));
+                        sendToMidServer(m_rm.newCustomer(Integer.parseInt(params[1])));
                         break;
                     case DELETE_FLIGHT:
-                        m_outToMidServer.println(m_rm.deleteFlight(Integer.parseInt(params[1]), Integer.parseInt(params[2])));
+                        sendToMidServer(m_rm.deleteFlight(Integer.parseInt(params[1]), Integer.parseInt(params[2])));
                         break;
                     case DELETE_CARS:
-                        m_outToMidServer.println(m_rm.deleteCars(Integer.parseInt(params[1]),params[2]));
+                        sendToMidServer(m_rm.deleteCars(Integer.parseInt(params[1]),params[2]));
                         break;
                     case DELETE_ROOMS:
-                        m_outToMidServer.println(m_rm.deleteRooms(Integer.parseInt(params[1]),params[2]));
+                        sendToMidServer(m_rm.deleteRooms(Integer.parseInt(params[1]),params[2]));
                         break;
                     case DELETE_CUSTOMER:
-                        m_outToMidServer.println(m_rm.deleteCustomer(Integer.parseInt(params[1]),Integer.parseInt(params[2])));
+                        sendToMidServer(m_rm.deleteCustomer(Integer.parseInt(params[1]),Integer.parseInt(params[2])));
                         break;
                     case QUERY_FLIGHT:
-                        m_outToMidServer.println(m_rm.queryFlight(Integer.parseInt(params[1]),Integer.parseInt(params[2])));
+                        sendToMidServer(m_rm.queryFlight(Integer.parseInt(params[1]),Integer.parseInt(params[2])));
                         break;
                     case QUERY_CARS:
-                        m_outToMidServer.println(m_rm.queryCars(Integer.parseInt(params[1]),params[2]));
+                        sendToMidServer(m_rm.queryCars(Integer.parseInt(params[1]),params[2]));
                         break;
                     case QUERY_ROOMS:
-                        m_outToMidServer.println(m_rm.queryRooms(Integer.parseInt(params[1]),params[2]));
+                        sendToMidServer(m_rm.queryRooms(Integer.parseInt(params[1]),params[2]));
                         break;
                     case QUERY_CUSTOMER_INFO:
-                        m_outToMidServer.println(m_rm.queryCustomerInfo(Integer.parseInt(params[1]),Integer.parseInt(params[2])));
+                        sendToMidServer(m_rm.queryCustomerInfo(Integer.parseInt(params[1]),Integer.parseInt(params[2])));
                         break;
                     case QUERY_FLIGHT_PRICE:
-                        m_outToMidServer.println(m_rm.queryFlightPrice(Integer.parseInt(params[1]),Integer.parseInt(params[2])));
+                        sendToMidServer(m_rm.queryFlightPrice(Integer.parseInt(params[1]),Integer.parseInt(params[2])));
                         break;
                     case QUERY_CARS_PRICE:
-                        m_outToMidServer.println(m_rm.queryCarsPrice(Integer.parseInt(params[1]),params[2]));
+                        sendToMidServer(m_rm.queryCarsPrice(Integer.parseInt(params[1]),params[2]));
                         break;
                     case QUERY_ROOMS_PRICE:
-                        m_outToMidServer.println(m_rm.queryRoomsPrice(Integer.parseInt(params[1]),params[2]));
+                        sendToMidServer(m_rm.queryRoomsPrice(Integer.parseInt(params[1]),params[2]));
                         break;
                     case RESERVE_FLIGHT:
-                        m_outToMidServer.println(m_rm.reserveFlight(Integer.parseInt(params[1]),Integer.parseInt(params[2]),Integer.parseInt(params[3])));
+                        sendToMidServer(m_rm.reserveFlight(Integer.parseInt(params[1]),Integer.parseInt(params[2]),Integer.parseInt(params[3])));
                         break;
                     case RESERVE_CAR:
-                        m_outToMidServer.println(m_rm.reserveCar(Integer.parseInt(params[1]),Integer.parseInt(params[2]),params[3]));
+                        sendToMidServer(m_rm.reserveCar(Integer.parseInt(params[1]),Integer.parseInt(params[2]),params[3]));
                         break;
                     case RESERVE_ROOM:
-                        m_outToMidServer.println(m_rm.reserveRoom(Integer.parseInt(params[1]),Integer.parseInt(params[2]),params[3]));
+                        sendToMidServer(m_rm.reserveRoom(Integer.parseInt(params[1]),Integer.parseInt(params[2]),params[3]));
                         break;
                     case ITINERARY:
                         // FIXME
                         // m_outToMidServer.println(m_rm.itinerary(Integer.parseInt(params[1]),Integer.parseInt(params[2]),Integer.parseInt(params[3]),Integer.parseInt(params[4])));
                         break;
                     case NEW_CUSTOMER_ID:
-                        m_outToMidServer.println(m_rm.newCustomer(Integer.parseInt(params[1]),Integer.parseInt(params[2])));
+                        sendToMidServer(m_rm.newCustomer(Integer.parseInt(params[1]),Integer.parseInt(params[2])));
                         break;
                 }
             }
