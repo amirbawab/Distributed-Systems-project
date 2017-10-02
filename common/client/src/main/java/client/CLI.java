@@ -525,16 +525,16 @@ public class CLI {
 
     /**
      * Print command usage
-     * @param command
+     * @param commandStr
      */
-    private void listSpecific(String command) {
+    private void listSpecific(String commandStr) {
         System.out.print("Help on: ");
-
-        switch(ResourceManager.Command.getFunctionByName(command)) {
+        ResourceManager.Command command = ResourceManager.Command.getFunctionByName(commandStr);
+        switch(command) {
             case HELP:
                 System.out.println("Help");
                 System.out.println("\nTyping help on the prompt gives a list of all the commands available.");
-                System.out.println("Typing help, <commandname> gives details on how to use the particular command.");
+                System.out.println("Typing " + command.getName() + ", <commandname> gives details on how to use the particular command.");
                 break;
 
             case ADD_FLIGHT:
@@ -542,7 +542,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tAdd information about a new flight.");
                 System.out.println("\nUsage:");
-                System.out.println("\tnewflight,<id>,<flightnumber>,<flightSeats>,<flightprice>");
+                System.out.println("\t" + command.getName() +",<id>,<flightnumber>,<flightSeats>,<flightprice>");
                 break;
 
             case ADD_CARS:
@@ -550,7 +550,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tAdd information about a new car location.");
                 System.out.println("\nUsage:");
-                System.out.println("\tnewcar,<id>,<location>,<numberofcars>,<pricepercar>");
+                System.out.println("\t" + command.getName() + ",<id>,<location>,<numberofcars>,<pricepercar>");
                 break;
 
             case ADD_ROOMS:
@@ -558,7 +558,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tAdd information about a new room location.");
                 System.out.println("\nUsage:");
-                System.out.println("\tnewroom,<id>,<location>,<numberofrooms>,<priceperroom>");
+                System.out.println("\t" + command.getName() + ",<id>,<location>,<numberofrooms>,<priceperroom>");
                 break;
 
             case NEW_CUSTOMER:
@@ -566,7 +566,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tGet the system to provide a new customer id. (same as adding a new customer)");
                 System.out.println("\nUsage:");
-                System.out.println("\tnewcustomer,<id>");
+                System.out.println("\t" + command.getName() + ",<id>");
                 break;
 
 
@@ -575,7 +575,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tDelete a flight's information.");
                 System.out.println("\nUsage:");
-                System.out.println("\tdeleteflight,<id>,<flightnumber>");
+                System.out.println("\t" + command.getName() + ",<id>,<flightnumber>");
                 break;
 
             case DELETE_CARS:
@@ -583,7 +583,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tDelete all cars from a location.");
                 System.out.println("\nUsage:");
-                System.out.println("\tdeletecar,<id>,<location>,<numCars>");
+                System.out.println("\t" +command.getName()+ ",<id>,<location>,<numCars>");
                 break;
 
             case DELETE_ROOMS:
@@ -591,7 +591,7 @@ public class CLI {
                 System.out.println("\nPurpose:");
                 System.out.println("\tDelete all rooms from a location.");
                 System.out.println("Usage:");
-                System.out.println("\tdeleteroom,<id>,<location>,<numRooms>");
+                System.out.println("\t" + command.getName() + ",<id>,<location>,<numRooms>");
                 break;
 
             case DELETE_CUSTOMER:
@@ -599,7 +599,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tRemove a customer from the database.");
                 System.out.println("\nUsage:");
-                System.out.println("\tdeletecustomer,<id>,<customerid>");
+                System.out.println("\t" + command.getName() + ",<id>,<customerid>");
                 break;
 
             case QUERY_FLIGHT:
@@ -607,7 +607,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tObtain Seat information about a certain flight.");
                 System.out.println("\nUsage:");
-                System.out.println("\tqueryflight,<id>,<flightnumber>");
+                System.out.println("\t" + command.getName() + ",<id>,<flightnumber>");
                 break;
 
             case QUERY_CARS:
@@ -615,7 +615,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tObtain number of cars at a certain car location.");
                 System.out.println("\nUsage:");
-                System.out.println("\tquerycar,<id>,<location>");
+                System.out.println("\t" + command.getName() + ",<id>,<location>");
                 break;
 
             case QUERY_ROOMS:
@@ -623,7 +623,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tObtain number of rooms at a certain room location.");
                 System.out.println("\nUsage:");
-                System.out.println("\tqueryroom,<id>,<location>");
+                System.out.println("\t" + command.getName() + ",<id>,<location>");
                 break;
 
             case QUERY_CUSTOMER_INFO:
@@ -631,7 +631,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tObtain information about a customer.");
                 System.out.println("\nUsage:");
-                System.out.println("\tquerycustomer,<id>,<customerid>");
+                System.out.println("\t" + command.getName() + ",<id>,<customerid>");
                 break;
 
             case QUERY_FLIGHT_PRICE:
@@ -647,7 +647,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tObtain price information about a certain car location.");
                 System.out.println("\nUsage:");
-                System.out.println("\tquerycarprice,<id>,<location>");
+                System.out.println("\t" + command.getName() + ",<id>,<location>");
                 break;
 
             case QUERY_ROOMS_PRICE:
@@ -655,7 +655,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tObtain price information about a certain room location.");
                 System.out.println("\nUsage:");
-                System.out.println("\tqueryroomprice,<id>,<location>");
+                System.out.println("\t" + command.getName() + ",<id>,<location>");
                 break;
 
             case RESERVE_FLIGHT:
@@ -663,7 +663,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tReserve a flight for a customer.");
                 System.out.println("\nUsage:");
-                System.out.println("\treserveflight,<id>,<customerid>,<flightnumber>");
+                System.out.println("\t" + command.getName() + ",<id>,<customerid>,<flightnumber>");
                 break;
 
             case RESERVE_CAR:
@@ -671,7 +671,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tReserve a given number of cars for a customer at a particular location.");
                 System.out.println("\nUsage:");
-                System.out.println("\treservecar,<id>,<customerid>,<location>,<nummberofCars>");
+                System.out.println("\t" + command.getName() + ",<id>,<customerid>,<location>,<nummberofCars>");
                 break;
 
             case RESERVE_ROOM:
@@ -679,7 +679,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tReserve a given number of rooms for a customer at a particular location.");
                 System.out.println("\nUsage:");
-                System.out.println("\treserveroom,<id>,<customerid>,<location>,<nummberofRooms>");
+                System.out.println("\t" + command.getName() + ",<id>,<customerid>,<location>,<nummberofRooms>");
                 break;
 
             case ITINERARY:
@@ -687,7 +687,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tBook one or more flights.Also book zero or more cars/rooms at a location.");
                 System.out.println("\nUsage:");
-                System.out.println("\titinerary,<id>,<customerid>,<flightnumber1>....<flightnumberN>,<LocationToBookCarsOrRooms>,<NumberOfCars>,<NumberOfRoom>");
+                System.out.println("\t" + command.getName() + ",<id>,<customerid>,<flightnumber1>,...,<flightnumberN>,<LocationToBookCarsOrRooms>,<wantCar>,<wantRoom>");
                 break;
 
 
@@ -696,7 +696,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tExit the client application.");
                 System.out.println("\nUsage:");
-                System.out.println("\tquit");
+                System.out.println("\t" + command.getName());
                 break;
 
             case NEW_CUSTOMER_ID:
@@ -704,7 +704,7 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tCreates a new customer with the id provided");
                 System.out.println("\nUsage:");
-                System.out.println("\tnewcustomerid, <id>, <customerid>");
+                System.out.println("\t" + command.getName() + ", <id>, <customerid>");
                 break;
 
             default:
