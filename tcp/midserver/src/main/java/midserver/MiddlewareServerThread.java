@@ -21,6 +21,14 @@ public class MiddlewareServerThread extends Thread {
     // Open an input stream from the middle layer server
     private BufferedReader m_inFromClient;
 
+    // RM Streams
+    private PrintWriter m_pwFlight ;
+    private BufferedReader m_brFlight ;
+    private PrintWriter m_pwCar ;
+    private BufferedReader m_brCar ;
+    private PrintWriter m_pwRoom ;
+    private BufferedReader m_brRoom ;
+
     // Middleware server as client
     private Socket m_socketRMFlight;
     private Socket m_socketRMCar;
@@ -70,21 +78,65 @@ public class MiddlewareServerThread extends Thread {
         this.m_socketRMRoom = new Socket(server, port);
     }
 
+    /**
+     * Send value to middleware server
+     * @param value
+     */
+    private void sendToClient(String value) throws IOException {
+        logger.debug("Sending to Client: " + value);
+        this.m_outToClient.println(value);
+    }
+
+    /**
+     * Send command to Car RM
+     * @param command
+     */
+    private String sendToCarRM(String command) throws IOException {
+        logger.debug("Sending to Car RM: " +command );
+        m_pwCar.println(command);
+        String ret = this.m_brCar.readLine();
+        logger.debug("Car RM returned: " + ret);
+        return ret;
+    }
+
+    /**
+     * Send command to Room RM
+     * @param command
+     */
+    private String sendToRoomRM(String command) throws IOException {
+        logger.debug("Sending to Room RM: " +command );
+        m_pwRoom.println(command);
+        String ret = this.m_brRoom.readLine();
+        logger.debug("Room RM returned: " + ret);
+        return ret;
+    }
+    /**
+     * Send command to Car RM
+     * @param command
+     */
+    private String sendToFlightRM(String command) throws IOException {
+        logger.debug("Sending to Flight RM: " +command );
+        m_pwFlight.println(command);
+        String ret = this.m_brFlight.readLine();
+        logger.debug("Flight RM returned: " + ret);
+        return ret;
+    }
+
     @Override
     public void run() {
         try {
 
             // Flight streams
-            PrintWriter pwFlight = new PrintWriter(m_socketRMFlight.getOutputStream(), true);
-            BufferedReader brFlight = new BufferedReader(new InputStreamReader(m_socketRMFlight.getInputStream()));
+            m_pwFlight = new PrintWriter(m_socketRMFlight.getOutputStream(), true);
+            m_brFlight = new BufferedReader(new InputStreamReader(m_socketRMFlight.getInputStream()));
 
             // Car streams
-            PrintWriter pwCar = new PrintWriter(m_socketRMCar.getOutputStream(), true);
-            BufferedReader brCar = new BufferedReader(new InputStreamReader(m_socketRMCar.getInputStream()));
+            m_pwCar = new PrintWriter(m_socketRMCar.getOutputStream(), true);
+            m_brCar = new BufferedReader(new InputStreamReader(m_socketRMCar.getInputStream()));
 
             // Room streams
-            PrintWriter pwRoom = new PrintWriter(m_socketRMRoom.getOutputStream(), true);
-            BufferedReader brRoom = new BufferedReader(new InputStreamReader(m_socketRMRoom.getInputStream()));
+            m_pwRoom = new PrintWriter(m_socketRMRoom.getOutputStream(), true);
+            m_brRoom = new BufferedReader(new InputStreamReader(m_socketRMRoom.getInputStream()));
 
             // Read messages from client
             String message;
@@ -106,8 +158,7 @@ public class MiddlewareServerThread extends Thread {
                     case QUERY_FLIGHT:
                     case QUERY_FLIGHT_PRICE:
                     case RESERVE_FLIGHT:
-                        pwFlight.println(message);
-                        m_outToClient.println(brFlight.readLine());
+                        sendToClient(sendToFlightRM(message));
                         break;
 
                     case ADD_CARS:
@@ -115,8 +166,7 @@ public class MiddlewareServerThread extends Thread {
                     case QUERY_CARS:
                     case QUERY_CARS_PRICE:
                     case RESERVE_CAR:
-                        pwCar.println(message);
-                        m_outToClient.println(brCar.readLine());
+                        sendToClient(sendToCarRM(message));
                         break;
 
                     case ADD_ROOMS:
@@ -124,49 +174,37 @@ public class MiddlewareServerThread extends Thread {
                     case DELETE_ROOMS:
                     case QUERY_ROOMS:
                     case QUERY_ROOMS_PRICE:
-                        pwRoom.println(message);
-                        m_outToClient.println(brRoom.readLine());
+                        sendToClient(sendToRoomRM(message));
                         break;
 
                     case NEW_CUSTOMER:
                         // TODO Refactor code
-                        pwCar.println(message);
-                        int cid = Integer.parseInt(brCar.readLine());
-                        String newCommand = String.format("%s,%d,%d",
+                        String cid = sendToCarRM(message);
+                        String newCommand = String.format("%s,%s,%s",
                                 ResourceManager.Command.NEW_CUSTOMER_ID.getName(),
-                                Integer.parseInt(params[1]), cid);
-                        pwRoom.println(newCommand);
-                        pwFlight.println(newCommand);
-
-                        // Read to clear buffer
-                        brFlight.readLine();
-                        brCar.readLine();
-                        brRoom.readLine();
-                        m_outToClient.println(cid);
+                                params[1], cid);
+                        sendToFlightRM(newCommand);
+                        sendToRoomRM(newCommand);
+                        sendToClient(cid+"");
                         break;
 
                     case NEW_CUSTOMER_ID:
                     case DELETE_CUSTOMER:
                     case ITINERARY:
-                        pwCar.println(message);
-                        pwRoom.println(message);
-                        pwFlight.println(message);
-                        if(brCar.readLine().equals(FALSE) || brFlight.readLine().equals(FALSE)
-                                || brRoom.readLine().equals(FALSE)) {
-                            m_outToClient.println(FALSE);
+                        if(sendToCarRM(message).equals(FALSE)
+                                || sendToFlightRM(message).equals(FALSE)
+                                || sendToRoomRM(message).equals(FALSE)) {
+                            sendToClient(FALSE);
                         } else {
-                            m_outToClient.println(TRUE);
+                            sendToClient(TRUE);
                         }
                         break;
 
                     case QUERY_CUSTOMER_INFO:
-                        pwCar.println(message);
-                        pwFlight.println(message);
-                        pwRoom.println(message);
                         StringBuilder info = new StringBuilder();
-                        info.append(brCar.readLine());
-                        info.append(brFlight.readLine());
-                        info.append(brRoom.readLine());
+                        info.append(sendToCarRM(message));
+                        info.append(sendToFlightRM(message));
+                        info.append(sendToRoomRM(message));
                         m_outToClient.println(info.toString());
                         break;
                 }
