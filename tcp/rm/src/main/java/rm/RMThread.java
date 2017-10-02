@@ -44,6 +44,7 @@ public class RMThread extends Thread {
             // Read messages from client (mid level server)
             String message;
             while ((message = m_inFromClient.readLine())!=null) {
+                logger.debug("Received command: " + message);
 
                 // split message with comma, and call that function
                 String[] params =  message.split(",");

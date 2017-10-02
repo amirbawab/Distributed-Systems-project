@@ -89,6 +89,8 @@ public class MiddlewareServerThread extends Thread {
             // Read messages from client
             String message;
             while ((message = m_inFromClient.readLine())!=null) {
+                logger.debug("Received command: " + message);
+
                 // Split message with comma, and call that function
                 String[] params = message.split(",");
 
