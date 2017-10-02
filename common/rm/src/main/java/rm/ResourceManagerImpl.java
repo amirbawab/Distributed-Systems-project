@@ -511,23 +511,9 @@ public class ResourceManagerImpl implements ResourceManager {
      */
     public boolean itinerary(int id,int customer, Vector flightNumbers,String location, boolean car, boolean room)
             throws RemoteException  {
-
-        boolean success = true;
-        // Reserve flights
-        for(Object fNum : flightNumbers) {
-            success &= reserveFlight(id, customer, Integer.parseInt(fNum.toString()));
-        }
-
-        // If should reserve a car
-        if(car) {
-            success &= reserveCar(id, customer, location);
-        }
-
-        // If should reserve a room
-        if(room) {
-            success &= reserveRoom(id, customer, location);
-        }
-        return success;
+        // NOTE:
+        // Implementation is handled by the middleware server
+        return false;
     }
 
 //    Returns the number of reservations for this flight.
