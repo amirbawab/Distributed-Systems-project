@@ -316,7 +316,7 @@ public class CLI {
                         Id = Integer.parseInt(arguments.elementAt(1));
                         int customer = Integer.parseInt(arguments.elementAt(2));
                         String bill=m_resourceManager.queryCustomerInfo(Id,customer);
-                        System.out.println("Customer info:"+bill);
+                        System.out.println("Customer info:" + bill.replace("@","\n"));
                     } catch(Exception e){
                         logger.error(e.getMessage());
                         return false;

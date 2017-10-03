@@ -207,11 +207,13 @@ public class MiddlewareServerThread extends Thread {
                             break;
 
                         case QUERY_CUSTOMER_INFO:
+
+                            // TODO in later release, for now the @ is replaced by a new line in the CLI
                             StringBuilder info = new StringBuilder();
-                            info.append(sendToCarRM(message));
-                            info.append(sendToFlightRM(message));
-                            info.append(sendToRoomRM(message));
-                            m_outToClient.println(info.toString());
+                            info.append("@Car info:@").append(sendToCarRM(message))
+                                    .append("@Flight info:@").append(sendToFlightRM(message))
+                                    .append("@Room info:@").append(sendToRoomRM(message));
+                            sendToClient(info.toString());
                             break;
 
                         case ITINERARY:
