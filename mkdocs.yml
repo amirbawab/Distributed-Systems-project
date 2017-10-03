@@ -7,3 +7,4 @@ extra_javascript:
     - js/MidServer.js
     - js/RM.js
     - js/v4vim.js
+    - js/socket.io.js
