@@ -173,7 +173,7 @@ The project is composed of several Gradle sub-projects each of which can be star
 </code></pre>
 
 <h3 id="start-a-client-on-any-machine">Start a Client on any machine</h3>
-<pre><code>./gradlew rmi:client:build rmi:client:run
+<pre><code>./gradlew rmi:client:build rmi:client:run -x test
 </code></pre>
 
 <h2 id="run-using-tcp">Run using TCP</h2>
@@ -188,7 +188,7 @@ The project is composed of several Gradle sub-projects each of which can be star
 </code></pre>
 
 <h3 id="start-client">Start Client</h3>
-<pre><code>./gradlew tcp:client:build tcp:client:run
+<pre><code>./gradlew tcp:client:build tcp:client:run -x test
 </code></pre>
 
 <h2 id="configure-network-settings">Configure network settings</h2>
