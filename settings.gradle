@@ -9,9 +9,9 @@ include 'rmi:midserver'
 include 'rmi:rm'
 
 // TCP projects
-include 'tcp:client'
-include 'tcp:midserver'
-include 'tcp:rm'
+//include 'tcp:client'
+//include 'tcp:midserver'
+//include 'tcp:rm'
 
 // Root project
 rootProject.name = 'V4Vim'

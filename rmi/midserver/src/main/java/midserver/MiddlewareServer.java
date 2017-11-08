@@ -1,9 +1,11 @@
 package midserver;
 
 import inter.ResourceManager;
+import lm.TransactionAbortedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.transaction.InvalidTransactionException;
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -285,5 +287,25 @@ class MiddlewareServer implements ResourceManager {
             }
             return success;
         }
+    }
+
+    @Override
+    public int start() throws RemoteException {
+        return 0;
+    }
+
+    @Override
+    public boolean commit(int transactionId) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
+        return false;
+    }
+
+    @Override
+    public void abort(int transactionId) throws RemoteException, InvalidTransactionException {
+
+    }
+
+    @Override
+    public boolean shutdown() throws RemoteException {
+        return false;
     }
 }

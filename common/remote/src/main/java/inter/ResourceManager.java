@@ -21,7 +21,7 @@ import java.util.*;
  * has succeeded.
  */
 
-public interface ResourceManager extends Remote {
+public interface ResourceManager extends Remote, ResourceManagerActions {
 
     // RM object reference
     String MID_SERVER_REF = "mid-server";

@@ -5,8 +5,11 @@
 package rm;
 
 import inter.ResourceManager;
+import lm.TransactionAbortedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import javax.transaction.InvalidTransactionException;
 import java.util.*;
 import java.rmi.RemoteException;
 
@@ -512,6 +515,26 @@ public class ResourceManagerImpl implements ResourceManager {
             throws RemoteException  {
         // NOTE:
         // Implementation is handled by the middleware server
+        return false;
+    }
+
+    @Override
+    public int start() throws RemoteException {
+        return 0;
+    }
+
+    @Override
+    public boolean commit(int transactionId) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
+        return false;
+    }
+
+    @Override
+    public void abort(int transactionId) throws RemoteException, InvalidTransactionException {
+
+    }
+
+    @Override
+    public boolean shutdown() throws RemoteException {
         return false;
     }
 
