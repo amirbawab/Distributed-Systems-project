@@ -1,6 +1,7 @@
 package midserver;
 
 import inter.ResourceManager;
+import lm.LockManager;
 import lm.TransactionAbortedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,6 +27,9 @@ class MiddlewareServer implements ResourceManager {
     // Program exit codes
     private static final int CODE_ERROR=1;
 
+    // Lock manager
+    private LockManager m_lockManager;
+
     // Logger
     private static final Logger logger = LogManager.getLogger(MiddlewareServer.class);
 
@@ -48,6 +52,9 @@ class MiddlewareServer implements ResourceManager {
         ms.m_carRM = connectToRM(ResourceManager.RM_CAR_REF, rmRMIRegistryIP, rmRMIRegistryPort);
         ms.m_flightRM = connectToRM(ResourceManager.RM_FLIGHT_REF, rmRMIRegistryIP, rmRMIRegistryPort);
         ms.m_roomRM = connectToRM(ResourceManager.RM_ROOM_REF, rmRMIRegistryIP, rmRMIRegistryPort);
+
+        // Initialize the lock manager
+        ms.m_lockManager = new LockManager();
 
         // Create and install a security manager
         if (System.getSecurityManager() == null) {

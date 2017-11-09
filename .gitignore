@@ -91,3 +91,4 @@ fabric.properties
 # Log files
 logs/
 *.swp
+out/
