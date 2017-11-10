@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class Transaction {
     private int m_xid;
-    private List<TrxnObj> m_transactions;
+    @Deprecated private List<TrxnObj> m_transactions;
     private Set<ResourceManager> m_rms;
 
     public Transaction(int xid) {
@@ -23,7 +23,7 @@ public class Transaction {
      * Get transactions
      * @return list of transaction objects
      */
-    public List<TrxnObj> getTransactionsObjects() {
+    @Deprecated public List<TrxnObj> getTransactionsObjects() {
         return m_transactions;
     }
 
@@ -39,7 +39,7 @@ public class Transaction {
      * Add transaction
      * @param transaction
      */
-    public void addTransaction(TrxnObj transaction) {
+    @Deprecated public void addTransaction(TrxnObj transaction) {
         m_transactions.add(transaction);
     }
 

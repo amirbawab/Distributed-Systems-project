@@ -8,7 +8,6 @@ import inter.ResourceManager;
 import lm.TransactionAbortedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import tm.Transaction;
 
 import javax.transaction.InvalidTransactionException;
 import java.util.*;

@@ -1,8 +1,10 @@
 package midserver;
 
 import inter.ResourceManager;
+import lm.DeadlockException;
 import lm.LockManager;
 import lm.TransactionAbortedException;
+import lm.TrxnObj;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tm.TransactionManager;
@@ -51,11 +53,13 @@ class MiddlewareServer implements ResourceManager {
         String rmRMIRegistryIP = args[1];
         int rmRMIRegistryPort = Integer.parseInt(args[2]);
 
-        // Connect
+        // Build a middleware server
         MiddlewareServer ms = bindRM(ResourceManager.MID_SERVER_REF, serverRMIRegistryPort);
-        ms.m_carRM = connectToRM(ResourceManager.RM_CAR_REF, rmRMIRegistryIP, rmRMIRegistryPort);
-        ms.m_flightRM = connectToRM(ResourceManager.RM_FLIGHT_REF, rmRMIRegistryIP, rmRMIRegistryPort);
-        ms.m_roomRM = connectToRM(ResourceManager.RM_ROOM_REF, rmRMIRegistryIP, rmRMIRegistryPort);
+
+        // Connect to rm
+        ms.m_carRM = ms.connectToRM(ResourceManager.RM_CAR_REF, rmRMIRegistryIP, rmRMIRegistryPort);
+        ms.m_flightRM = ms.connectToRM(ResourceManager.RM_FLIGHT_REF, rmRMIRegistryIP, rmRMIRegistryPort);
+        ms.m_roomRM = ms.connectToRM(ResourceManager.RM_ROOM_REF, rmRMIRegistryIP, rmRMIRegistryPort);
 
         // Initialize the lock manager
         ms.m_lockManager = new LockManager();
@@ -92,7 +96,7 @@ class MiddlewareServer implements ResourceManager {
      * Connect to RM
      * @param key
      */
-    private static ResourceManager connectToRM(String key, String server, int port) {
+    private ResourceManager connectToRM(String key, String server, int port) {
         try {
             // get a reference to the rmiregistry
             Registry registry = LocateRegistry.getRegistry(server, port);
@@ -109,6 +113,10 @@ class MiddlewareServer implements ResourceManager {
         }
         throw new RuntimeException("Connection failure: Terminating program ...");
     }
+
+    /****************************
+     *      CLIENT ACTIONS
+     ***************************/
 
     @Override
     public boolean addFlight(int id, int flightNum, int flightSeats, int flightPrice)
