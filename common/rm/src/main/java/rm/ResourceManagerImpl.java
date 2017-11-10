@@ -574,9 +574,7 @@ public class ResourceManagerImpl implements ResourceManager {
                     getTable(GLOBAL_TABLE).put(key, getTable(transactionId).get(key));
                 }
             }
-            // Delete table
-            m_tables.remove(transactionId);
-            m_lockManager.UnlockAll(transactionId);
+            deleteTable(transactionId);
             return true;
         }
         throw new InvalidTransactionException("Transaction id " + transactionId + " is not available");
@@ -584,7 +582,7 @@ public class ResourceManagerImpl implements ResourceManager {
 
     @Override
     public void abort(int transactionId) throws RemoteException, InvalidTransactionException {
-        m_lockManager.UnlockAll(transactionId);
+        deleteTable(transactionId);
     }
 
     @Override
@@ -606,6 +604,15 @@ public class ResourceManagerImpl implements ResourceManager {
         RMHashtable localTable = new RMHashtable();
         m_tables.put(transactionId, localTable);
         return localTable;
+    }
+
+    /**
+     * Delete a table and unlock all acquired locks
+     * @param transactionId
+     */
+    public void deleteTable(int transactionId) {
+        m_tables.remove(transactionId);
+        m_lockManager.UnlockAll(transactionId);
     }
 
 //    Returns the number of reservations for this flight.
