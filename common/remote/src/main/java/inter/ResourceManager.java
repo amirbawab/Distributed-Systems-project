@@ -1,8 +1,5 @@
 package inter;
 
-
-import tm.TransactionListener;
-
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
