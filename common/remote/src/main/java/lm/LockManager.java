@@ -76,7 +76,6 @@ public class LockManager
                                 this.lockTable.removeAll(dataObj);
                                 this.lockTable.add(trxnObj);
                                 this.lockTable.add(dataObj);
-                                System.out.println(this.lockTable.toString());
                             }
 
                         } else {
