@@ -36,6 +36,13 @@ public class TransactionManager implements ResourceManagerActions {
         return m_transactionMap.get(id);
     }
 
+    public void removeTransaction(int id) throws InvalidTransactionException {
+        if(!m_transactionMap.containsKey(id)) {
+            throw new InvalidTransactionException("Transaction id " + id + " is not available");
+        }
+        m_transactionMap.remove(id);
+    }
+
     /**
      * Start transaction
      * @return

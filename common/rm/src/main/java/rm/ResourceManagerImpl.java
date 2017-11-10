@@ -49,8 +49,7 @@ public class ResourceManagerImpl implements ResourceManager {
                 if(!getTable(GLOBAL_TABLE).containsKey(key)) {
                     return null;
                 }
-                // FIXME Clone object on read as it's not of a primitive type
-                getTable(id).put(key, getTable(GLOBAL_TABLE).get(key));
+                getTable(id).put(key, getTable(GLOBAL_TABLE).get(key).clone());
             }
             return getTable(id).get(key);
         }
@@ -545,16 +544,22 @@ public class ResourceManagerImpl implements ResourceManager {
 
     @Override
     public boolean commit(int transactionId) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
-        for(String key : getTable(transactionId).keySet()) {
-            if(getTable(transactionId).get(key) == RM_NULL) {
-                if(getTable(GLOBAL_TABLE).containsKey(key)) {
-                    getTable(GLOBAL_TABLE).remove(key);
+        if(m_tables.containsKey(transactionId)) {
+            // Copy changes
+            for(String key : getTable(transactionId).keySet()) {
+                if(getTable(transactionId).get(key) == RM_NULL) {
+                    if(getTable(GLOBAL_TABLE).containsKey(key)) {
+                        getTable(GLOBAL_TABLE).remove(key);
+                    }
+                } else {
+                    getTable(GLOBAL_TABLE).put(key, getTable(transactionId).get(key));
                 }
-            } else {
-                getTable(GLOBAL_TABLE).put(key, getTable(transactionId).get(key));
             }
+            // Delete table
+            m_tables.remove(transactionId);
+            return true;
         }
-        return true;
+        throw new InvalidTransactionException("Transaction id " + transactionId + " is not available");
     }
 
     @Override

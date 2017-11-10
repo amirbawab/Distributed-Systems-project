@@ -1,1 +1,1 @@
-// -------------------------------// adapted from Kevin T. Manley// CSE 593// -------------------------------package rm;import java.io.*;// Resource manager data itempublic abstract class RMItem implements Serializable {    RMItem() {			super();    }}
+// -------------------------------// adapted from Kevin T. Manley// CSE 593// -------------------------------package rm;import java.io.*;// Resource manager data itempublic abstract class RMItem implements Serializable {    RMItem() {super();}    protected abstract RMItem clone();}

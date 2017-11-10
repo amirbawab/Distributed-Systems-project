@@ -348,6 +348,7 @@ class MiddlewareServer implements ResourceManager {
         for(ResourceManager rm : m_tm.getTransaction(transactionId).getRMs()) {
             rm.commit(transactionId);
         }
+        m_tm.removeTransaction(transactionId);
         return true;
     }
 
@@ -356,6 +357,7 @@ class MiddlewareServer implements ResourceManager {
         for(ResourceManager rm : m_tm.getTransaction(transactionId).getRMs()) {
             rm.abort(transactionId);
         }
+        m_tm.removeTransaction(transactionId);
     }
 
     @Override
