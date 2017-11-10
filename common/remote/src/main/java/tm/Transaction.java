@@ -4,17 +4,19 @@ import inter.ResourceManager;
 import lm.TrxnObj;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Transaction {
     private int m_xid;
     private List<TrxnObj> m_transactions;
-    private List<ResourceManager> m_rms;
+    private Set<ResourceManager> m_rms;
 
     public Transaction(int xid) {
         m_xid = xid;
         m_transactions = new ArrayList<>();
-        m_rms = new ArrayList<>();
+        m_rms = new HashSet<>();
     }
 
     /**
@@ -27,9 +29,9 @@ public class Transaction {
 
     /**
      * Get involved Resource managers
-     * @return list of resource managers
+     * @return set of resource managers
      */
-    public List<ResourceManager> getRMs() {
+    public Set<ResourceManager> getRMs() {
         return m_rms;
     }
 

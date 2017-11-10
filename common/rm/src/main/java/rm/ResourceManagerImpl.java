@@ -46,6 +46,9 @@ public class ResourceManagerImpl implements ResourceManager {
         synchronized(getTable(id)) {
             // Check if data already in table
             if(!getTable(id).containsKey(key)) {
+                if(!getTable(GLOBAL_TABLE).containsKey(key)) {
+                    return null;
+                }
                 getTable(id).put(key, getTable(GLOBAL_TABLE).get(key));
             }
             return getTable(id).get(key);
