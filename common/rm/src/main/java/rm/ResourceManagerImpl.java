@@ -20,19 +20,17 @@ public class ResourceManagerImpl implements ResourceManager {
     private static final Logger logger = LogManager.getLogger(ResourceManagerImpl.class);
 
     // Constants
-    private static final int CODE_ERROR=1;
-
-    // Store items in a hash table
-    private final RMHashtable m_itemHT = new RMHashtable();
+    private static final int GLOBAL_TABLE=-1;
 
     // Local table for each transaction
-    private Map<Integer, RMHashtable> m_txLocalTables;
+    private Map<Integer, RMHashtable> m_tables;
 
     /**
      * Construct a new resource manager
      */
     ResourceManagerImpl() {
-        m_txLocalTables = new HashMap<>();
+        m_tables = new HashMap<>();
+        m_tables.put(GLOBAL_TABLE, new RMHashtable());
     }
 
     /**
@@ -42,8 +40,8 @@ public class ResourceManagerImpl implements ResourceManager {
      * @return item read
      */
     private RMItem readData( int id, String key ) {
-        synchronized(m_itemHT) {
-            return (RMItem) m_itemHT.get(key);
+        synchronized(getTable(id)) {
+            return getTable(id).get(key);
         }
     }
 
@@ -54,8 +52,8 @@ public class ResourceManagerImpl implements ResourceManager {
      * @param value
      */
     private void writeData( int id, String key, RMItem value ) {
-        synchronized(m_itemHT) {
-            m_itemHT.put(key, value);
+        synchronized(getTable(id)) {
+            getTable(id).put(key, value);
         }
     }
     
@@ -66,8 +64,8 @@ public class ResourceManagerImpl implements ResourceManager {
      * @return removed item
      */
     private RMItem removeData(int id, String key) {
-        synchronized(m_itemHT) {
-            return (RMItem)m_itemHT.remove(key);
+        synchronized(getTable(id)) {
+            return getTable(id).remove(key);
         }
     }
     
@@ -547,6 +545,22 @@ public class ResourceManagerImpl implements ResourceManager {
     @Override
     public boolean shutdown() throws RemoteException {
         return false;
+    }
+
+    /**
+     * Get local table
+     * If table for the specified transaction id does not
+     * exist, then create it then return it
+     * @param transactionId
+     * @return copy of the local table
+     */
+    public RMHashtable getTable(int transactionId) {
+        if(m_tables.containsKey(transactionId)) {
+            return m_tables.get(transactionId);
+        }
+        RMHashtable localTable = new RMHashtable(m_tables.get(GLOBAL_TABLE));
+        m_tables.put(transactionId, localTable);
+        return localTable;
     }
 
 //    Returns the number of reservations for this flight.
