@@ -49,6 +49,7 @@ public class ResourceManagerImpl implements ResourceManager {
                 if(!getTable(GLOBAL_TABLE).containsKey(key)) {
                     return null;
                 }
+                // FIXME Clone object on read as it's not of a primitive type
                 getTable(id).put(key, getTable(GLOBAL_TABLE).get(key));
             }
             return getTable(id).get(key);
