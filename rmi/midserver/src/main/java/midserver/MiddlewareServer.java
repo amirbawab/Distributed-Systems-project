@@ -153,8 +153,8 @@ class MiddlewareServer implements ResourceManager {
                 return m_flightRM.addFlight(m_tm.getTransaction(id).getXID(), flightNum, flightSeats, flightPrice);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return false;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -168,8 +168,8 @@ class MiddlewareServer implements ResourceManager {
                 return m_carRM.addCars(m_tm.getTransaction(id).getXID(), location, numCars, price);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return false;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -183,8 +183,8 @@ class MiddlewareServer implements ResourceManager {
                 return m_roomRM.addRooms(m_tm.getTransaction(id).getXID(), location, numRooms, price);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return false;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -203,8 +203,8 @@ class MiddlewareServer implements ResourceManager {
                 return cid;
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return -1;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -223,8 +223,8 @@ class MiddlewareServer implements ResourceManager {
                         m_roomRM.newCustomer(id, cid);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return false;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -238,8 +238,8 @@ class MiddlewareServer implements ResourceManager {
                 return m_flightRM.deleteFlight(m_tm.getTransaction(id).getXID(), flightNum);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return false;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -253,8 +253,8 @@ class MiddlewareServer implements ResourceManager {
                 return m_carRM.deleteCars(m_tm.getTransaction(id).getXID(), location);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return false;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -268,8 +268,8 @@ class MiddlewareServer implements ResourceManager {
                 return m_roomRM.deleteRooms(m_tm.getTransaction(id).getXID(), location);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return false;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -288,8 +288,8 @@ class MiddlewareServer implements ResourceManager {
                         m_flightRM.deleteCustomer(id, customer);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return false;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -303,8 +303,8 @@ class MiddlewareServer implements ResourceManager {
                 return m_flightRM.queryFlight(m_tm.getTransaction(id).getXID(), flightNumber);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return -1;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -317,10 +317,8 @@ class MiddlewareServer implements ResourceManager {
                 return m_carRM.queryCars(m_tm.getTransaction(id).getXID(), location);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-
-                // TODO Maybe handle this?
-                return -1;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -334,10 +332,8 @@ class MiddlewareServer implements ResourceManager {
                 return m_roomRM.queryRooms(m_tm.getTransaction(id).getXID(), location);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-
-                // TODO Maybe handle this?
-                return -1;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -358,8 +354,8 @@ class MiddlewareServer implements ResourceManager {
                 return sb.toString();
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return "";
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -373,8 +369,8 @@ class MiddlewareServer implements ResourceManager {
                 return m_flightRM.queryFlightPrice(m_tm.getTransaction(id).getXID(), flightNumber);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return -1;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -388,8 +384,8 @@ class MiddlewareServer implements ResourceManager {
                 return m_carRM.queryCarsPrice(m_tm.getTransaction(id).getXID(), location);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return -1;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -403,8 +399,8 @@ class MiddlewareServer implements ResourceManager {
                 return m_roomRM.queryRoomsPrice(m_tm.getTransaction(id).getXID(), location);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return -1;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -418,8 +414,8 @@ class MiddlewareServer implements ResourceManager {
                 return m_flightRM.reserveFlight(m_tm.getTransaction(id).getXID(), customer, flightNumber);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return false;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -433,8 +429,8 @@ class MiddlewareServer implements ResourceManager {
                 return m_carRM.reserveCar(m_tm.getTransaction(id).getXID(), customer, location);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return false;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -448,8 +444,8 @@ class MiddlewareServer implements ResourceManager {
                 return m_roomRM.reserveRoom(m_tm.getTransaction(id).getXID(), customer, locationd);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return false;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }
@@ -508,8 +504,8 @@ class MiddlewareServer implements ResourceManager {
                 return success;
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
-                abort(id);
-                return false;
+                abort(e.GetXId());
+                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
             }
         }
     }

@@ -13,7 +13,7 @@ public class DeadlockException extends RuntimeException {
         this.xid = xid;
     }
     
-    int GetXId()
+    public int GetXId()
     {
         return xid;
     }
