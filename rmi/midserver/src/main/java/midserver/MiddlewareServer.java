@@ -77,7 +77,7 @@ class MiddlewareServer implements ResourceManager {
      */
     public MiddlewareServer() {
         final int SLEEP_TIME = 1000;
-        final int MAX_IDLE_TIME = 30000;
+        final int MAX_IDLE_TIME = 60000;
 
         // Abort old transactions
         new Thread(() -> {

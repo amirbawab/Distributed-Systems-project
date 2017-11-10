@@ -73,8 +73,10 @@ public class LockManager
                             synchronized (this.lockTable) {
                                 logger.info("Conversion bit is set. Converting READ lock to WRITE lock");
                                 this.lockTable.removeAll(trxnObj);
+                                this.lockTable.removeAll(dataObj);
                                 this.lockTable.add(trxnObj);
                                 this.lockTable.add(dataObj);
+                                System.out.println(this.lockTable.toString());
                             }
 
                         } else {
@@ -134,7 +136,7 @@ public class LockManager
                     logger.info("Releasing " + (trxnObj.getLockType() == TrxnObj.READ ? "READ" : "WRITE") + " lock on "
                             + trxnObj.getDataName() + " from transaction " + trxnObj.getXId());
                 }
-                                        
+
                 // check if there are any waiting transactions. 
                 synchronized (this.waitTable) {
                     // get all the transactions waiting on this dataObj
@@ -189,7 +191,7 @@ public class LockManager
                     }
                 } 
             }
-        } 
+        }
 
         return true;
     }
