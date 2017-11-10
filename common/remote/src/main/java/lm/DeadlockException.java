@@ -4,8 +4,7 @@ package lm;
     The transaction is deadlocked.  Somebody should abort it.
 */
 
-public class DeadlockException extends Exception
-{
+public class DeadlockException extends RuntimeException {
     private int xid = 0;
     
     public DeadlockException (int xid, String msg)

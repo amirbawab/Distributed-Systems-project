@@ -48,23 +48,17 @@ public class ResourceManagerImpl implements ResourceManager {
      * @param key
      * @return item read
      */
-    private RMItem readData( int id, String key ) {
+    private RMItem readData( int id, String key ) throws DeadlockException {
         synchronized(getTable(id)) {
-            try {
-                m_lockManager.Lock(id, key, TrxnObj.READ);
-                // Check if data already in table
-                if(!getTable(id).containsKey(key)) {
-                    if(!getTable(GLOBAL_TABLE).containsKey(key)) {
-                        return null;
-                    }
-                    getTable(id).put(key, getTable(GLOBAL_TABLE).get(key).clone());
+            m_lockManager.Lock(id, key, TrxnObj.READ);
+            // Check if data already in table
+            if(!getTable(id).containsKey(key)) {
+                if(!getTable(GLOBAL_TABLE).containsKey(key)) {
+                    return null;
                 }
-                return getTable(id).get(key);
-            } catch (DeadlockException e) {
-                logger.error("Deadlock ...");
-                // TODO Inform the client
-                throw new RuntimeException("No return");
+                getTable(id).put(key, getTable(GLOBAL_TABLE).get(key).clone());
             }
+            return getTable(id).get(key);
         }
     }
 
@@ -74,15 +68,10 @@ public class ResourceManagerImpl implements ResourceManager {
      * @param key
      * @param value
      */
-    private void writeData( int id, String key, RMItem value ) {
+    private void writeData( int id, String key, RMItem value ) throws DeadlockException {
         synchronized(getTable(id)) {
-            try {
-                m_lockManager.Lock(id, key, TrxnObj.WRITE);
-                getTable(id).put(key, value);
-            } catch (DeadlockException e) {
-                logger.error("Deadlock ...");
-                // TODO Inform the client
-            }
+            m_lockManager.Lock(id, key, TrxnObj.WRITE);
+            getTable(id).put(key, value);
         }
     }
     

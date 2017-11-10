@@ -73,7 +73,7 @@ class MiddlewareServer implements ResourceManager {
      */
     public MiddlewareServer() {
         final int SLEEP_TIME = 1000;
-        final int MAX_IDLE_TIME = 10000;
+        final int MAX_IDLE_TIME = 30000;
 
         // Abort old transactions
         new Thread(() -> {
@@ -143,192 +143,310 @@ class MiddlewareServer implements ResourceManager {
     public boolean addFlight(int id, int flightNum, int flightSeats, int flightPrice)
             throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_flightRM);
-            return m_flightRM.addFlight(m_tm.getTransaction(id).getXID(), flightNum, flightSeats, flightPrice);
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_flightRM);
+                return m_flightRM.addFlight(m_tm.getTransaction(id).getXID(), flightNum, flightSeats, flightPrice);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return false;
+            }
         }
     }
 
     @Override
     public boolean addCars(int id, String location, int numCars, int price) throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_carRM);
-            return m_carRM.addCars(m_tm.getTransaction(id).getXID(), location, numCars, price);
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_carRM);
+                return m_carRM.addCars(m_tm.getTransaction(id).getXID(), location, numCars, price);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return false;
+            }
         }
     }
 
     @Override
     public boolean addRooms(int id, String location, int numRooms, int price) throws RemoteException {
         synchronized (lock){
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_roomRM);
-            return m_roomRM.addRooms(m_tm.getTransaction(id).getXID(), location, numRooms, price);
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_roomRM);
+                return m_roomRM.addRooms(m_tm.getTransaction(id).getXID(), location, numRooms, price);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return false;
+            }
         }
     }
 
     @Override
     public int newCustomer(int id) throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_roomRM);
-            m_tm.getTransaction(id).addRM(m_carRM);
-            m_tm.getTransaction(id).addRM(m_flightRM);
-            int cid = m_carRM.newCustomer(m_tm.getTransaction(id).getXID());
-            m_roomRM.newCustomer(id, cid);
-            m_flightRM.newCustomer(id, cid);
-            return cid;
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_roomRM);
+                m_tm.getTransaction(id).addRM(m_carRM);
+                m_tm.getTransaction(id).addRM(m_flightRM);
+                int cid = m_carRM.newCustomer(m_tm.getTransaction(id).getXID());
+                m_roomRM.newCustomer(id, cid);
+                m_flightRM.newCustomer(id, cid);
+                return cid;
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return -1;
+            }
         }
     }
 
     @Override
     public boolean newCustomer(int id, int cid) throws RemoteException {
         synchronized (lock) {
-            id = m_tm.getTransaction(id).getXID();
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_flightRM);
-            m_tm.getTransaction(id).addRM(m_carRM);
-            m_tm.getTransaction(id).addRM(m_roomRM);
-            return m_flightRM.newCustomer(id, cid) &&
-                    m_carRM.newCustomer(id, cid) &&
-                    m_roomRM.newCustomer(id, cid);
+            try {
+                id = m_tm.getTransaction(id).getXID();
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_flightRM);
+                m_tm.getTransaction(id).addRM(m_carRM);
+                m_tm.getTransaction(id).addRM(m_roomRM);
+                return m_flightRM.newCustomer(id, cid) &&
+                        m_carRM.newCustomer(id, cid) &&
+                        m_roomRM.newCustomer(id, cid);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return false;
+            }
         }
     }
 
     @Override
     public boolean deleteFlight(int id, int flightNum) throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_flightRM);
-            return m_flightRM.deleteFlight(m_tm.getTransaction(id).getXID(), flightNum);
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_flightRM);
+                return m_flightRM.deleteFlight(m_tm.getTransaction(id).getXID(), flightNum);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return false;
+            }
         }
     }
 
     @Override
     public boolean deleteCars(int id, String location) throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_carRM);
-            return m_carRM.deleteCars(m_tm.getTransaction(id).getXID(), location);
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_carRM);
+                return m_carRM.deleteCars(m_tm.getTransaction(id).getXID(), location);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return false;
+            }
         }
     }
 
     @Override
     public boolean deleteRooms(int id, String location) throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_roomRM);
-            return m_roomRM.deleteRooms(m_tm.getTransaction(id).getXID(), location);
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_roomRM);
+                return m_roomRM.deleteRooms(m_tm.getTransaction(id).getXID(), location);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return false;
+            }
         }
     }
 
     @Override
     public boolean deleteCustomer(int id, int customer) throws RemoteException {
         synchronized (lock) {
-            id = m_tm.getTransaction(id).getXID();
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_roomRM);
-            m_tm.getTransaction(id).addRM(m_carRM);
-            m_tm.getTransaction(id).addRM(m_flightRM);
-            return m_roomRM.deleteCustomer(id, customer) &&
-                    m_carRM.deleteCustomer(id, customer) &&
-                    m_flightRM.deleteCustomer(id, customer);
+            try {
+                id = m_tm.getTransaction(id).getXID();
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_roomRM);
+                m_tm.getTransaction(id).addRM(m_carRM);
+                m_tm.getTransaction(id).addRM(m_flightRM);
+                return m_roomRM.deleteCustomer(id, customer) &&
+                        m_carRM.deleteCustomer(id, customer) &&
+                        m_flightRM.deleteCustomer(id, customer);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return false;
+            }
         }
     }
 
     @Override
     public int queryFlight(int id, int flightNumber) throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_flightRM);
-            return m_flightRM.queryFlight(m_tm.getTransaction(id).getXID(), flightNumber);
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_flightRM);
+                return m_flightRM.queryFlight(m_tm.getTransaction(id).getXID(), flightNumber);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return -1;
+            }
         }
     }
 
     @Override
     public int queryCars(int id, String location) throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).addRM(m_carRM);
-            return m_carRM.queryCars(m_tm.getTransaction(id).getXID(), location);
+            try {
+                m_tm.getTransaction(id).addRM(m_carRM);
+                return m_carRM.queryCars(m_tm.getTransaction(id).getXID(), location);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+
+                // TODO Maybe handle this?
+                return -1;
+            }
         }
     }
 
     @Override
     public int queryRooms(int id, String location) throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_roomRM);
-            return m_roomRM.queryRooms(m_tm.getTransaction(id).getXID(), location);
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_roomRM);
+                return m_roomRM.queryRooms(m_tm.getTransaction(id).getXID(), location);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+
+                // TODO Maybe handle this?
+                return -1;
+            }
         }
     }
 
     @Override
     public String queryCustomerInfo(int id, int customer) throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_carRM);
-            m_tm.getTransaction(id).addRM(m_flightRM);
-            m_tm.getTransaction(id).addRM(m_roomRM);
-            StringBuilder sb = new StringBuilder();
-            id = m_tm.getTransaction(id).getXID();
-            sb.append("\nCar info:\n").append(m_carRM.queryCustomerInfo(id, customer))
-                    .append("\nFlight info:\n").append(m_flightRM.queryCustomerInfo(id, customer))
-                    .append("\nRoom info:\n").append(m_roomRM.queryCustomerInfo(id, customer));
-            return sb.toString();
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_carRM);
+                m_tm.getTransaction(id).addRM(m_flightRM);
+                m_tm.getTransaction(id).addRM(m_roomRM);
+                StringBuilder sb = new StringBuilder();
+                id = m_tm.getTransaction(id).getXID();
+                sb.append("\nCar info:\n").append(m_carRM.queryCustomerInfo(id, customer))
+                        .append("\nFlight info:\n").append(m_flightRM.queryCustomerInfo(id, customer))
+                        .append("\nRoom info:\n").append(m_roomRM.queryCustomerInfo(id, customer));
+                return sb.toString();
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return "";
+            }
         }
     }
 
     @Override
     public int queryFlightPrice(int id, int flightNumber) throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_flightRM);
-            return m_flightRM.queryFlightPrice(m_tm.getTransaction(id).getXID(), flightNumber);
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_flightRM);
+                return m_flightRM.queryFlightPrice(m_tm.getTransaction(id).getXID(), flightNumber);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return -1;
+            }
         }
     }
 
     @Override
     public int queryCarsPrice(int id, String location) throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_carRM);
-            return m_carRM.queryCarsPrice(m_tm.getTransaction(id).getXID(), location);
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_carRM);
+                return m_carRM.queryCarsPrice(m_tm.getTransaction(id).getXID(), location);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return -1;
+            }
         }
     }
 
     @Override
     public int queryRoomsPrice(int id, String location) throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_roomRM);
-            return m_roomRM.queryRoomsPrice(m_tm.getTransaction(id).getXID(), location);
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_roomRM);
+                return m_roomRM.queryRoomsPrice(m_tm.getTransaction(id).getXID(), location);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return -1;
+            }
         }
     }
 
     @Override
     public boolean reserveFlight(int id, int customer, int flightNumber) throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_flightRM);
-            return m_flightRM.reserveFlight(m_tm.getTransaction(id).getXID(), customer, flightNumber);
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_flightRM);
+                return m_flightRM.reserveFlight(m_tm.getTransaction(id).getXID(), customer, flightNumber);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return false;
+            }
         }
     }
 
     @Override
     public boolean reserveCar(int id, int customer, String location) throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_carRM);
-            return m_carRM.reserveCar(m_tm.getTransaction(id).getXID(), customer, location);
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_carRM);
+                return m_carRM.reserveCar(m_tm.getTransaction(id).getXID(), customer, location);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return false;
+            }
         }
     }
 
     @Override
     public boolean reserveRoom(int id, int customer, String locationd) throws RemoteException {
         synchronized (lock) {
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_roomRM);
-            return m_roomRM.reserveRoom(m_tm.getTransaction(id).getXID(), customer, locationd);
+            try {
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_roomRM);
+                return m_roomRM.reserveRoom(m_tm.getTransaction(id).getXID(), customer, locationd);
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
+                return false;
+            }
         }
     }
 
@@ -336,53 +454,59 @@ class MiddlewareServer implements ResourceManager {
     public boolean itinerary(int id, int customer, Vector flightNumbers, String location, boolean car, boolean room)
             throws RemoteException {
         synchronized (lock) {
-            id = m_tm.getTransaction(id).getXID();
-            m_tm.getTransaction(id).updateLastActive();
-            m_tm.getTransaction(id).addRM(m_flightRM);
-            m_tm.getTransaction(id).addRM(m_carRM);
-            m_tm.getTransaction(id).addRM(m_roomRM);
+            try {
+                id = m_tm.getTransaction(id).getXID();
+                m_tm.getTransaction(id).updateLastActive();
+                m_tm.getTransaction(id).addRM(m_flightRM);
+                m_tm.getTransaction(id).addRM(m_carRM);
+                m_tm.getTransaction(id).addRM(m_roomRM);
 
-            // Check if can reserve flight
-            for(Object fNum : flightNumbers) {
-                if(queryFlight(id, Integer.parseInt(fNum.toString())) == 0) {
+                // Check if can reserve flight
+                for(Object fNum : flightNumbers) {
+                    if(queryFlight(id, Integer.parseInt(fNum.toString())) == 0) {
+                        return false;
+                    }
+                }
+
+                // Check if can reserve a car
+                if(car && queryCars(id, location) == 0) {
                     return false;
                 }
-            }
 
-            // Check if can reserve a car
-            if(car && queryCars(id, location) == 0) {
+                // Check if can reserve room
+                if(room && queryRooms(id, location) == 0) {
+                    return false;
+                }
+
+                // Start reserving
+                boolean success = true;
+
+                // Reserve flights
+                for(Object fNum : flightNumbers) {
+                    success &= reserveFlight(id, customer, Integer.parseInt(fNum.toString()));
+                }
+
+                // If should reserve a car
+                if(car) {
+                    success &= reserveCar(id, customer, location);
+                }
+
+                // If should reserve a room
+                if(room) {
+                    success &= reserveRoom(id, customer, location);
+                }
+
+                // If can reserve but was not successful
+                if(!success) {
+                    logger.warn("Query showed that the user can reserve but the reservation was not successful. " +
+                            "Further investigation is required");
+                }
+                return success;
+            } catch (DeadlockException e) {
+                logger.error(e.getMessage());
+                abort(id);
                 return false;
             }
-
-            // Check if can reserve room
-            if(room && queryRooms(id, location) == 0) {
-                return false;
-            }
-
-            // Start reserving
-            boolean success = true;
-
-            // Reserve flights
-            for(Object fNum : flightNumbers) {
-                success &= reserveFlight(id, customer, Integer.parseInt(fNum.toString()));
-            }
-
-            // If should reserve a car
-            if(car) {
-                success &= reserveCar(id, customer, location);
-            }
-
-            // If should reserve a room
-            if(room) {
-                success &= reserveRoom(id, customer, location);
-            }
-
-            // If can reserve but was not successful
-            if(!success) {
-                logger.warn("Query showed that the user can reserve but the reservation was not successful. " +
-                        "Further investigation is required");
-            }
-            return success;
         }
     }
 
