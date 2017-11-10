@@ -576,7 +576,8 @@ public class ResourceManagerImpl implements ResourceManager {
 
     @Override
     public boolean shutdown() throws RemoteException {
-        return false;
+        logger.info("Shutting down ...");
+        return true;
     }
 
     /**

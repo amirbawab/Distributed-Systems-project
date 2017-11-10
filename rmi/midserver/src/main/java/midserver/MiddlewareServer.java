@@ -11,6 +11,7 @@ import tm.Transaction;
 import tm.TransactionManager;
 
 import javax.transaction.InvalidTransactionException;
+import java.rmi.NotBoundException;
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -33,6 +34,9 @@ class MiddlewareServer implements ResourceManager {
 
     // Transaction manager
     private TransactionManager m_tm;
+
+    // RM Registry
+    private static Registry s_registry;
 
     // Logger
     private static final Logger logger = LogManager.getLogger(MiddlewareServer.class);
@@ -103,8 +107,8 @@ class MiddlewareServer implements ResourceManager {
             ResourceManager rm = (ResourceManager) UnicastRemoteObject.exportObject(obj, 0);
 
             // Bind the remote object's stub in the registry
-            Registry registry = LocateRegistry.getRegistry(port);
-            registry.rebind(key, rm);
+            s_registry = LocateRegistry.getRegistry(port);
+            s_registry.rebind(key, rm);
             logger.info("Middleware server ready!");
             return obj;
         } catch (Exception e) {
@@ -512,7 +516,9 @@ class MiddlewareServer implements ResourceManager {
 
     @Override
     public int start() throws RemoteException {
-        return m_tm.start();
+        int transactionId = m_tm.start();
+        logger.info("Started a new transaction with id: " + transactionId);
+        return transactionId;
     }
 
     @Override
@@ -538,6 +544,22 @@ class MiddlewareServer implements ResourceManager {
 
     @Override
     public boolean shutdown() throws RemoteException {
+        if(m_tm.getTransactions().isEmpty()){
+            for(String key : s_registry.list()) {
+                try {
+                    s_registry.unbind(key);
+                    UnicastRemoteObject.unexportObject(this, true);
+                } catch (NotBoundException e) {
+                    logger.error("Error unbinding remote object with key: " + key);
+                    return false;
+                }
+            }
+            boolean shutdown = m_flightRM.shutdown() && m_carRM.shutdown() && m_roomRM.shutdown();
+            logger.info("All RMs are shutdown. Shutting down middleware server ...");
+            return shutdown;
+        } else {
+            logger.info("Will not shutdown because there are still transactions");
+        }
         return false;
     }
 }

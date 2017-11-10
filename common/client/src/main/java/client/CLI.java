@@ -527,6 +527,23 @@ public class CLI {
                         logger.error(e.getMessage());
                     }
                     break;
+                case SHUTDOWN:
+                    if(arguments.size()!=1){
+                        wrongNumber();
+                        break;
+                    }
+
+                    try{
+                        System.out.println("Shutting down system");
+                        if(m_resourceManager.shutdown()) {
+                            System.out.println("System shutdown successfully");
+                        } else {
+                            System.out.println("System could not shutdown because it is in use");
+                        }
+                    } catch(Exception e){
+                        logger.error(e.getMessage());
+                    }
+                    break;
 
                 default:
                     System.out.println("The interface does not support this command.");
@@ -743,12 +760,19 @@ public class CLI {
                 System.out.println("Purpose:");
                 System.out.println("\tApply changes on commit");
                 System.out.println("\nUsage:");
-                System.out.println("\t" + command.getName());
+                System.out.println("\t" + command.getName() + ",<id>");
                 break;
             case ABORT:
                 System.out.println("Abort transaction");
                 System.out.println("Purpose:");
                 System.out.println("\tAbort user transaction");
+                System.out.println("\nUsage:");
+                System.out.println("\t" + command.getName() + ",<id>");
+                break;
+            case SHUTDOWN:
+                System.out.println("Shutdown system");
+                System.out.println("Purpose:");
+                System.out.println("\tShutdown system components");
                 System.out.println("\nUsage:");
                 System.out.println("\t" + command.getName());
                 break;

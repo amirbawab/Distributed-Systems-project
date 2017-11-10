@@ -55,7 +55,8 @@ public interface ResourceManager extends Remote, ResourceManagerActions {
         ITINERARY("itinerary"),
         START("start"),
         COMMIT("commit"),
-        ABORT("abort")
+        ABORT("abort"),
+        SHUTDOWN("shutdown")
         ;
         private String m_functionName;
         private int m_id = 0;
