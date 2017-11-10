@@ -72,8 +72,7 @@ public class LockManager
                             // lock table
                             synchronized (this.lockTable) {
                                 logger.info("Conversion bit is set. Converting READ lock to WRITE lock");
-                                this.lockTable.remove(trxnObj);
-                                this.lockTable.remove(dataObj);
+                                this.lockTable.removeAll(trxnObj);
                                 this.lockTable.add(trxnObj);
                                 this.lockTable.add(dataObj);
                             }
@@ -123,12 +122,18 @@ public class LockManager
             int size = vect.size();
                                                 
             for (int i = (size - 1); i >= 0; i--) {
-                
+
+                boolean unlockFlag = true;
                 trxnObj = (TrxnObj) vect.elementAt(i);
-                this.lockTable.remove(trxnObj);
+                unlockFlag &= this.lockTable.remove(trxnObj);
 
                 DataObj dataObj = new DataObj(trxnObj.getXId(), trxnObj.getDataName(), trxnObj.getLockType());
-                this.lockTable.remove(dataObj);
+                unlockFlag &= this.lockTable.remove(dataObj);
+
+                if(unlockFlag) {
+                    logger.info("Releasing " + (trxnObj.getLockType() == TrxnObj.READ ? "READ" : "WRITE") + " lock on "
+                            + trxnObj.getDataName() + " from transaction " + trxnObj.getXId());
+                }
                                         
                 // check if there are any waiting transactions. 
                 synchronized (this.waitTable) {
@@ -227,7 +232,6 @@ public class LockManager
                         throw new RedundantLockRequestException(dataObj.getXId(), message);
                     } else if(dataObj2.getLockType() == DataObj.READ) {
                         bitset.set(0, true);
-                        // TODO What if S_1(a) -> S_2(a) -> X_1(a). Now the exception prevents a complete scan
                     }
                 }
             } 

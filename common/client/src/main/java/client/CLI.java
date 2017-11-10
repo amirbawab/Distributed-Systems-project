@@ -522,7 +522,7 @@ public class CLI {
                         Id = Integer.parseInt(arguments.elementAt(1));
                         System.out.println("Aborting transaction:" + Id);
                         m_resourceManager.abort(Id);
-                        System.out.println("Transaction " + Id + "  successfully");
+                        System.out.println("Transaction " + Id + " aborted successfully");
                     } catch(Exception e){
                         logger.error(e.getMessage());
                     }
