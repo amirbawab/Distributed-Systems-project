@@ -30,7 +30,7 @@ public class TransactionManager implements ResourceManagerActions {
      * @exception InvalidTransactionException
      */
     public Transaction getTransaction(int id) throws InvalidTransactionException {
-        if(m_transactionMap.containsKey(id)) {
+        if(!m_transactionMap.containsKey(id)) {
             throw new InvalidTransactionException("Transaction id " + id + " is not available");
         }
         return m_transactionMap.get(id);

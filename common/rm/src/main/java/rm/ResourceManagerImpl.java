@@ -45,7 +45,7 @@ public class ResourceManagerImpl implements ResourceManager {
     private RMItem readData( int id, String key ) {
         synchronized(getTable(id)) {
             // Check if data already in table
-            if(getTable(id).containsKey(key)) {
+            if(!getTable(id).containsKey(key)) {
                 getTable(id).put(key, getTable(GLOBAL_TABLE).get(key));
             }
             return getTable(id).get(key);
@@ -542,8 +542,10 @@ public class ResourceManagerImpl implements ResourceManager {
     @Override
     public boolean commit(int transactionId) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
         for(String key : getTable(transactionId).keySet()) {
-            if(getTable(transactionId).get(key) == RM_NULL && getTable(GLOBAL_TABLE).containsKey(key)) {
-                getTable(GLOBAL_TABLE).remove(key);
+            if(getTable(transactionId).get(key) == RM_NULL) {
+                if(getTable(GLOBAL_TABLE).containsKey(key)) {
+                    getTable(GLOBAL_TABLE).remove(key);
+                }
             } else {
                 getTable(GLOBAL_TABLE).put(key, getTable(transactionId).get(key));
             }

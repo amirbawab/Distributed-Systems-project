@@ -4,6 +4,7 @@ import inter.ResourceManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.transaction.InvalidTransactionException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -91,18 +92,17 @@ public class CLI {
                     System.out.println("Add Flight Seats: "+arguments.elementAt(3));
                     System.out.println("Set Flight Price: "+arguments.elementAt(4));
 
-                    try{
+                    try {
                         Id = Integer.parseInt(arguments.elementAt(1));
                         flightNum = Integer.parseInt(arguments.elementAt(2));
                         flightSeats = Integer.parseInt(arguments.elementAt(3));
                         flightPrice = Integer.parseInt(arguments.elementAt(4));
-                        if(m_resourceManager.addFlight(Id,flightNum,flightSeats,flightPrice))
+                        if (m_resourceManager.addFlight(Id, flightNum, flightSeats, flightPrice))
                             System.out.println("Flight added");
                         else
                             System.out.println("Flight could not be added");
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -126,7 +126,6 @@ public class CLI {
                             System.out.println("Cars could not be added");
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -150,7 +149,6 @@ public class CLI {
                             System.out.println("Rooms could not be added");
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -166,7 +164,6 @@ public class CLI {
                         System.out.println("new customer id:"+customer);
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -186,7 +183,6 @@ public class CLI {
                             System.out.println("Flight could not be deleted");
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -207,7 +203,6 @@ public class CLI {
                             System.out.println("Cars could not be deleted");
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -227,7 +222,6 @@ public class CLI {
                             System.out.println("Rooms could not be deleted");
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -247,7 +241,6 @@ public class CLI {
                             System.out.println("Customer could not be deleted");
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -265,7 +258,6 @@ public class CLI {
                         System.out.println("Number of seats available:"+seats);
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -283,7 +275,6 @@ public class CLI {
                         System.out.println("number of Cars at this location:"+numCars);
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -301,7 +292,6 @@ public class CLI {
                         System.out.println("number of Rooms at this location:"+numRooms);
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -319,7 +309,6 @@ public class CLI {
                         System.out.println("Customer info:" + bill.replace("@","\n"));
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -337,7 +326,6 @@ public class CLI {
                         System.out.println("Price of a seat:"+price);
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -355,7 +343,6 @@ public class CLI {
                         System.out.println("Price of a car at this location:"+price);
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -373,7 +360,6 @@ public class CLI {
                         System.out.println("Price of Rooms at this location:"+price);
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -395,7 +381,6 @@ public class CLI {
                             System.out.println("Flight could not be reserved.");
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -419,7 +404,6 @@ public class CLI {
                             System.out.println("Car could not be reserved.");
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -442,7 +426,6 @@ public class CLI {
                             System.out.println("Room could not be reserved.");
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -474,7 +457,6 @@ public class CLI {
                             System.out.println("Itinerary could not be reserved.");
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
@@ -500,12 +482,11 @@ public class CLI {
                         System.out.println("new customer id:"+Cid);
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
                 case START:
-                    if(arguments.size()!=0){
+                    if(arguments.size()!=1){
                         wrongNumber();
                         break;
                     }
@@ -515,12 +496,11 @@ public class CLI {
                         System.out.println("Your transaction id is:" + transactionId);
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
                 case COMMIT:
-                    if(arguments.size()!=1){
+                    if(arguments.size()!=2){
                         wrongNumber();
                         break;
                     }
@@ -531,11 +511,10 @@ public class CLI {
                         System.out.println("Transaction " + Id + " committed successfully");
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
                 case ABORT:
-                    if(arguments.size()!=1){
+                    if(arguments.size()!=2){
                         wrongNumber();
                         break;
                     }
@@ -543,10 +522,9 @@ public class CLI {
                         Id = Integer.parseInt(arguments.elementAt(1));
                         System.out.println("Aborting transaction:" + Id);
                         m_resourceManager.abort(Id);
-                        System.out.println("Transaction " + Id + " aborted successfully");
+                        System.out.println("Transaction " + Id + "  successfully");
                     } catch(Exception e){
                         logger.error(e.getMessage());
-                        return false;
                     }
                     break;
 
