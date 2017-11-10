@@ -1,5 +1,8 @@
 package lm;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.BitSet;
 import java.util.Vector;
 
@@ -14,7 +17,10 @@ public class LockManager
     private static TPHashTable lockTable = new TPHashTable(LockManager.TABLE_SIZE);
     private static TPHashTable stampTable = new TPHashTable(LockManager.TABLE_SIZE);
     private static TPHashTable waitTable = new TPHashTable(LockManager.TABLE_SIZE);
-    
+
+    // Logger
+    private static final Logger logger = LogManager.getLogger(LockManager.class);
+
     public LockManager() {
         super();
     }
@@ -65,11 +71,16 @@ public class LockManager
                             // *** ADD CODE HERE *** to carry out the lock conversion in the
                             // lock table
                             synchronized (this.lockTable) {
-                                ((TrxnObj) this.lockTable.get(trxnObj)).setLockType(TrxnObj.WRITE);
+                                logger.info("Conversion bit is set. Converting READ lock to WRITE lock");
+                                this.lockTable.remove(trxnObj);
+                                this.lockTable.remove(dataObj);
+                                this.lockTable.add(trxnObj);
+                                this.lockTable.add(dataObj);
                             }
 
                         } else {
                             // a lock request that is not lock conversion
+                            logger.info("Successfully acquired " + (lockType == READ ? "READ" : "WRITE") + " lock");
                             this.lockTable.add(trxnObj);
                             this.lockTable.add(dataObj);
                         }
@@ -77,6 +88,7 @@ public class LockManager
                 }
                 if (bConflict) {
                     // lock conflict exists, wait
+                    logger.info("Lock conflict detected, waiting ...");
                     WaitLock(dataObj);
                 }
             }
@@ -142,7 +154,7 @@ public class LockManager
                                         }    
                                     }
                                     catch (Exception e)    {
-                                        System.out.println("Exception on unlock\n" + e.getMessage());
+                                        logger.error("Exception on unlock\n" + e.getMessage());
                                     }        
                                 }
                                 else {
@@ -166,7 +178,7 @@ public class LockManager
                                 }    
                             }
                             catch (Exception e) {
-                                System.out.println("Exception e\n" + e.getMessage());
+                                logger.error("Exception e\n" + e.getMessage());
                             }
                         }
                     }
@@ -199,7 +211,9 @@ public class LockManager
                     // since transaction already has a lock (may be READ, may be WRITE. we don't
                     // care) on this data item and it is requesting a READ lock, this lock request
                     // is redundant.
-                    throw new RedundantLockRequestException(dataObj.getXId(), "Redundant READ lock request");
+                    String message = "Redundant READ lock request";
+                    logger.info(message);
+                    throw new RedundantLockRequestException(dataObj.getXId(), message);
                 } else if (dataObj.getLockType() == DataObj.WRITE) {
                     // transaction already has a lock and is requesting a WRITE lock
                     // now there are two cases to analyze here
@@ -208,9 +222,12 @@ public class LockManager
                     // Seeing the comments at the top of this function might be helpful
                     // *** ADD CODE HERE *** to take care of both these cases
                     if(dataObj2.getLockType() == DataObj.WRITE) {
-                        throw new RedundantLockRequestException(dataObj.getXId(), "Redundant WRITE lock request");
-                    } else {
+                        String message = "Redundant WRITE lock request";
+                        logger.info(message);
+                        throw new RedundantLockRequestException(dataObj.getXId(), message);
+                    } else if(dataObj2.getLockType() == DataObj.READ) {
                         bitset.set(0, true);
+                        // TODO What if S_1(a) -> S_2(a) -> X_1(a). Now the exception prevents a complete scan
                     }
                 }
             } 
@@ -219,7 +236,7 @@ public class LockManager
                     if (dataObj2.getLockType() == DataObj.WRITE) {
                         // transaction is requesting a READ lock and some other transaction
                         // already has a WRITE lock on it ==> conflict
-                        System.out.println("Want READ, someone has WRITE");
+                        logger.info("Want READ, someone has WRITE");
                         return true;
                     }
                     else {
@@ -228,7 +245,7 @@ public class LockManager
                 } else if (dataObj.getLockType() == DataObj.WRITE) {
                     // transaction is requesting a WRITE lock and some other transaction has either
                     // a READ or a WRITE lock on it ==> conflict
-                    System.out.println("Want WRITE, someone has READ or WRITE");
+                    logger.info("Want WRITE, someone has READ or WRITE");
                     return true;
                 }
             }
@@ -299,7 +316,7 @@ public class LockManager
                 }
             }
             catch (InterruptedException e) {
-                System.out.println("Thread interrupted?");
+                logger.error("Thread interrupted?");
             }
         }
     }

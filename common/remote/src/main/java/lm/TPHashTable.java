@@ -167,4 +167,16 @@ public class TPHashTable
             }
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for(Object object : allElements()) {
+            if(object.toString().length() > 0) {
+                sb.append(object.toString());
+                sb.append("\n");
+            }
+        }
+        return sb.toString();
+    }
 }
