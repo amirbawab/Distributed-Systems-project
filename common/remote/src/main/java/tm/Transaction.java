@@ -6,7 +6,7 @@ import lm.TrxnObj;
 import java.util.ArrayList;
 import java.util.List;
 
-class Transaction {
+public class Transaction {
     private int m_xid;
     private List<TrxnObj> m_transactions;
     private List<ResourceManager> m_rms;

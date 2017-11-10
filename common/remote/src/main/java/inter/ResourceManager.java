@@ -54,6 +54,9 @@ public interface ResourceManager extends Remote, ResourceManagerActions {
         RESERVE_CAR("reserveCar"),
         RESERVE_ROOM("reserveRoom"),
         ITINERARY("itinerary"),
+        START("start"),
+        COMMIT("commit"),
+        ABORT("abort")
         ;
         private String m_functionName;
         private int m_id = 0;

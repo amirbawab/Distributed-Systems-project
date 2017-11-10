@@ -8,6 +8,7 @@ import inter.ResourceManager;
 import lm.TransactionAbortedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import tm.Transaction;
 
 import javax.transaction.InvalidTransactionException;
 import java.util.*;
@@ -23,6 +24,16 @@ public class ResourceManagerImpl implements ResourceManager {
 
     // Store items in a hash table
     private final RMHashtable m_itemHT = new RMHashtable();
+
+    // Local table for each transaction
+    private Map<Integer, RMHashtable> m_txLocalTables;
+
+    /**
+     * Construct a new resource manager
+     */
+    ResourceManagerImpl() {
+        m_txLocalTables = new HashMap<>();
+    }
 
     /**
      * Reads a data item

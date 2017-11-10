@@ -8,7 +8,7 @@ import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
 
-class TransactionManager implements ResourceManagerActions {
+public class TransactionManager implements ResourceManagerActions {
 
     // Keep track of transactions
     private Map<Integer, Transaction> m_transactionMap;
@@ -43,7 +43,9 @@ class TransactionManager implements ResourceManagerActions {
      */
     @Override
     public int start() throws RemoteException {
-       return new Transaction(m_uniqId++).getXID();
+       Transaction transaction = new Transaction(m_uniqId++);
+       m_transactionMap.put(transaction.getXID(), transaction);
+       return transaction.getXID();
     }
 
     /**

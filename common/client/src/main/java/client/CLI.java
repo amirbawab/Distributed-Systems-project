@@ -468,7 +468,6 @@ public class CLI {
                         location = arguments.elementAt(arguments.size()-3);
                         boolean Car = Boolean.parseBoolean(arguments.elementAt(arguments.size()-2));
                         boolean Room = Boolean.parseBoolean(arguments.elementAt(arguments.size()-1));
-
                         if(m_resourceManager.itinerary(Id,customer,flightNumbers,location,Car,Room))
                             System.out.println("Itinerary Reserved");
                         else
@@ -499,6 +498,52 @@ public class CLI {
                         Cid = Integer.parseInt(arguments.elementAt(2));
                         m_resourceManager.newCustomer(Id,Cid);
                         System.out.println("new customer id:"+Cid);
+                    } catch(Exception e){
+                        logger.error(e.getMessage());
+                        return false;
+                    }
+                    break;
+
+                case START:
+                    if(arguments.size()!=0){
+                        wrongNumber();
+                        break;
+                    }
+                    System.out.println("Getting a new transaction id:");
+                    try{
+                        int transactionId = m_resourceManager.start();
+                        System.out.println("Your transaction id is:" + transactionId);
+                    } catch(Exception e){
+                        logger.error(e.getMessage());
+                        return false;
+                    }
+                    break;
+
+                case COMMIT:
+                    if(arguments.size()!=1){
+                        wrongNumber();
+                        break;
+                    }
+                    try{
+                        Id = Integer.parseInt(arguments.elementAt(1));
+                        System.out.println("Committing transaction:" + Id);
+                        m_resourceManager.commit(Id);
+                        System.out.println("Transaction " + Id + " committed successfully");
+                    } catch(Exception e){
+                        logger.error(e.getMessage());
+                        return false;
+                    }
+                    break;
+                case ABORT:
+                    if(arguments.size()!=1){
+                        wrongNumber();
+                        break;
+                    }
+                    try{
+                        Id = Integer.parseInt(arguments.elementAt(1));
+                        System.out.println("Aborting transaction:" + Id);
+                        m_resourceManager.abort(Id);
+                        System.out.println("Transaction " + Id + " aborted successfully");
                     } catch(Exception e){
                         logger.error(e.getMessage());
                         return false;
@@ -705,6 +750,29 @@ public class CLI {
                 System.out.println("\tCreates a new customer with the id provided");
                 System.out.println("\nUsage:");
                 System.out.println("\t" + command.getName() + ", <id>, <customerid>");
+                break;
+
+            case START:
+                System.out.println("Start a new transaction");
+                System.out.println("Purpose:");
+                System.out.println("\tStart a new transaction and get a unique id");
+                System.out.println("\nUsage:");
+                System.out.println("\t" + command.getName());
+                break;
+
+            case COMMIT:
+                System.out.println("Commit transaction");
+                System.out.println("Purpose:");
+                System.out.println("\tApply changes on commit");
+                System.out.println("\nUsage:");
+                System.out.println("\t" + command.getName());
+                break;
+            case ABORT:
+                System.out.println("Abort transaction");
+                System.out.println("Purpose:");
+                System.out.println("\tAbort user transaction");
+                System.out.println("\nUsage:");
+                System.out.println("\t" + command.getName());
                 break;
 
             default:

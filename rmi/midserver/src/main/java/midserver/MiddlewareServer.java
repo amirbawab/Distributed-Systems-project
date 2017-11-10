@@ -5,6 +5,7 @@ import lm.LockManager;
 import lm.TransactionAbortedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import tm.TransactionManager;
 
 import javax.transaction.InvalidTransactionException;
 import java.rmi.RMISecurityManager;
@@ -29,6 +30,9 @@ class MiddlewareServer implements ResourceManager {
 
     // Lock manager
     private LockManager m_lockManager;
+
+    // Transaction manager
+    private TransactionManager m_transactionManager;
 
     // Logger
     private static final Logger logger = LogManager.getLogger(MiddlewareServer.class);
@@ -55,6 +59,9 @@ class MiddlewareServer implements ResourceManager {
 
         // Initialize the lock manager
         ms.m_lockManager = new LockManager();
+
+        // Initialize the transaction manager
+        ms.m_transactionManager = new TransactionManager();
 
         // Create and install a security manager
         if (System.getSecurityManager() == null) {
@@ -298,7 +305,7 @@ class MiddlewareServer implements ResourceManager {
 
     @Override
     public int start() throws RemoteException {
-        return 0;
+        return m_transactionManager.start();
     }
 
     @Override
