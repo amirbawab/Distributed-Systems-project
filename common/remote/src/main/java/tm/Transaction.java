@@ -12,11 +12,28 @@ public class Transaction {
     private int m_xid;
     @Deprecated private List<TrxnObj> m_transactions;
     private Set<ResourceManager> m_rms;
+    private long m_lastActive;
 
     public Transaction(int xid) {
         m_xid = xid;
         m_transactions = new ArrayList<>();
         m_rms = new HashSet<>();
+        updateLastActive();
+    }
+
+    /**
+     * Update the last active time
+     */
+    public void updateLastActive() {
+        m_lastActive = System.currentTimeMillis();
+    }
+
+    /**
+     * Get how much time the transaction has been non-active
+     * @return time in milliseconds
+     */
+    public long getIdleTime() {
+        return System.currentTimeMillis() - m_lastActive;
     }
 
     /**

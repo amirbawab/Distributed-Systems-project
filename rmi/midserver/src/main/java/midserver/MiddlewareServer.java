@@ -7,6 +7,7 @@ import lm.TransactionAbortedException;
 import lm.TrxnObj;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import tm.Transaction;
 import tm.TransactionManager;
 
 import javax.transaction.InvalidTransactionException;
@@ -67,6 +68,32 @@ class MiddlewareServer implements ResourceManager {
         }
     }
 
+    /**
+     * Middleware server constructor
+     */
+    public MiddlewareServer() {
+        final int SLEEP_TIME = 1000;
+        final int MAX_IDLE_TIME = 10000;
+
+        // Abort old transactions
+        new Thread(() -> {
+            try {
+                while (true) {
+                    if(MiddlewareServer.this.m_tm != null) {
+                        for(Transaction tx : MiddlewareServer.this.m_tm.getTransactions()) {
+                            if(tx.getIdleTime() > MAX_IDLE_TIME) {
+                                abort(tx.getXID());
+                            }
+                        }
+                    }
+                    Thread.sleep(SLEEP_TIME);
+                }
+            } catch (RemoteException | InterruptedException e) {
+                logger.error("Exception occurred in abort thread. Long transactions will not be auto-aborted");
+            }
+        }).start();
+    }
+
     private static MiddlewareServer bindRM(String key, int port) {
         // Bind server object
         try {
@@ -116,6 +143,7 @@ class MiddlewareServer implements ResourceManager {
     public boolean addFlight(int id, int flightNum, int flightSeats, int flightPrice)
             throws RemoteException {
         synchronized (lock) {
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_flightRM);
             return m_flightRM.addFlight(m_tm.getTransaction(id).getXID(), flightNum, flightSeats, flightPrice);
         }
@@ -124,6 +152,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public boolean addCars(int id, String location, int numCars, int price) throws RemoteException {
         synchronized (lock) {
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_carRM);
             return m_carRM.addCars(m_tm.getTransaction(id).getXID(), location, numCars, price);
         }
@@ -132,6 +161,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public boolean addRooms(int id, String location, int numRooms, int price) throws RemoteException {
         synchronized (lock){
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_roomRM);
             return m_roomRM.addRooms(m_tm.getTransaction(id).getXID(), location, numRooms, price);
         }
@@ -140,6 +170,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public int newCustomer(int id) throws RemoteException {
         synchronized (lock) {
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_roomRM);
             m_tm.getTransaction(id).addRM(m_carRM);
             m_tm.getTransaction(id).addRM(m_flightRM);
@@ -154,6 +185,7 @@ class MiddlewareServer implements ResourceManager {
     public boolean newCustomer(int id, int cid) throws RemoteException {
         synchronized (lock) {
             id = m_tm.getTransaction(id).getXID();
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_flightRM);
             m_tm.getTransaction(id).addRM(m_carRM);
             m_tm.getTransaction(id).addRM(m_roomRM);
@@ -166,6 +198,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public boolean deleteFlight(int id, int flightNum) throws RemoteException {
         synchronized (lock) {
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_flightRM);
             return m_flightRM.deleteFlight(m_tm.getTransaction(id).getXID(), flightNum);
         }
@@ -174,6 +207,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public boolean deleteCars(int id, String location) throws RemoteException {
         synchronized (lock) {
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_carRM);
             return m_carRM.deleteCars(m_tm.getTransaction(id).getXID(), location);
         }
@@ -182,6 +216,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public boolean deleteRooms(int id, String location) throws RemoteException {
         synchronized (lock) {
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_roomRM);
             return m_roomRM.deleteRooms(m_tm.getTransaction(id).getXID(), location);
         }
@@ -191,6 +226,7 @@ class MiddlewareServer implements ResourceManager {
     public boolean deleteCustomer(int id, int customer) throws RemoteException {
         synchronized (lock) {
             id = m_tm.getTransaction(id).getXID();
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_roomRM);
             m_tm.getTransaction(id).addRM(m_carRM);
             m_tm.getTransaction(id).addRM(m_flightRM);
@@ -203,6 +239,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public int queryFlight(int id, int flightNumber) throws RemoteException {
         synchronized (lock) {
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_flightRM);
             return m_flightRM.queryFlight(m_tm.getTransaction(id).getXID(), flightNumber);
         }
@@ -219,6 +256,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public int queryRooms(int id, String location) throws RemoteException {
         synchronized (lock) {
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_roomRM);
             return m_roomRM.queryRooms(m_tm.getTransaction(id).getXID(), location);
         }
@@ -227,6 +265,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public String queryCustomerInfo(int id, int customer) throws RemoteException {
         synchronized (lock) {
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_carRM);
             m_tm.getTransaction(id).addRM(m_flightRM);
             m_tm.getTransaction(id).addRM(m_roomRM);
@@ -242,6 +281,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public int queryFlightPrice(int id, int flightNumber) throws RemoteException {
         synchronized (lock) {
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_flightRM);
             return m_flightRM.queryFlightPrice(m_tm.getTransaction(id).getXID(), flightNumber);
         }
@@ -250,6 +290,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public int queryCarsPrice(int id, String location) throws RemoteException {
         synchronized (lock) {
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_carRM);
             return m_carRM.queryCarsPrice(m_tm.getTransaction(id).getXID(), location);
         }
@@ -258,6 +299,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public int queryRoomsPrice(int id, String location) throws RemoteException {
         synchronized (lock) {
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_roomRM);
             return m_roomRM.queryRoomsPrice(m_tm.getTransaction(id).getXID(), location);
         }
@@ -266,6 +308,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public boolean reserveFlight(int id, int customer, int flightNumber) throws RemoteException {
         synchronized (lock) {
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_flightRM);
             return m_flightRM.reserveFlight(m_tm.getTransaction(id).getXID(), customer, flightNumber);
         }
@@ -274,6 +317,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public boolean reserveCar(int id, int customer, String location) throws RemoteException {
         synchronized (lock) {
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_carRM);
             return m_carRM.reserveCar(m_tm.getTransaction(id).getXID(), customer, location);
         }
@@ -282,6 +326,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public boolean reserveRoom(int id, int customer, String locationd) throws RemoteException {
         synchronized (lock) {
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_roomRM);
             return m_roomRM.reserveRoom(m_tm.getTransaction(id).getXID(), customer, locationd);
         }
@@ -292,6 +337,7 @@ class MiddlewareServer implements ResourceManager {
             throws RemoteException {
         synchronized (lock) {
             id = m_tm.getTransaction(id).getXID();
+            m_tm.getTransaction(id).updateLastActive();
             m_tm.getTransaction(id).addRM(m_flightRM);
             m_tm.getTransaction(id).addRM(m_carRM);
             m_tm.getTransaction(id).addRM(m_roomRM);
@@ -347,6 +393,8 @@ class MiddlewareServer implements ResourceManager {
 
     @Override
     public boolean commit(int transactionId) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
+        logger.info("Committing transaction " + transactionId);
+        m_tm.getTransaction(transactionId).updateLastActive();
         for(ResourceManager rm : m_tm.getTransaction(transactionId).getRMs()) {
             rm.commit(transactionId);
         }
@@ -356,6 +404,8 @@ class MiddlewareServer implements ResourceManager {
 
     @Override
     public void abort(int transactionId) throws RemoteException, InvalidTransactionException {
+        logger.info("Aborting transaction " + transactionId);
+        m_tm.getTransaction(transactionId).updateLastActive();
         for(ResourceManager rm : m_tm.getTransaction(transactionId).getRMs()) {
             rm.abort(transactionId);
         }

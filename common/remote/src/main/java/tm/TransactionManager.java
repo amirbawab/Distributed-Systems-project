@@ -5,7 +5,9 @@ import lm.TransactionAbortedException;
 
 import javax.transaction.InvalidTransactionException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TransactionManager implements ResourceManagerActions {
@@ -21,6 +23,14 @@ public class TransactionManager implements ResourceManagerActions {
      */
     public TransactionManager() {
         m_transactionMap = new HashMap<>();
+    }
+
+    /**
+     * Get transactions
+     * @return transactions
+     */
+    public List<Transaction> getTransactions() {
+        return new ArrayList<>(m_transactionMap.values());
     }
 
     /**
