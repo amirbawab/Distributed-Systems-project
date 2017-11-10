@@ -576,6 +576,7 @@ public class ResourceManagerImpl implements ResourceManager {
             }
             // Delete table
             m_tables.remove(transactionId);
+            m_lockManager.UnlockAll(transactionId);
             return true;
         }
         throw new InvalidTransactionException("Transaction id " + transactionId + " is not available");
@@ -583,7 +584,7 @@ public class ResourceManagerImpl implements ResourceManager {
 
     @Override
     public void abort(int transactionId) throws RemoteException, InvalidTransactionException {
-
+        m_lockManager.UnlockAll(transactionId);
     }
 
     @Override
