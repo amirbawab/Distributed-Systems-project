@@ -25,6 +25,9 @@ public class ResourceManagerImpl implements ResourceManager {
     // Local table for each transaction
     private Map<Integer, RMHashtable> m_tables;
 
+    // Object dedicated to flag a an entry for deletion
+    private final RMItem RM_NULL = new Customer(0);
+
     /**
      * Construct a new resource manager
      */
@@ -41,6 +44,10 @@ public class ResourceManagerImpl implements ResourceManager {
      */
     private RMItem readData( int id, String key ) {
         synchronized(getTable(id)) {
+            // Check if data already in table
+            if(getTable(id).containsKey(key)) {
+                getTable(id).put(key, getTable(GLOBAL_TABLE).get(key));
+            }
             return getTable(id).get(key);
         }
     }
@@ -65,7 +72,7 @@ public class ResourceManagerImpl implements ResourceManager {
      */
     private RMItem removeData(int id, String key) {
         synchronized(getTable(id)) {
-            return getTable(id).remove(key);
+            return getTable(id).put(key, RM_NULL);
         }
     }
     
@@ -534,7 +541,14 @@ public class ResourceManagerImpl implements ResourceManager {
 
     @Override
     public boolean commit(int transactionId) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
-        return false;
+        for(String key : getTable(transactionId).keySet()) {
+            if(getTable(transactionId).get(key) == RM_NULL && getTable(GLOBAL_TABLE).containsKey(key)) {
+                getTable(GLOBAL_TABLE).remove(key);
+            } else {
+                getTable(GLOBAL_TABLE).put(key, getTable(transactionId).get(key));
+            }
+        }
+        return true;
     }
 
     @Override
@@ -558,7 +572,7 @@ public class ResourceManagerImpl implements ResourceManager {
         if(m_tables.containsKey(transactionId)) {
             return m_tables.get(transactionId);
         }
-        RMHashtable localTable = new RMHashtable(m_tables.get(GLOBAL_TABLE));
+        RMHashtable localTable = new RMHashtable();
         m_tables.put(transactionId, localTable);
         return localTable;
     }
