@@ -5,7 +5,10 @@
 package rm;
 
 import inter.ResourceManager;
+import lm.DeadlockException;
+import lm.LockManager;
 import lm.TransactionAbortedException;
+import lm.TrxnObj;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -27,12 +30,16 @@ public class ResourceManagerImpl implements ResourceManager {
     // Object dedicated to flag a an entry for deletion
     private final RMItem RM_NULL = new Customer(0);
 
+    // Lock manager
+    private LockManager m_lockManager;
+
     /**
      * Construct a new resource manager
      */
     ResourceManagerImpl() {
         m_tables = new HashMap<>();
         m_tables.put(GLOBAL_TABLE, new RMHashtable());
+        m_lockManager = new LockManager();
     }
 
     /**
@@ -43,14 +50,21 @@ public class ResourceManagerImpl implements ResourceManager {
      */
     private RMItem readData( int id, String key ) {
         synchronized(getTable(id)) {
-            // Check if data already in table
-            if(!getTable(id).containsKey(key)) {
-                if(!getTable(GLOBAL_TABLE).containsKey(key)) {
-                    return null;
+            try {
+                m_lockManager.Lock(id, key, TrxnObj.READ);
+                // Check if data already in table
+                if(!getTable(id).containsKey(key)) {
+                    if(!getTable(GLOBAL_TABLE).containsKey(key)) {
+                        return null;
+                    }
+                    getTable(id).put(key, getTable(GLOBAL_TABLE).get(key).clone());
                 }
-                getTable(id).put(key, getTable(GLOBAL_TABLE).get(key).clone());
+                return getTable(id).get(key);
+            } catch (DeadlockException e) {
+                logger.error("Deadlock ...");
+                // TODO Inform the client
+                throw new RuntimeException("No return");
             }
-            return getTable(id).get(key);
         }
     }
 
@@ -62,7 +76,13 @@ public class ResourceManagerImpl implements ResourceManager {
      */
     private void writeData( int id, String key, RMItem value ) {
         synchronized(getTable(id)) {
-            getTable(id).put(key, value);
+            try {
+                m_lockManager.Lock(id, key, TrxnObj.WRITE);
+                getTable(id).put(key, value);
+            } catch (DeadlockException e) {
+                logger.error("Deadlock ...");
+                // TODO Inform the client
+            }
         }
     }
     

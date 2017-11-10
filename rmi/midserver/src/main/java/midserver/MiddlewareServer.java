@@ -30,9 +30,6 @@ class MiddlewareServer implements ResourceManager {
     // Program exit codes
     private static final int CODE_ERROR=1;
 
-    // Lock manager
-    private LockManager m_lockManager;
-
     // Transaction manager
     private TransactionManager m_tm;
 
@@ -60,9 +57,6 @@ class MiddlewareServer implements ResourceManager {
         ms.m_carRM = ms.connectToRM(ResourceManager.RM_CAR_REF, rmRMIRegistryIP, rmRMIRegistryPort);
         ms.m_flightRM = ms.connectToRM(ResourceManager.RM_FLIGHT_REF, rmRMIRegistryIP, rmRMIRegistryPort);
         ms.m_roomRM = ms.connectToRM(ResourceManager.RM_ROOM_REF, rmRMIRegistryIP, rmRMIRegistryPort);
-
-        // Initialize the lock manager
-        ms.m_lockManager = new LockManager();
 
         // Initialize the transaction manager
         ms.m_tm = new TransactionManager();
