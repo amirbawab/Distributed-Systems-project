@@ -64,6 +64,10 @@ public class LockManager
                             // lock conversion 
                             // *** ADD CODE HERE *** to carry out the lock conversion in the
                             // lock table
+                            synchronized (this.lockTable) {
+                                ((TrxnObj) this.lockTable.get(trxnObj)).setLockType(TrxnObj.WRITE);
+                            }
+
                         } else {
                             // a lock request that is not lock conversion
                             this.lockTable.add(trxnObj);
@@ -206,8 +210,7 @@ public class LockManager
                     if(dataObj2.getLockType() == DataObj.WRITE) {
                         throw new RedundantLockRequestException(dataObj.getXId(), "Redundant WRITE lock request");
                     } else {
-                        dataObj2.setLockType(DataObj.WRITE);
-                        throw new RedundantLockRequestException(dataObj.getXId(), "Lock of type READ promoted to WRITE");
+                        bitset.set(0, true);
                     }
                 }
             } 
