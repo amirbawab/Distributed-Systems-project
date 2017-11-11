@@ -34,10 +34,6 @@ public class TwoPLTest {
     private final int MED_THREAD = 4;
     private final int HIGH_THREAD = 6;
 
-    // Objects details
-    private final int cid = 1;
-    private final String testLocation = "test-location-";
-
     @BeforeClass
     public static void connectToServer() {
 
@@ -63,27 +59,24 @@ public class TwoPLTest {
     @Test
     public void oneClientOneRM_test() throws RemoteException, InterruptedException {
 
-        logger.info("TITLE: 1 Client and 1 RM (Flight RM)");
+        // Objects details
+        final String testLocation = "test-location-1-";
+        final int cid = 10000;
+        final int testLevel = HIGH_TEST;
 
-        int testLevel = HIGH_TEST;
+        logger.info("TITLE: 1 Client and all RM");
 
         // Start transactions
         logger.info("Starting a new transaction");
         int xid = rm.start();
 
-        // Delete customer
-        logger.info("Cleaning any created customers");
-        rm.deleteCustomer(xid, cid);
-
-        // Remove flights if any
-        logger.info("Cleaning any created flights");
-        for(int i=0; i < testLevel; i++) {
-            rm.deleteFlight(xid, i);
-        }
+        // Add new customer
+        logger.info("Adding a new customer");
+        rm.newCustomer(xid, cid);
 
         // Add flights
         logger.info("Adding " + testLevel + " flights");
-        for(int i = 0; i < testLevel; i++) {
+        for(int i = 1; i <= testLevel; i++) {
             try {
                 if(!rm.addFlight(xid, i, i, i)) {
                     fail(String.format("Failed to add flight id: %d, number: %d", i, i));
@@ -93,61 +86,49 @@ public class TwoPLTest {
             }
         }
 
-        // Query flights
-        logger.info("Verifying that all flights were added ...");
-        for(int i=0; i < testLevel; i++) {
-            if(rm.queryFlight(xid, i) != i || rm.queryFlightPrice(xid, i) != i) {
-                fail(String.format("Flight id: %d, number: %d was not added!", i, i));
+        // Reserve flights
+        logger.info("Reserving flights");
+        for(int i=1; i <= testLevel; i++) {
+            if(!rm.reserveFlight(xid, cid, i)) {
+                fail(String.format("Fail to reserve in flight id: %d, number: %d", i, i));
             }
         }
-        logger.info("Verification completed");
 
-        // Commit transaction
-        try {
-            logger.info("Committing changes");
-            rm.commit(xid);
-        } catch (TransactionAbortedException e) {
-            fail("Failed to commit transaction");
+        // Query flights
+        logger.info("Verifying flight reservations");
+        for(int i=1; i <= testLevel; i++) {
+            if(rm.queryFlight(xid, i) != i-1) {
+                fail(String.format("Flight id: %d, number: %d was not reserved!", i, i));
+            }
         }
+
+        // Abort transaction
+        logger.info("Aborting changes to avoid modifying the DB");
+        rm.abort(xid);
         logger.info("Test completed successfully!");
     }
 
     @Test
     public void oneClientAllRM_test() throws RemoteException, InterruptedException {
 
-        logger.info("TITLE: 1 Client and all RM");
+        // Objects details
+        final String testLocation = "test-location-2-";
+        final int cid = 20000;
+        final int testLevel = HIGH_TEST;
 
-        int testLevel = HIGH_TEST;
+        logger.info("TITLE: 1 Client and all RM");
 
         // Start transactions
         logger.info("Starting a new transaction");
         int xid = rm.start();
 
-        // Delete customer
-        logger.info("Cleaning any created customers");
-        rm.deleteCustomer(xid, cid);
-
-        // Remove flights if any
-        logger.info("Cleaning any created flights");
-        for(int i=0; i < testLevel; i++) {
-            rm.deleteFlight(xid, i);
-        }
-
-        // Remove cars if any
-        logger.info("Cleaning any created cars");
-        for(int i=0; i < testLevel; i++) {
-            rm.deleteCars(xid, testLocation+i);
-        }
-
-        // Remove rooms if any
-        logger.info("Cleaning any created rooms");
-        for(int i=0; i < testLevel; i++) {
-            rm.deleteRooms(xid, testLocation+i);
-        }
+        // Add new customer
+        logger.info("Adding a new customer");
+        rm.newCustomer(xid, cid);
 
         // Add flights
         logger.info("Adding " + testLevel + " flights");
-        for(int i = 0; i < testLevel; i++) {
+        for(int i = 1; i <= testLevel; i++) {
             try {
                 if(!rm.addFlight(xid, i, i, i)) {
                     fail(String.format("Failed to add flight id: %d, number: %d", i, i));
@@ -157,21 +138,9 @@ public class TwoPLTest {
             }
         }
 
-        // Add cars
-        logger.info("Adding " + testLevel + " cars");
-        for(int i = 0; i < testLevel; i++) {
-            try {
-                if(!rm.addCars(xid, testLocation+i, i, i)) {
-                    fail(String.format("Failed to add car id: %d, location: %s", i, testLocation+i));
-                }
-            } catch (RemoteException e) {
-                fail("Failed to add car caused by remote exception");
-            }
-        }
-
         // Add rooms
         logger.info("Adding " + testLevel + " rooms");
-        for(int i = 0; i < testLevel; i++) {
+        for(int i = 1; i <= testLevel; i++) {
             try {
                 if(!rm.addRooms(xid, testLocation+i, i, i)) {
                     fail(String.format("Failed to add room id: %d, location: %s", i, testLocation+i));
@@ -181,43 +150,80 @@ public class TwoPLTest {
             }
         }
 
-        // Query flights
-        logger.info("Verifying that all flights were added ...");
-        for(int i=0; i < testLevel; i++) {
-            if(rm.queryFlight(xid, i) != i || rm.queryFlightPrice(xid, i) != i) {
-                fail(String.format("Flight id: %d, number: %d was not added!", i, i));
+        // Add cars
+        logger.info("Adding " + testLevel + " cars");
+        for(int i = 1; i <= testLevel; i++) {
+            try {
+                if(!rm.addCars(xid, testLocation+i, i, i)) {
+                    fail(String.format("Failed to add car id: %d, location: %s", i, testLocation+i));
+                }
+            } catch (RemoteException e) {
+                fail("Failed to add car caused by remote exception");
             }
         }
 
-        // Query cars
-        logger.info("Verifying that all cars were added ...");
-        for(int i=0; i < testLevel; i++) {
-            if(rm.queryCars(xid, testLocation+i) != i || rm.queryCarsPrice(xid, testLocation+i) != i) {
-                fail(String.format("Car id: %d, location: %s was not added!", i, testLocation+i));
+        // Reserve flights
+        logger.info("Reserving flights");
+        for(int i=1; i <= testLevel; i++) {
+            if(!rm.reserveFlight(xid, cid, i)) {
+                fail(String.format("Fail to reserve in flight id: %d, number: %d", i, i));
+            }
+        }
+
+        // Reserve rooms
+        logger.info("Reserving rooms");
+        for(int i=1; i <= testLevel; i++) {
+            if(!rm.reserveRoom(xid, cid, testLocation+i)) {
+                fail(String.format("Fail to reserve room id: %d, location: %s", i, testLocation+i));
+            }
+        }
+
+        // Reserve cars
+        logger.info("Reserving cars");
+        for(int i=1; i <= testLevel; i++) {
+            if(!rm.reserveCar(xid, cid, testLocation+i)) {
+                fail(String.format("Fail to reserve car id: %d, location: %s", i, testLocation+i));
+            }
+        }
+
+        // Query flights
+        logger.info("Verifying flight reservations");
+        for(int i=1; i <= testLevel; i++) {
+            if(rm.queryFlight(xid, i) != i-1) {
+                fail(String.format("Flight id: %d, number: %d was not reserved!", i, i));
             }
         }
 
         // Query rooms
-        logger.info("Verifying that all rooms were added ...");
-        for(int i=0; i < testLevel; i++) {
-            if(rm.queryRooms(xid, testLocation+i) != i || rm.queryRoomsPrice(xid, testLocation+i) != i) {
-                fail(String.format("Room id: %d, location: %s was not added!", i, testLocation+i));
+        logger.info("Verifying rooms reservations");
+        for(int i=1; i <= testLevel; i++) {
+            if(rm.queryRooms(xid, testLocation+i) != i-1) {
+                fail(String.format("Room id: %d, location: %s was not reserved!", i, testLocation+i));
             }
         }
-        logger.info("Verification completed");
 
-        // Commit transaction
-        try {
-            logger.info("Committing changes");
-            rm.commit(xid);
-        } catch (TransactionAbortedException e) {
-            fail("Failed to commit transaction");
+        // Query rooms
+        logger.info("Verifying cars reservations");
+        for(int i=1; i <= testLevel; i++) {
+            if(rm.queryCars(xid, testLocation+i) != i-1) {
+                fail(String.format("Car id: %d, location: %s was not reserved!", i, testLocation+i));
+            }
         }
+
+        // Abort transaction
+        logger.info("Aborting changes to avoid modifying the DB");
+        rm.abort(xid);
         logger.info("Test completed successfully!");
     }
 
     @Test
+    @Ignore
     public void manyClientsAllRM_test() throws RemoteException, InterruptedException {
+
+        final int cid = 30000;
+
+        // Objects details
+        final String testLocation = "test-location-3-";
 
         logger.info("TITLE: Many Clients and all RM");
 
@@ -341,14 +347,10 @@ public class TwoPLTest {
         // TODO Compute the loss
         // TODO If transaction aborted then flag it so that it's not in use anymore
 
-        // Commit transaction
+        // Abort transaction
+        logger.info("Aborting changes to avoid modifying the DB");
         for(int i=0; i < totalThreads; i++) {
-            try {
-                logger.info("Committing changes for transaction " + xidArray.get(i));
-                rm.commit(xidArray.get(i));
-            } catch (TransactionAbortedException e) {
-                fail("Failed to commit transaction " + xidArray.get(i));
-            }
+            rm.abort(xidArray.get(i));
         }
         logger.info("Test completed successfully!");
     }
