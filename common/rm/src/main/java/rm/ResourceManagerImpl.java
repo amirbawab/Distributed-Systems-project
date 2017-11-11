@@ -58,6 +58,11 @@ public class ResourceManagerImpl implements ResourceManager {
                 }
                 getTable(id).put(key, getTable(GLOBAL_TABLE).get(key).clone());
             }
+
+            // RM_NULL must behave as a null
+            if(getTable(id).get(key) == RM_NULL) {
+                return null;
+            }
             return getTable(id).get(key);
         }
     }
