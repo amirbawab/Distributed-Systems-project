@@ -84,7 +84,7 @@ public class TwoPLTest {
     }
 
     @Test
-    @Ignore
+//    @Ignore
     public void oneClientOneRM_test() throws RemoteException, InterruptedException {
 
         // Objects details
@@ -148,8 +148,8 @@ public class TwoPLTest {
     }
 
     @Test
-    @Ignore
-    public void oneClientAllRM_test() throws RemoteException, InterruptedException {
+//    @Ignore
+    public void oneClientTwoRM_test() throws RemoteException, InterruptedException {
 
         // Objects details
         final String testLocation = "test-location-2-";
@@ -171,9 +171,9 @@ public class TwoPLTest {
         rm.newCustomer(xid, cid);
 
         // Add flights
-        logger.info("Adding " + testLevel + " flights");
-        totalTransactions += testLevel;
-        for(int i = 1; i <= testLevel; i++) {
+        logger.info("Adding " + testLevel/2 + " flights");
+        totalTransactions += testLevel/2;
+        for(int i = 1; i <= testLevel/2; i++) {
             try {
                 if(!rm.addFlight(xid, i, i, i)) {
                     fail(String.format("Failed to add flight id: %d, number: %d", i, i));
@@ -185,9 +185,107 @@ public class TwoPLTest {
         }
 
         // Add rooms
-        logger.info("Adding " + testLevel + " rooms");
-        totalTransactions += testLevel;
-        for(int i = 1; i <= testLevel; i++) {
+        logger.info("Adding " + testLevel/2 + " rooms");
+        totalTransactions += testLevel/2;
+        for(int i = 1; i <= testLevel/2; i++) {
+            try {
+                if(!rm.addRooms(xid, testLocation+i, i, i)) {
+                    fail(String.format("Failed to add room id: %d, location: %s", i, testLocation+i));
+                }
+                completedTransactions.set(0, completedTransactions.get(0)+1);
+            } catch (RemoteException e) {
+                fail("Failed to add room caused by remote exception");
+            }
+        }
+
+        // Reserve flights
+        logger.info("Reserving flights");
+        totalTransactions += testLevel/2;
+        for(int i=1; i <= testLevel/2; i++) {
+            if(!rm.reserveFlight(xid, cid, i)) {
+                fail(String.format("Fail to reserve in flight id: %d, number: %d", i, i));
+            }
+            completedTransactions.set(0, completedTransactions.get(0)+1);
+        }
+
+        // Reserve rooms
+        logger.info("Reserving rooms");
+        totalTransactions += testLevel/2;
+        for(int i=1; i <= testLevel/2; i++) {
+            if(!rm.reserveRoom(xid, cid, testLocation+i)) {
+                fail(String.format("Fail to reserve room id: %d, location: %s", i, testLocation+i));
+            }
+            completedTransactions.set(0, completedTransactions.get(0)+1);
+        }
+
+        // Query flights
+        logger.info("Verifying flight reservations");
+        totalTransactions += testLevel/2;
+        for(int i=1; i <= testLevel/2; i++) {
+            if(rm.queryFlight(xid, i) != i-1) {
+                fail(String.format("Flight id: %d, number: %d was not reserved!", i, i));
+            }
+            completedTransactions.set(0, completedTransactions.get(0)+1);
+        }
+
+        // Query rooms
+        logger.info("Verifying rooms reservations");
+        totalTransactions += testLevel/2;
+        for(int i=1; i <= testLevel/2; i++) {
+            if(rm.queryRooms(xid, testLocation+i) != i-1) {
+                fail(String.format("Room id: %d, location: %s was not reserved!", i, testLocation+i));
+            }
+            completedTransactions.set(0, completedTransactions.get(0)+1);
+        }
+
+        // Abort transaction
+        logger.info("Aborting changes to avoid modifying the DB");
+        rm.abort(xid);
+        _logAnalysis(Arrays.asList(false), startTime);
+        logger.info("Test completed successfully!");
+    }
+
+    @Test
+    @Ignore
+    public void oneClientThreeRM_test() throws RemoteException, InterruptedException {
+
+        // Objects details
+        final String testLocation = "test-location-2-";
+        final int cid = 20000;
+        final int testLevel = HIGH_TEST;
+        final long startTime = System.currentTimeMillis();
+        totalTransactions = 0;
+        completedTransactions = new ArrayList<>();
+        completedTransactions.add(0);
+
+        logger.info("TITLE: 1 Client and all RM");
+
+        // Start transactions
+        logger.info("Starting a new transaction");
+        int xid = rm.start();
+
+        // Add new customer
+        logger.info("Adding a new customer");
+        rm.newCustomer(xid, cid);
+
+        // Add flights
+        logger.info("Adding " + testLevel/3 + " flights");
+        totalTransactions += testLevel/3;
+        for(int i = 1; i <= testLevel/3; i++) {
+            try {
+                if(!rm.addFlight(xid, i, i, i)) {
+                    fail(String.format("Failed to add flight id: %d, number: %d", i, i));
+                }
+                completedTransactions.set(0, completedTransactions.get(0)+1);
+            } catch (RemoteException e) {
+                fail("Failed to add flight caused by remote exception");
+            }
+        }
+
+        // Add rooms
+        logger.info("Adding " + testLevel/3 + " rooms");
+        totalTransactions += testLevel/3;
+        for(int i = 1; i <= testLevel/3; i++) {
             try {
                 if(!rm.addRooms(xid, testLocation+i, i, i)) {
                     fail(String.format("Failed to add room id: %d, location: %s", i, testLocation+i));
@@ -199,9 +297,9 @@ public class TwoPLTest {
         }
 
         // Add cars
-        logger.info("Adding " + testLevel + " cars");
-        totalTransactions += testLevel;
-        for(int i = 1; i <= testLevel; i++) {
+        logger.info("Adding " + testLevel/3 + " cars");
+        totalTransactions += testLevel/3;
+        for(int i = 1; i <= testLevel/3; i++) {
             try {
                 if(!rm.addCars(xid, testLocation+i, i, i)) {
                     fail(String.format("Failed to add car id: %d, location: %s", i, testLocation+i));
@@ -214,8 +312,8 @@ public class TwoPLTest {
 
         // Reserve flights
         logger.info("Reserving flights");
-        totalTransactions += testLevel;
-        for(int i=1; i <= testLevel; i++) {
+        totalTransactions += testLevel/3;
+        for(int i=1; i <= testLevel/3; i++) {
             if(!rm.reserveFlight(xid, cid, i)) {
                 fail(String.format("Fail to reserve in flight id: %d, number: %d", i, i));
             }
@@ -224,8 +322,8 @@ public class TwoPLTest {
 
         // Reserve rooms
         logger.info("Reserving rooms");
-        totalTransactions += testLevel;
-        for(int i=1; i <= testLevel; i++) {
+        totalTransactions += testLevel/3;
+        for(int i=1; i <= testLevel/3; i++) {
             if(!rm.reserveRoom(xid, cid, testLocation+i)) {
                 fail(String.format("Fail to reserve room id: %d, location: %s", i, testLocation+i));
             }
@@ -234,8 +332,8 @@ public class TwoPLTest {
 
         // Reserve cars
         logger.info("Reserving cars");
-        totalTransactions += testLevel;
-        for(int i=1; i <= testLevel; i++) {
+        totalTransactions += testLevel/3;
+        for(int i=1; i <= testLevel/3; i++) {
             if(!rm.reserveCar(xid, cid, testLocation+i)) {
                 fail(String.format("Fail to reserve car id: %d, location: %s", i, testLocation+i));
             }
@@ -244,8 +342,8 @@ public class TwoPLTest {
 
         // Query flights
         logger.info("Verifying flight reservations");
-        totalTransactions += testLevel;
-        for(int i=1; i <= testLevel; i++) {
+        totalTransactions += testLevel/3;
+        for(int i=1; i <= testLevel/3; i++) {
             if(rm.queryFlight(xid, i) != i-1) {
                 fail(String.format("Flight id: %d, number: %d was not reserved!", i, i));
             }
@@ -254,8 +352,8 @@ public class TwoPLTest {
 
         // Query rooms
         logger.info("Verifying rooms reservations");
-        totalTransactions += testLevel;
-        for(int i=1; i <= testLevel; i++) {
+        totalTransactions += testLevel/3;
+        for(int i=1; i <= testLevel/3; i++) {
             if(rm.queryRooms(xid, testLocation+i) != i-1) {
                 fail(String.format("Room id: %d, location: %s was not reserved!", i, testLocation+i));
             }
@@ -264,8 +362,8 @@ public class TwoPLTest {
 
         // Query rooms
         logger.info("Verifying cars reservations");
-        totalTransactions += testLevel;
-        for(int i=1; i <= testLevel; i++) {
+        totalTransactions += testLevel/3;
+        for(int i=1; i <= testLevel/3; i++) {
             if(rm.queryCars(xid, testLocation+i) != i-1) {
                 fail(String.format("Car id: %d, location: %s was not reserved!", i, testLocation+i));
             }
@@ -554,7 +652,7 @@ public class TwoPLTest {
     }
 
     @Test
-//    @Ignore
+    @Ignore
     public void manyClientsAllRM_conflict_read_test() throws RemoteException, InterruptedException {
 
         logger.info("TITLE: Many Clients and all RM, with conflict");
@@ -632,7 +730,7 @@ public class TwoPLTest {
     }
 
     @Test
-//    @Ignore
+    @Ignore
     public void manyClientsAllRM_no_conflict_read_test() throws RemoteException, InterruptedException {
 
         logger.info("TITLE: Many Clients and all RM, no conflict");
