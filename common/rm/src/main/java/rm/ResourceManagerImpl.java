@@ -28,7 +28,7 @@ public class ResourceManagerImpl implements ResourceManager {
     private Map<Integer, RMHashtable> m_tables;
 
     // Object dedicated to flag a an entry for deletion
-    private final RMItem RM_NULL = new Customer(0);
+    private final RMItem RM_NULL = new Customer(Integer.MIN_VALUE);
 
     // Lock manager
     private LockManager m_lockManager;

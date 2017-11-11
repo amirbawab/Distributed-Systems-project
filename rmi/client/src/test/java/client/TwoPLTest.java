@@ -63,7 +63,7 @@ public class TwoPLTest {
     @Test
     public void oneClientOneRM_test() throws RemoteException, InterruptedException {
 
-        logger.info("TEST: 1 Client and 1 RM (Flight RM)");
+        logger.info("TITLE: 1 Client and 1 RM (Flight RM)");
 
         // Thread number
         int totalThreads = LOW_THREAD;

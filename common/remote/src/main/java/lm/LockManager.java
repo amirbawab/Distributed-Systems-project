@@ -72,8 +72,8 @@ public class LockManager
                             // lock table
                             synchronized (this.lockTable) {
                                 logger.info("Conversion bit is set. Converting READ lock to WRITE lock");
-                                this.lockTable.removeAll(trxnObj);
-                                this.lockTable.removeAll(dataObj);
+                                this.lockTable.remove(trxnObj);
+                                this.lockTable.remove(dataObj);
                                 this.lockTable.add(trxnObj);
                                 this.lockTable.add(dataObj);
                             }

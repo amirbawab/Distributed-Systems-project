@@ -218,8 +218,8 @@ class MiddlewareServer implements ResourceManager {
                 m_tm.getTransaction(id).addRM(m_flightRM);
                 m_tm.getTransaction(id).addRM(m_carRM);
                 m_tm.getTransaction(id).addRM(m_roomRM);
-                return m_flightRM.newCustomer(id, cid) &&
-                        m_carRM.newCustomer(id, cid) &&
+                return m_flightRM.newCustomer(id, cid) &
+                        m_carRM.newCustomer(id, cid) &
                         m_roomRM.newCustomer(id, cid);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -283,8 +283,8 @@ class MiddlewareServer implements ResourceManager {
                 m_tm.getTransaction(id).addRM(m_roomRM);
                 m_tm.getTransaction(id).addRM(m_carRM);
                 m_tm.getTransaction(id).addRM(m_flightRM);
-                return m_roomRM.deleteCustomer(id, customer) &&
-                        m_carRM.deleteCustomer(id, customer) &&
+                return m_roomRM.deleteCustomer(id, customer) &
+                        m_carRM.deleteCustomer(id, customer) &
                         m_flightRM.deleteCustomer(id, customer);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -522,6 +522,15 @@ class MiddlewareServer implements ResourceManager {
         logger.info("Committing transaction " + transactionId);
         m_tm.getTransaction(transactionId).updateLastActive();
         for(ResourceManager rm : m_tm.getTransaction(transactionId).getRMs()) {
+            String name = "UNKNOWN";
+            if(rm == m_carRM) {
+                name = "Car";
+            } else if(rm == m_flightRM) {
+                name = "Flight";
+            } else if(rm == m_roomRM) {
+                name = "Room";
+            }
+            logger.info("Applying 1 phase commit on RM " + name);
             rm.commit(transactionId);
         }
         m_tm.removeTransaction(transactionId);
@@ -550,7 +559,7 @@ class MiddlewareServer implements ResourceManager {
                     return false;
                 }
             }
-            boolean shutdown = m_flightRM.shutdown() && m_carRM.shutdown() && m_roomRM.shutdown();
+            boolean shutdown = m_flightRM.shutdown() & m_carRM.shutdown() & m_roomRM.shutdown();
             logger.info("All RMs are shutdown. Shutting down middleware server ...");
             return shutdown;
         } else {
