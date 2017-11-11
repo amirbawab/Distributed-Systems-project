@@ -386,10 +386,10 @@ public class TwoPLTest {
         // Objects details
         final int cid = 30000;
         final String testLocation = "test-location-3-";
-        final int totalThreads = MED_THREAD;
-        final int testLevel = LOW_TEST;
+        final int totalThreads = 10;
+        final int testLevel = 1000/totalThreads;
         final long startTime = System.currentTimeMillis();
-        final int LOAD_SLEEP = 500;
+        final int LOAD_SLEEP = 10;
         totalTransactions = 0;
         completedTransactions = new ArrayList<>();
         for(int i=0; i < totalThreads; i++) completedTransactions.add(0);
@@ -652,7 +652,7 @@ public class TwoPLTest {
     }
 
     @Test
-    @Ignore
+//    @Ignore
     public void manyClientsAllRM_conflict_read_test() throws RemoteException, InterruptedException {
 
         logger.info("TITLE: Many Clients and all RM, with conflict");
@@ -660,10 +660,10 @@ public class TwoPLTest {
         // Objects details
         final int cid = 30000;
         final String testLocation = "test-location-3-";
-        final int totalThreads = MED_THREAD;
-        final int testLevel = LOW_TEST;
+        final int totalThreads = 10;
+        final int testLevel = 1000/totalThreads;
         final long startTime = System.currentTimeMillis();
-        final int LOAD_SLEEP = 500;
+        final int LOAD_SLEEP = 10;
         totalTransactions = 0;
         completedTransactions = new ArrayList<>();
         for(int i=0; i < totalThreads; i++) completedTransactions.add(0);
