@@ -84,7 +84,7 @@ public class TwoPLTest {
     }
 
     @Test
-//    @Ignore
+    @Ignore
     public void oneClientOneRM_test() throws RemoteException, InterruptedException {
 
         // Objects details
@@ -148,7 +148,7 @@ public class TwoPLTest {
     }
 
     @Test
-//    @Ignore
+    @Ignore
     public void oneClientTwoRM_test() throws RemoteException, InterruptedException {
 
         // Objects details
@@ -693,7 +693,73 @@ public class TwoPLTest {
                 try {
                     for(int i = 0; i < testLevel; i++) {
                         if (rm.queryFlight(xidArray.get(finalT), i) != 0) {
-                            fail(String.format("Failed to add flight id: %d, number: %d", i, i));
+                            fail(String.format("Failed to query flight id: %d, number: %d", i, i));
+                        }
+                        Thread.sleep(LOAD_SLEEP);
+                        synchronized (completedTransactions) {
+                            completedTransactions.set(finalT, completedTransactions.get(finalT)+1);
+                        }
+                    }
+                } catch (RemoteException e) {
+                    if(e.getCause() instanceof InvalidTransactionException) {
+                        logger.info("Transaction " + xidArray.get(finalT) + " aborted due to deadlock");
+                        abortedArray.set(finalT, true);
+                    } else {
+                        fail(e.getMessage());
+                    }
+                } catch (InterruptedException e) {
+                    fail(e.getMessage());
+                }
+            });
+            thread.start();
+            threadList.add(thread);
+        }
+
+        // Start threads
+        totalTransactions += totalThreads * testLevel;
+        logger.info("Querying " + testLevel + " rooms in " + totalThreads + " transactions");
+        for(int t=0; t < totalThreads && !abortedArray.get(t); t++) {
+            // Create thread
+            int finalT = t;
+            Thread thread = new Thread(() -> {
+                // Add flights
+                try {
+                    for(int i = 0; i < testLevel; i++) {
+                        if (rm.queryRooms(xidArray.get(finalT), testLocation+i) != 0) {
+                            fail(String.format("Failed to query room id: %d, location: %s", i, testLocation+i));
+                        }
+                        Thread.sleep(LOAD_SLEEP);
+                        synchronized (completedTransactions) {
+                            completedTransactions.set(finalT, completedTransactions.get(finalT)+1);
+                        }
+                    }
+                } catch (RemoteException e) {
+                    if(e.getCause() instanceof InvalidTransactionException) {
+                        logger.info("Transaction " + xidArray.get(finalT) + " aborted due to deadlock");
+                        abortedArray.set(finalT, true);
+                    } else {
+                        fail(e.getMessage());
+                    }
+                } catch (InterruptedException e) {
+                    fail(e.getMessage());
+                }
+            });
+            thread.start();
+            threadList.add(thread);
+        }
+
+        // Start threads
+        totalTransactions += totalThreads * testLevel;
+        logger.info("Querying " + testLevel + " cars in " + totalThreads + " transactions");
+        for(int t=0; t < totalThreads && !abortedArray.get(t); t++) {
+            // Create thread
+            int finalT = t;
+            Thread thread = new Thread(() -> {
+                // Add flights
+                try {
+                    for(int i = 0; i < testLevel; i++) {
+                        if (rm.queryCars(xidArray.get(finalT), testLocation+i) != 0) {
+                            fail(String.format("Failed to query cars id: %d, location: %s", i, testLocation+i));
                         }
                         Thread.sleep(LOAD_SLEEP);
                         synchronized (completedTransactions) {
@@ -738,8 +804,8 @@ public class TwoPLTest {
         // Objects details
         final int cid = 40000;
         final String testLocation = "test-location-3-";
-        final int totalThreads = MED_THREAD;
-        final int testLevel = LOW_TEST;
+        final int totalThreads = 10;
+        final int testLevel = 1000/totalThreads;
         final long startTime = System.currentTimeMillis();
         totalTransactions = 0;
         completedTransactions = new ArrayList<>();
@@ -759,9 +825,10 @@ public class TwoPLTest {
         // Prepare thread list
         List<Thread> threadList = new ArrayList<>();
 
+
         // Start threads
         totalTransactions += totalThreads * testLevel;
-        logger.info("Adding " + testLevel + " flights in " + totalThreads + " transactions");
+        logger.info("Querying " + testLevel + " flights in " + totalThreads + " transactions");
         for(int t=0; t < totalThreads && !abortedArray.get(t); t++) {
             // Create thread
             int finalT = t;
@@ -769,8 +836,8 @@ public class TwoPLTest {
                 // Add flights
                 try {
                     for(int i = testLevel*(finalT -1); i < testLevel* finalT; i++) {
-                        if (!rm.addFlight(xidArray.get(finalT), i, i, i)) {
-                            fail(String.format("Failed to add flight id: %d, number: %d", i, i));
+                        if (rm.queryFlight(xidArray.get(finalT), i) != 0) {
+                            fail(String.format("Failed to query flight id: %d, number: %d", i, i));
                         }
                         synchronized (completedTransactions) {
                             completedTransactions.set(finalT, completedTransactions.get(finalT)+1);
@@ -790,16 +857,17 @@ public class TwoPLTest {
         }
 
         // Start threads
-        logger.info("Adding " + testLevel + " cars in " + totalThreads + " transactions");
         totalTransactions += totalThreads * testLevel;
+        logger.info("Querying " + testLevel + " rooms in " + totalThreads + " transactions");
         for(int t=0; t < totalThreads && !abortedArray.get(t); t++) {
             // Create thread
             int finalT = t;
             Thread thread = new Thread(() -> {
+                // Add flights
                 try {
                     for(int i = testLevel*(finalT -1); i < testLevel* finalT; i++) {
-                        if(!rm.addCars(xidArray.get(finalT), testLocation+i, i, i)) {
-                            fail(String.format("Failed to add flight id: %d, location: %s", i, testLocation+i));
+                        if (rm.queryRooms(xidArray.get(finalT), testLocation+i) != 0) {
+                            fail(String.format("Failed to query room id: %d, location: %s", i, testLocation+i));
                         }
                         synchronized (completedTransactions) {
                             completedTransactions.set(finalT, completedTransactions.get(finalT)+1);
@@ -819,16 +887,17 @@ public class TwoPLTest {
         }
 
         // Start threads
-        logger.info("Adding " + testLevel + " rooms in " + totalThreads + " transactions");
         totalTransactions += totalThreads * testLevel;
+        logger.info("Querying " + testLevel + " cars in " + totalThreads + " transactions");
         for(int t=0; t < totalThreads && !abortedArray.get(t); t++) {
             // Create thread
             int finalT = t;
             Thread thread = new Thread(() -> {
+                // Add flights
                 try {
                     for(int i = testLevel*(finalT -1); i < testLevel* finalT; i++) {
-                        if(!rm.addRooms(xidArray.get(finalT), testLocation+i, i, i)) {
-                            fail(String.format("Failed to add room id: %d, location: %s", i, testLocation+i));
+                        if (rm.queryCars(xidArray.get(finalT), testLocation+i) != 0) {
+                            fail(String.format("Failed to query cars id: %d, location: %s", i, testLocation+i));
                         }
                         synchronized (completedTransactions) {
                             completedTransactions.set(finalT, completedTransactions.get(finalT)+1);
