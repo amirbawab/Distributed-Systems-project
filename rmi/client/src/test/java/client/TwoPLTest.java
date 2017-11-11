@@ -65,6 +65,163 @@ public class TwoPLTest {
 
         logger.info("TITLE: 1 Client and 1 RM (Flight RM)");
 
+        int testLevel = HIGH_TEST;
+
+        // Start transactions
+        logger.info("Starting a new transaction");
+        int xid = rm.start();
+
+        // Delete customer
+        logger.info("Cleaning any created customers");
+        rm.deleteCustomer(xid, cid);
+
+        // Remove flights if any
+        logger.info("Cleaning any created flights");
+        for(int i=0; i < testLevel; i++) {
+            rm.deleteFlight(xid, i);
+        }
+
+        // Add flights
+        logger.info("Adding " + testLevel + " flights");
+        for(int i = 0; i < testLevel; i++) {
+            try {
+                if(!rm.addFlight(xid, i, i, i)) {
+                    fail(String.format("Failed to add flight id: %d, number: %d", i, i));
+                }
+            } catch (RemoteException e) {
+                fail("Failed to add flight caused by remote exception");
+            }
+        }
+
+        // Query flights
+        logger.info("Verifying that all flights were added ...");
+        for(int i=0; i < testLevel; i++) {
+            if(rm.queryFlight(xid, i) != i || rm.queryFlightPrice(xid, i) != i) {
+                fail(String.format("Flight id: %d, number: %d was not added!", i, i));
+            }
+        }
+        logger.info("Verification completed");
+
+        // Commit transaction
+        try {
+            logger.info("Committing changes");
+            rm.commit(xid);
+        } catch (TransactionAbortedException e) {
+            fail("Failed to commit transaction");
+        }
+        logger.info("Test completed successfully!");
+    }
+
+    @Test
+    public void oneClientAllRM_test() throws RemoteException, InterruptedException {
+
+        logger.info("TITLE: 1 Client and all RM");
+
+        int testLevel = HIGH_TEST;
+
+        // Start transactions
+        logger.info("Starting a new transaction");
+        int xid = rm.start();
+
+        // Delete customer
+        logger.info("Cleaning any created customers");
+        rm.deleteCustomer(xid, cid);
+
+        // Remove flights if any
+        logger.info("Cleaning any created flights");
+        for(int i=0; i < testLevel; i++) {
+            rm.deleteFlight(xid, i);
+        }
+
+        // Remove cars if any
+        logger.info("Cleaning any created cars");
+        for(int i=0; i < testLevel; i++) {
+            rm.deleteCars(xid, testLocation+i);
+        }
+
+        // Remove rooms if any
+        logger.info("Cleaning any created rooms");
+        for(int i=0; i < testLevel; i++) {
+            rm.deleteRooms(xid, testLocation+i);
+        }
+
+        // Add flights
+        logger.info("Adding " + testLevel + " flights");
+        for(int i = 0; i < testLevel; i++) {
+            try {
+                if(!rm.addFlight(xid, i, i, i)) {
+                    fail(String.format("Failed to add flight id: %d, number: %d", i, i));
+                }
+            } catch (RemoteException e) {
+                fail("Failed to add flight caused by remote exception");
+            }
+        }
+
+        // Add cars
+        logger.info("Adding " + testLevel + " cars");
+        for(int i = 0; i < testLevel; i++) {
+            try {
+                if(!rm.addCars(xid, testLocation+i, i, i)) {
+                    fail(String.format("Failed to add car id: %d, location: %s", i, testLocation+i));
+                }
+            } catch (RemoteException e) {
+                fail("Failed to add car caused by remote exception");
+            }
+        }
+
+        // Add rooms
+        logger.info("Adding " + testLevel + " rooms");
+        for(int i = 0; i < testLevel; i++) {
+            try {
+                if(!rm.addRooms(xid, testLocation+i, i, i)) {
+                    fail(String.format("Failed to add room id: %d, location: %s", i, testLocation+i));
+                }
+            } catch (RemoteException e) {
+                fail("Failed to add room caused by remote exception");
+            }
+        }
+
+        // Query flights
+        logger.info("Verifying that all flights were added ...");
+        for(int i=0; i < testLevel; i++) {
+            if(rm.queryFlight(xid, i) != i || rm.queryFlightPrice(xid, i) != i) {
+                fail(String.format("Flight id: %d, number: %d was not added!", i, i));
+            }
+        }
+
+        // Query cars
+        logger.info("Verifying that all cars were added ...");
+        for(int i=0; i < testLevel; i++) {
+            if(rm.queryCars(xid, testLocation+i) != i || rm.queryCarsPrice(xid, testLocation+i) != i) {
+                fail(String.format("Car id: %d, location: %s was not added!", i, testLocation+i));
+            }
+        }
+
+        // Query rooms
+        logger.info("Verifying that all rooms were added ...");
+        for(int i=0; i < testLevel; i++) {
+            if(rm.queryRooms(xid, testLocation+i) != i || rm.queryRoomsPrice(xid, testLocation+i) != i) {
+                fail(String.format("Room id: %d, location: %s was not added!", i, testLocation+i));
+            }
+        }
+        logger.info("Verification completed");
+
+        // Commit transaction
+        try {
+            logger.info("Committing changes");
+            rm.commit(xid);
+        } catch (TransactionAbortedException e) {
+            fail("Failed to commit transaction");
+        }
+        logger.info("Test completed successfully!");
+    }
+
+    @Test
+    @Ignore
+    public void manyClientsThreeRM_test() throws RemoteException, InterruptedException {
+
+        logger.info("TITLE: 1 Client and all RM");
+
         // Thread number
         int totalThreads = LOW_THREAD;
         int testLevel = LOW_TEST;
