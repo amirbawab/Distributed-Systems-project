@@ -3,6 +3,7 @@ import inter.ResourceManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.rmi.RemoteException;
@@ -59,6 +60,7 @@ public class ClientTest {
     }
 
     @Test
+    @Ignore
     public void flights_test_1() throws RemoteException, InterruptedException {
 
         // Thread number
@@ -110,6 +112,7 @@ public class ClientTest {
     }
 
     @Test
+    @Ignore
     public void flights_test_2() throws RemoteException, InterruptedException {
 
         // Thread number
@@ -173,6 +176,7 @@ public class ClientTest {
     }
 
     @Test
+    @Ignore
     public void cars_test_1() throws RemoteException, InterruptedException {
 
         // Thread number
@@ -224,6 +228,7 @@ public class ClientTest {
     }
 
     @Test
+    @Ignore
     public void cars_test_2() throws RemoteException, InterruptedException {
 
         // Thread number
@@ -287,6 +292,7 @@ public class ClientTest {
     }
 
     @Test
+    @Ignore
     public void rooms_test_1() throws RemoteException, InterruptedException {
 
         // Thread number
@@ -338,6 +344,7 @@ public class ClientTest {
     }
 
     @Test
+    @Ignore
     public void rooms_test_2() throws RemoteException, InterruptedException {
 
         // Thread number
