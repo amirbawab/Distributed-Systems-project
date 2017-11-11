@@ -1,5 +1,6 @@
 package client;
 import inter.ResourceManager;
+import lm.TransactionAbortedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.BeforeClass;
@@ -14,6 +15,7 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
+@Ignore
 public class ClientTest {
 
     // Logger
@@ -60,7 +62,6 @@ public class ClientTest {
     }
 
     @Test
-    @Ignore
     public void flights_test_1() throws RemoteException, InterruptedException {
 
         // Thread number
@@ -112,7 +113,6 @@ public class ClientTest {
     }
 
     @Test
-    @Ignore
     public void flights_test_2() throws RemoteException, InterruptedException {
 
         // Thread number
@@ -176,7 +176,6 @@ public class ClientTest {
     }
 
     @Test
-    @Ignore
     public void cars_test_1() throws RemoteException, InterruptedException {
 
         // Thread number
@@ -228,7 +227,6 @@ public class ClientTest {
     }
 
     @Test
-    @Ignore
     public void cars_test_2() throws RemoteException, InterruptedException {
 
         // Thread number
@@ -292,7 +290,6 @@ public class ClientTest {
     }
 
     @Test
-    @Ignore
     public void rooms_test_1() throws RemoteException, InterruptedException {
 
         // Thread number
@@ -344,7 +341,6 @@ public class ClientTest {
     }
 
     @Test
-    @Ignore
     public void rooms_test_2() throws RemoteException, InterruptedException {
 
         // Thread number

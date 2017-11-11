@@ -191,7 +191,7 @@ public class LockManager
                 } 
             }
         }
-
+        logger.info("Lock label after releasing locks of transaction " + xid + ":\n" + this.lockTable.toString());
         return true;
     }
 
