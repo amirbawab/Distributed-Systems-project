@@ -291,6 +291,7 @@ public class TwoPLTest {
         final int totalThreads = MED_THREAD;
         final int testLevel = LOW_TEST;
         final long startTime = System.currentTimeMillis();
+        final int LOAD_SLEEP = 500;
         totalTransactions = 0;
         completedTransactions = new ArrayList<>();
         for(int i=0; i < totalThreads; i++) completedTransactions.add(0);
@@ -322,6 +323,147 @@ public class TwoPLTest {
                         if (!rm.addFlight(xidArray.get(finalT), i, i, i)) {
                             fail(String.format("Failed to add flight id: %d, number: %d", i, i));
                         }
+                        Thread.sleep(LOAD_SLEEP);
+                        synchronized (completedTransactions) {
+                            completedTransactions.set(finalT, completedTransactions.get(finalT)+1);
+                        }
+                    }
+                } catch (RemoteException e) {
+                    if(e.getCause() instanceof InvalidTransactionException) {
+                        logger.info("Transaction " + xidArray.get(finalT) + " aborted due to deadlock");
+                        abortedArray.set(finalT, true);
+                    } else {
+                        fail(e.getMessage());
+                    }
+                } catch (InterruptedException e) {
+                    fail(e.getMessage());
+                }
+            });
+            thread.start();
+            threadList.add(thread);
+        }
+
+        // Start threads
+        logger.info("Adding " + testLevel + " cars in " + totalThreads + " transactions");
+        totalTransactions += totalThreads * testLevel;
+        for(int t=0; t < totalThreads && !abortedArray.get(t); t++) {
+            // Create thread
+            int finalT = t;
+            Thread thread = new Thread(() -> {
+                try {
+                    for(int i = 0; i < testLevel; i++) {
+                        if(!rm.addCars(xidArray.get(finalT), testLocation+i, i, i)) {
+                            fail(String.format("Failed to add flight id: %d, location: %s", i, testLocation+i));
+                        }
+                        Thread.sleep(LOAD_SLEEP);
+                        synchronized (completedTransactions) {
+                            completedTransactions.set(finalT, completedTransactions.get(finalT)+1);
+                        }
+                    }
+                } catch (RemoteException e) {
+                    if(e.getCause() instanceof InvalidTransactionException) {
+                        logger.info("Transaction " + xidArray.get(finalT) + " aborted due to deadlock");
+                        abortedArray.set(finalT, true);
+                    } else {
+                        fail(e.getMessage());
+                    }
+                } catch (InterruptedException e) {
+                    fail(e.getMessage());
+                }
+            });
+            thread.start();
+            threadList.add(thread);
+        }
+
+        // Start threads
+        logger.info("Adding " + testLevel + " rooms in " + totalThreads + " transactions");
+        totalTransactions += totalThreads * testLevel;
+        for(int t=0; t < totalThreads && !abortedArray.get(t); t++) {
+            // Create thread
+            int finalT = t;
+            Thread thread = new Thread(() -> {
+                try {
+                    for(int i = 0; i < testLevel; i++) {
+                        if(!rm.addRooms(xidArray.get(finalT), testLocation+i, i, i)) {
+                            fail(String.format("Failed to add room id: %d, location: %s", i, testLocation+i));
+                        }
+                        Thread.sleep(LOAD_SLEEP);
+                        synchronized (completedTransactions) {
+                            completedTransactions.set(finalT, completedTransactions.get(finalT)+1);
+                        }
+                    }
+                } catch (RemoteException e) {
+                    if(e.getCause() instanceof InvalidTransactionException) {
+                        logger.info("Transaction " + xidArray.get(finalT) + " aborted due to deadlock");
+                        abortedArray.set(finalT, true);
+                    } else {
+                        fail(e.getMessage());
+                    }
+                } catch (InterruptedException e) {
+                    fail(e.getMessage());
+                }
+            });
+            thread.start();
+            threadList.add(thread);
+        }
+
+        // Wait until all threads terminate
+        for(Thread thread : threadList) {
+            thread.join();
+        }
+
+        // Abort transaction
+        logger.info("Aborting changes to avoid modifying the DB");
+        for(int i=0; i < totalThreads && !abortedArray.get(i); i++) {
+            rm.abort(xidArray.get(i));
+        }
+        _logAnalysis(abortedArray, startTime);
+        logger.info("Test completed successfully!");
+    }
+
+    @Test
+    @Ignore
+    public void manyClientsAllRM_no_conflict_test() throws RemoteException, InterruptedException {
+
+        logger.info("TITLE: Many Clients and all RM, no conflict");
+
+        // Objects details
+        final int cid = 40000;
+        final String testLocation = "test-location-3-";
+        final int totalThreads = MED_THREAD;
+        final int testLevel = LOW_TEST;
+        final long startTime = System.currentTimeMillis();
+        totalTransactions = 0;
+        completedTransactions = new ArrayList<>();
+        for(int i=0; i < totalThreads; i++) completedTransactions.add(0);
+
+        // Transaction array
+        List<Integer> xidArray = new ArrayList<>();
+        List<Boolean> abortedArray = new ArrayList<>();
+
+        // Start transactions
+        logger.info("Starting " + totalThreads + " new transaction");
+        for(int i=0; i < totalThreads; i++) {
+            xidArray.add(rm.start());
+            abortedArray.add(false);
+        }
+
+        // Prepare thread list
+        List<Thread> threadList = new ArrayList<>();
+
+        // Start threads
+        totalTransactions += totalThreads * testLevel;
+        logger.info("Adding " + testLevel + " flights in " + totalThreads + " transactions");
+        for(int t=0; t < totalThreads && !abortedArray.get(t); t++) {
+            // Create thread
+            int finalT = t;
+            Thread thread = new Thread(() -> {
+                // Add flights
+                try {
+                    for(int i = testLevel*(finalT -1); i < testLevel* finalT; i++) {
+                        if (!rm.addFlight(xidArray.get(finalT), i, i, i)) {
+                            fail(String.format("Failed to add flight id: %d, number: %d", i, i));
+                        }
                         synchronized (completedTransactions) {
                             completedTransactions.set(finalT, completedTransactions.get(finalT)+1);
                         }
@@ -347,7 +489,7 @@ public class TwoPLTest {
             int finalT = t;
             Thread thread = new Thread(() -> {
                 try {
-                    for(int i = 0; i < testLevel; i++) {
+                    for(int i = testLevel*(finalT -1); i < testLevel* finalT; i++) {
                         if(!rm.addCars(xidArray.get(finalT), testLocation+i, i, i)) {
                             fail(String.format("Failed to add flight id: %d, location: %s", i, testLocation+i));
                         }
@@ -376,7 +518,7 @@ public class TwoPLTest {
             int finalT = t;
             Thread thread = new Thread(() -> {
                 try {
-                    for(int i = 0; i < testLevel; i++) {
+                    for(int i = testLevel*(finalT -1); i < testLevel* finalT; i++) {
                         if(!rm.addRooms(xidArray.get(finalT), testLocation+i, i, i)) {
                             fail(String.format("Failed to add room id: %d, location: %s", i, testLocation+i));
                         }
@@ -412,7 +554,86 @@ public class TwoPLTest {
     }
 
     @Test
-    public void manyClientsAllRM_no_conflict_test() throws RemoteException, InterruptedException {
+//    @Ignore
+    public void manyClientsAllRM_conflict_read_test() throws RemoteException, InterruptedException {
+
+        logger.info("TITLE: Many Clients and all RM, with conflict");
+
+        // Objects details
+        final int cid = 30000;
+        final String testLocation = "test-location-3-";
+        final int totalThreads = MED_THREAD;
+        final int testLevel = LOW_TEST;
+        final long startTime = System.currentTimeMillis();
+        final int LOAD_SLEEP = 500;
+        totalTransactions = 0;
+        completedTransactions = new ArrayList<>();
+        for(int i=0; i < totalThreads; i++) completedTransactions.add(0);
+
+        // Transaction array
+        List<Integer> xidArray = new ArrayList<>();
+        List<Boolean> abortedArray = new ArrayList<>();
+
+        // Start transactions
+        logger.info("Starting " + totalThreads + " new transaction");
+        for(int i=0; i < totalThreads; i++) {
+            xidArray.add(rm.start());
+            abortedArray.add(false);
+        }
+
+        // Prepare thread list
+        List<Thread> threadList = new ArrayList<>();
+
+        // Start threads
+        totalTransactions += totalThreads * testLevel;
+        logger.info("Querying " + testLevel + " flights in " + totalThreads + " transactions");
+        for(int t=0; t < totalThreads && !abortedArray.get(t); t++) {
+            // Create thread
+            int finalT = t;
+            Thread thread = new Thread(() -> {
+                // Add flights
+                try {
+                    for(int i = 0; i < testLevel; i++) {
+                        if (rm.queryFlight(xidArray.get(finalT), i) != 0) {
+                            fail(String.format("Failed to add flight id: %d, number: %d", i, i));
+                        }
+                        Thread.sleep(LOAD_SLEEP);
+                        synchronized (completedTransactions) {
+                            completedTransactions.set(finalT, completedTransactions.get(finalT)+1);
+                        }
+                    }
+                } catch (RemoteException e) {
+                    if(e.getCause() instanceof InvalidTransactionException) {
+                        logger.info("Transaction " + xidArray.get(finalT) + " aborted due to deadlock");
+                        abortedArray.set(finalT, true);
+                    } else {
+                        fail(e.getMessage());
+                    }
+                } catch (InterruptedException e) {
+                    fail(e.getMessage());
+                }
+            });
+            thread.start();
+            threadList.add(thread);
+        }
+
+        // Wait until all threads terminate
+        for(Thread thread : threadList) {
+            thread.join();
+        }
+
+        // Abort transaction
+        logger.info("Aborting changes to avoid modifying the DB");
+        for(int i=0; i < totalThreads && !abortedArray.get(i); i++) {
+            rm.abort(xidArray.get(i));
+        }
+        _logAnalysis(abortedArray, startTime);
+        logger.info("Test completed successfully!");
+    }
+
+    @Test
+//    @Ignore
+    public void manyClientsAllRM_no_conflict_read_test() throws RemoteException, InterruptedException {
 
         logger.info("TITLE: Many Clients and all RM, no conflict");
 
