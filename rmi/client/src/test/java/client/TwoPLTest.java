@@ -217,46 +217,115 @@ public class TwoPLTest {
     }
 
     @Test
-    @Ignore
-    public void manyClientsThreeRM_test() throws RemoteException, InterruptedException {
+    public void manyClientsAllRM_test() throws RemoteException, InterruptedException {
 
-        logger.info("TITLE: 1 Client and all RM");
+        logger.info("TITLE: Many Clients and all RM");
 
         // Thread number
         int totalThreads = LOW_THREAD;
         int testLevel = LOW_TEST;
 
+        // Cleaning transaction
+        int cleanXid = rm.start();
+
+        // Transaction array
+        List<Integer> xidArray = new ArrayList<>();
+
         // Start transactions
-        logger.info("Starting a new transaction");
-        int xid = rm.start();
+        logger.info("Starting " + totalThreads + " new transaction");
+        for(int i=0; i < totalThreads; i++) {
+            xidArray.add(rm.start());
+        }
 
         // Delete customer
         logger.info("Cleaning any created customers");
-        rm.deleteCustomer(xid, cid);
+        rm.deleteCustomer(cleanXid, cid);
 
         // Remove flights if any
         logger.info("Cleaning any created flights");
-        for(int i=0; i < testLevel * totalThreads; i++) {
-            rm.deleteFlight(xid, i);
+        for(int i=0; i < testLevel; i++) {
+            rm.deleteFlight(cleanXid, i);
+        }
+
+        // Remove cars if any
+        logger.info("Cleaning any created cars");
+        for(int i=0; i < testLevel; i++) {
+            rm.deleteCars(cleanXid, testLocation+i);
+        }
+
+        // Remove rooms if any
+        logger.info("Cleaning any created rooms");
+        for(int i=0; i < testLevel; i++) {
+            rm.deleteRooms(cleanXid, testLocation+i);
+        }
+
+        // Commit clean data
+        try {
+            logger.info("Committing clean transaction");
+            rm.commit(cleanXid);
+        } catch (TransactionAbortedException e) {
+            fail("Failed to commit clean transaction");
         }
 
         // Prepare thread list
         List<Thread> threadList = new ArrayList<>();
 
         // Start threads
-        logger.info("Adding " + testLevel + " flights in each of " + totalThreads + " threads");
-        for(int t=1; t <= totalThreads; t++) {
+        logger.info("Adding " + testLevel + " flights in " + totalThreads + " transactions");
+        for(int t=0; t < totalThreads; t++) {
             // Create thread
             int finalT = t;
             Thread thread = new Thread(() -> {
                 // Add flights
-                for(int i = testLevel*(finalT -1); i < testLevel* finalT; i++) {
+                for(int i = 0; i < testLevel; i++) {
                     try {
-                        if(!rm.addFlight(xid, i, i, i)) {
+                        if(!rm.addFlight(xidArray.get(finalT), i, i, i)) {
                             fail(String.format("Failed to add flight id: %d, number: %d", i, i));
                         }
                     } catch (RemoteException e) {
-                        fail("Failed to add flight caused by remote exception");
+                        fail(e.getMessage());
+                    }
+                }
+            });
+            thread.start();
+            threadList.add(thread);
+        }
+
+        // Start threads
+        logger.info("Adding " + testLevel + " cars in " + totalThreads + " transactions");
+        for(int t=0; t < totalThreads; t++) {
+            // Create thread
+            int finalT = t;
+            Thread thread = new Thread(() -> {
+                // Add flights
+                for(int i = 0; i < testLevel; i++) {
+                    try {
+                        if(!rm.addCars(xidArray.get(finalT), testLocation+i, i, i)) {
+                            fail(String.format("Failed to add flight id: %d, location: %s", i, testLocation+i));
+                        }
+                    } catch (RemoteException e) {
+                        fail(e.getMessage());
+                    }
+                }
+            });
+            thread.start();
+            threadList.add(thread);
+        }
+
+        // Start threads
+        logger.info("Adding " + testLevel + " rooms in " + totalThreads + " transactions");
+        for(int t=0; t < totalThreads; t++) {
+            // Create thread
+            int finalT = t;
+            Thread thread = new Thread(() -> {
+                // Add flights
+                for(int i = 0; i < testLevel; i++) {
+                    try {
+                        if(!rm.addRooms(xidArray.get(finalT), testLocation+i, i, i)) {
+                            fail(String.format("Failed to add room id: %d, location: %s", i, testLocation+i));
+                        }
+                    } catch (RemoteException e) {
+                        fail(e.getMessage());
                     }
                 }
             });
@@ -269,21 +338,17 @@ public class TwoPLTest {
             thread.join();
         }
 
-        // Query flights
-        logger.info("Verifying that all flights were added ...");
-        for(int i=0; i < testLevel * totalThreads; i++) {
-            if(rm.queryFlight(xid, i) != i || rm.queryFlightPrice(xid, i) != i) {
-                fail(String.format("Flight id: %d, number: %d was not added!", i, i));
-            }
-        }
-        logger.info("Verification completed");
+        // TODO Compute the loss
+        // TODO If transaction aborted then flag it so that it's not in use anymore
 
         // Commit transaction
-        try {
-            logger.info("Committing changes");
-            rm.commit(xid);
-        } catch (TransactionAbortedException e) {
-            fail("Failed to commit transaction");
+        for(int i=0; i < totalThreads; i++) {
+            try {
+                logger.info("Committing changes for transaction " + xidArray.get(i));
+                rm.commit(xidArray.get(i));
+            } catch (TransactionAbortedException e) {
+                fail("Failed to commit transaction " + xidArray.get(i));
+            }
         }
         logger.info("Test completed successfully!");
     }
