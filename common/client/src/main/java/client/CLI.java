@@ -102,7 +102,11 @@ public class CLI {
                         else
                             System.out.println("Flight could not be added");
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -125,7 +129,11 @@ public class CLI {
                         else
                             System.out.println("Cars could not be added");
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -148,7 +156,11 @@ public class CLI {
                         else
                             System.out.println("Rooms could not be added");
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -163,7 +175,11 @@ public class CLI {
                         int customer=m_resourceManager.newCustomer(Id);
                         System.out.println("new customer id:"+customer);
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -182,7 +198,11 @@ public class CLI {
                         else
                             System.out.println("Flight could not be deleted");
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -202,7 +222,11 @@ public class CLI {
                         else
                             System.out.println("Cars could not be deleted");
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -221,7 +245,11 @@ public class CLI {
                         else
                             System.out.println("Rooms could not be deleted");
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -240,7 +268,11 @@ public class CLI {
                         else
                             System.out.println("Customer could not be deleted");
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -257,7 +289,11 @@ public class CLI {
                         int seats=m_resourceManager.queryFlight(Id,flightNum);
                         System.out.println("Number of seats available:"+seats);
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -274,7 +310,11 @@ public class CLI {
                         numCars=m_resourceManager.queryCars(Id,location);
                         System.out.println("number of Cars at this location:"+numCars);
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -291,7 +331,11 @@ public class CLI {
                         numRooms=m_resourceManager.queryRooms(Id,location);
                         System.out.println("number of Rooms at this location:"+numRooms);
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -308,7 +352,11 @@ public class CLI {
                         String bill=m_resourceManager.queryCustomerInfo(Id,customer);
                         System.out.println("Customer info:" + bill.replace("@","\n"));
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -325,7 +373,11 @@ public class CLI {
                         price=m_resourceManager.queryFlightPrice(Id,flightNum);
                         System.out.println("Price of a seat:"+price);
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -342,7 +394,11 @@ public class CLI {
                         price=m_resourceManager.queryCarsPrice(Id,location);
                         System.out.println("Price of a car at this location:"+price);
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -359,7 +415,11 @@ public class CLI {
                         price=m_resourceManager.queryRoomsPrice(Id,location);
                         System.out.println("Price of Rooms at this location:"+price);
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -380,7 +440,11 @@ public class CLI {
                         else
                             System.out.println("Flight could not be reserved.");
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -403,7 +467,11 @@ public class CLI {
                         else
                             System.out.println("Car could not be reserved.");
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -425,7 +493,11 @@ public class CLI {
                         else
                             System.out.println("Room could not be reserved.");
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -456,7 +528,11 @@ public class CLI {
                         else
                             System.out.println("Itinerary could not be reserved.");
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -481,7 +557,11 @@ public class CLI {
                         m_resourceManager.newCustomer(Id,Cid);
                         System.out.println("new customer id:"+Cid);
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -495,7 +575,11 @@ public class CLI {
                         int transactionId = m_resourceManager.start();
                         System.out.println("Your transaction id is:" + transactionId);
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
@@ -510,7 +594,11 @@ public class CLI {
                         m_resourceManager.commit(Id);
                         System.out.println("Transaction " + Id + " committed successfully");
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
                 case ABORT:
@@ -524,7 +612,11 @@ public class CLI {
                         m_resourceManager.abort(Id);
                         System.out.println("Transaction " + Id + " aborted successfully");
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
                 case SHUTDOWN:
@@ -541,7 +633,11 @@ public class CLI {
                             System.out.println("System could not shutdown because it is in use");
                         }
                     } catch(Exception e){
-                        logger.error(e.getMessage());
+                        if(e.getCause() != null) {
+                            logger.error(e.getCause().getMessage());
+                        } else {
+                            logger.error(e.getMessage());
+                        }
                     }
                     break;
 
