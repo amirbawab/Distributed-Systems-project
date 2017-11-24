@@ -39,7 +39,7 @@ public class RM {
         // Bind object to reference key
         try {
             // Create a new Server object
-            ResourceManagerImpl obj = new ResourceManagerImpl();
+            ResourceManagerImpl obj = new ResourceManagerImpl(objRef);
             // Dynamically generate the stub (client proxy)
             ResourceManager rm = (ResourceManager) UnicastRemoteObject.exportObject(obj, 0);
 

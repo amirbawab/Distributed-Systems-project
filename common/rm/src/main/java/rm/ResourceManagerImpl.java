@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.transaction.InvalidTransactionException;
+import java.io.*;
 import java.util.*;
 import java.rmi.RemoteException;
 
@@ -33,13 +34,20 @@ public class ResourceManagerImpl implements ResourceManager {
     // Lock manager
     private LockManager m_lockManager;
 
+    // Name of the resource manager object
+    private String m_name;
+
     /**
      * Construct a new resource manager
      */
-    ResourceManagerImpl() {
+    public ResourceManagerImpl(String name) {
         m_tables = new HashMap<>();
         m_tables.put(GLOBAL_TABLE, new RMHashtable());
         m_lockManager = new LockManager();
+        m_name = name;
+
+        // Resume RM
+        loadTables();
     }
 
     /**
@@ -569,6 +577,10 @@ public class ResourceManagerImpl implements ResourceManager {
                 }
             }
             deleteTable(transactionId);
+            writeTables();
+            // TODO Delete the ones that are not used
+            // TODO Maybe put this code in deleteTables ?
+            // TODO LockManager must be stored as well!
             return true;
         }
         throw new InvalidTransactionException("Transaction id " + transactionId + " is not available");
@@ -577,11 +589,13 @@ public class ResourceManagerImpl implements ResourceManager {
     @Override
     public void abort(int transactionId) throws RemoteException, InvalidTransactionException {
         deleteTable(transactionId);
+        writeTables();
     }
 
     @Override
     public boolean shutdown() throws RemoteException {
         logger.info("Shutting down ...");
+        writeTables();
         return true;
     }
 
@@ -608,6 +622,62 @@ public class ResourceManagerImpl implements ResourceManager {
     public void deleteTable(int transactionId) {
         m_tables.remove(transactionId);
         m_lockManager.UnlockAll(transactionId);
+    }
+
+    /**
+     * Load object files
+     */
+    private void loadTables() {
+        File dir = new File(m_name);
+        if(!dir.exists()) {
+            logger.info("RM " + m_name + " did not find any files to load. Starting empty");
+        } else {
+            File[] files = dir.listFiles();
+            for(File file : files) {
+                try (FileInputStream fis = new FileInputStream(file); ObjectInputStream ois = new ObjectInputStream(fis)){
+                    RMHashtable table = (RMHashtable) ois.readObject();
+                    String fileName = file.getName();
+                    String split[] = fileName.split("_");
+                    if(split.length > 0) {
+                        try {
+                            int tid = Integer.parseInt(split[split.length-1]);
+                            m_tables.put(tid, table);
+                        } catch (Exception e) {
+                            throw new IOException("File does not contain transaction id. File will be ignored");
+                        }
+                    }
+                } catch (ClassNotFoundException | IOException e) {
+                    logger.error(e.getMessage());
+                }
+            }
+        }
+    }
+
+    /**
+     * Store tables into files
+     */
+    private void writeTables() {
+        // Create directory if not there
+        File dir = new File(m_name);
+        if(!dir.exists()) {
+            if(!dir.mkdir()) {
+                logger.error("Failed to create directory " + dir.getAbsolutePath() + ". Data will not be stored.");
+                return;
+            } else {
+                logger.info("Directory " + dir.getAbsolutePath() + " created");
+            }
+        }
+
+        // Start creating object files
+        for(Integer tid : m_tables.keySet()) {
+            String fileName = m_name + "_" + tid;
+            try(FileOutputStream fos = new FileOutputStream(dir.getPath() + "/" + fileName); ObjectOutputStream obj = new ObjectOutputStream(fos)) {
+                obj.writeObject(m_tables.get(tid));
+                logger.info("File " + fileName + " updated!");
+            } catch (IOException e) {
+                logger.error(e.getMessage());
+            }
+        }
     }
 
 //    Returns the number of reservations for this flight.
