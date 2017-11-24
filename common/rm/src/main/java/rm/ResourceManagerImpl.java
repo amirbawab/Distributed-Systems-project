@@ -647,7 +647,7 @@ public class ResourceManagerImpl implements ResourceManager {
      * @return file
      */
     private File getTableFile(int tid) {
-        return new File(m_name + "/" + m_name + "_" + tid);
+        return new File("data_" + m_name + "/" + m_name + "_" + tid);
     }
 
     /**
@@ -655,7 +655,7 @@ public class ResourceManagerImpl implements ResourceManager {
      * @return lock file
      */
     private File getLockFile() {
-        return new File(m_name + "/" + m_name + "_LM");
+        return new File("data_"+ m_name + "/" + m_name + "_LM");
     }
 
     /**
