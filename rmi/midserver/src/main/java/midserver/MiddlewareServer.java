@@ -41,6 +41,9 @@ class MiddlewareServer implements ResourceManager {
     // Logger
     private static final Logger logger = LogManager.getLogger(MiddlewareServer.class);
 
+    // Middleware server
+    private static MiddlewareServer m_ms;
+
     public static void main(String[] args) {
 
         // Figure out where server is running
@@ -56,15 +59,15 @@ class MiddlewareServer implements ResourceManager {
         int rmRMIRegistryPort = Integer.parseInt(args[2]);
 
         // Build a middleware server
-        MiddlewareServer ms = bindRM(ResourceManager.MID_SERVER_REF, serverRMIRegistryPort);
+        m_ms = bindRM(ResourceManager.MID_SERVER_REF, serverRMIRegistryPort);
 
         // Connect to rm
-        ms.m_carRM = ms.connectToRM(ResourceManager.RM_CAR_REF, rmRMIRegistryIP, rmRMIRegistryPort);
-        ms.m_flightRM = ms.connectToRM(ResourceManager.RM_FLIGHT_REF, rmRMIRegistryIP, rmRMIRegistryPort);
-        ms.m_roomRM = ms.connectToRM(ResourceManager.RM_ROOM_REF, rmRMIRegistryIP, rmRMIRegistryPort);
+        m_ms.m_carRM = m_ms.connectToRM(ResourceManager.RM_CAR_REF, rmRMIRegistryIP, rmRMIRegistryPort);
+        m_ms.m_flightRM = m_ms.connectToRM(ResourceManager.RM_FLIGHT_REF, rmRMIRegistryIP, rmRMIRegistryPort);
+        m_ms.m_roomRM = m_ms.connectToRM(ResourceManager.RM_ROOM_REF, rmRMIRegistryIP, rmRMIRegistryPort);
 
         // Initialize the transaction manager
-        ms.m_tm = new TransactionManager();
+        m_ms.m_tm = new TransactionManager();
 
         // Create and install a security manager
         if (System.getSecurityManager() == null) {
@@ -99,22 +102,36 @@ class MiddlewareServer implements ResourceManager {
     }
 
     private static MiddlewareServer bindRM(String key, int port) {
-        // Bind server object
-        try {
-            // Create a new Server object
-            MiddlewareServer obj = new MiddlewareServer();
-            // Dynamically generate the stub (client proxy)
-            ResourceManager rm = (ResourceManager) UnicastRemoteObject.exportObject(obj, 0);
+        MiddlewareServer obj = new MiddlewareServer();
+        final int BIND_SLEEP = 5000;
 
-            // Bind the remote object's stub in the registry
-            s_registry = LocateRegistry.getRegistry(port);
-            s_registry.rebind(key, rm);
-            logger.info("Middleware server ready!");
-            return obj;
-        } catch (Exception e) {
-            logger.error("Middleware server exception: " + e.toString());
+        ResourceManager rm = null;
+        while(true) {
+            // Bind server object
+            try {
+
+                // Export one time only
+                if(rm == null) {
+                    // Create a new Server object
+                    // Dynamically generate the stub (client proxy)
+                    rm = (ResourceManager) UnicastRemoteObject.exportObject(obj, 0);
+                }
+
+                // Bind the remote object's stub in the registry
+                s_registry = LocateRegistry.getRegistry(port);
+                s_registry.rebind(key, rm);
+                logger.info("Middleware server ready!");
+                return obj;
+            } catch (Exception e) {
+                logger.error("Failed to bind object: " + e.toString());
+                try {
+                    logger.info("Trying again in " + BIND_SLEEP + " ms");
+                    Thread.sleep(BIND_SLEEP);
+                } catch (InterruptedException e1) {
+                    logger.error("Failed to put thread to sleep. Message: " + e1.getMessage());
+                }
+            }
         }
-        throw new RuntimeException("Binding failure: Terminating program ...");
     }
 
     /**
@@ -122,21 +139,28 @@ class MiddlewareServer implements ResourceManager {
      * @param key
      */
     private ResourceManager connectToRM(String key, String server, int port) {
-        try {
-            // get a reference to the rmiregistry
-            Registry registry = LocateRegistry.getRegistry(server, port);
-            // get the proxy and the remote reference by rmiregistry lookup
-            ResourceManager rm = (ResourceManager) registry.lookup(key);
-            if(rm!=null) {
-                logger.info("Connected to RM: " + key);
-            } else {
-                logger.error("Could not connect to RM: " + key);
+        final int CONNECT_SLEEP = 5000;
+        while (true) {
+            try {
+                // get a reference to the rmiregistry
+                Registry registry = LocateRegistry.getRegistry(server, port);
+                // get the proxy and the remote reference by rmiregistry lookup
+                ResourceManager rm = (ResourceManager) registry.lookup(key);
+                if(rm!=null) {
+                    logger.info("Connected to RM: " + key);
+                    return rm;
+                }
+                throw new Exception("Could not connect to RM: " + key);
+            } catch (Exception e) {
+                logger.error("Exception while connecting to RM " + key + ". Message"+ e.toString());
+                try {
+                    logger.info("Trying again in " + CONNECT_SLEEP + " ms");
+                    Thread.sleep(CONNECT_SLEEP);
+                } catch (InterruptedException e1) {
+                    logger.error("Failed to put thread to sleep. Message: " + e1.getMessage());
+                }
             }
-            return rm;
-        } catch (Exception e) {
-            logger.error("Exception while connecting to RM: "+ e.toString());
         }
-        throw new RuntimeException("Connection failure: Terminating program ...");
     }
 
     /****************************
