@@ -670,13 +670,18 @@ public class ResourceManagerImpl implements ResourceManager {
             boolean fileLoaded = false;
             for(File file : files) {
                 try (FileInputStream fis = new FileInputStream(file); ObjectInputStream ois = new ObjectInputStream(fis)){
-                    RMHashtable table = (RMHashtable) ois.readObject();
                     String fileName = file.getName();
+                    // Skip LM file
+                    if(fileName.endsWith("LM")) {
+                        continue;
+                    }
                     String split[] = fileName.split("_");
+                    RMHashtable table = (RMHashtable) ois.readObject();
                     if(split.length > 0) {
                         try {
                             int tid = Integer.parseInt(split[split.length-1]);
                             m_tables.put(tid, table);
+                            logger.info("Table file " + file.getAbsolutePath() + " loaded");
                             fileLoaded = true;
                         } catch (Exception e) {
                             throw new IOException("File does not contain transaction id. File will be ignored");
@@ -740,6 +745,7 @@ public class ResourceManagerImpl implements ResourceManager {
         if(lockFile.exists()) {
             try (FileInputStream fis = new FileInputStream(lockFile); ObjectInputStream ois = new ObjectInputStream(fis)){
                 m_lockManager = (LockManager) ois.readObject();
+                logger.info("Lock file " + lockFile.getAbsolutePath() + " loaded");
             } catch (ClassNotFoundException | IOException e) {
                 logger.error("Error loading file " + lockFile.getAbsolutePath() + ". Message: " + e.getMessage());
             }
