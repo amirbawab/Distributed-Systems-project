@@ -47,6 +47,7 @@ public class ResourceManagerImpl implements ResourceManager {
         m_name = name;
 
         // Resume RM
+        loadLocks();
         loadTables();
     }
 
@@ -59,12 +60,14 @@ public class ResourceManagerImpl implements ResourceManager {
     private RMItem readData( int id, String key ) throws DeadlockException {
         synchronized(getTable(id)) {
             m_lockManager.Lock(id, key, TrxnObj.READ);
+            writeLocks();
             // Check if data already in table
             if(!getTable(id).containsKey(key)) {
                 if(!getTable(GLOBAL_TABLE).containsKey(key)) {
                     return null;
                 }
                 getTable(id).put(key, getTable(GLOBAL_TABLE).get(key).clone());
+                writeTable(id);
             }
 
             // RM_NULL must behave as a null
@@ -85,6 +88,10 @@ public class ResourceManagerImpl implements ResourceManager {
         synchronized(getTable(id)) {
             m_lockManager.Lock(id, key, TrxnObj.WRITE);
             getTable(id).put(key, value);
+
+            // Write locks and table
+            writeLocks();
+            writeTable(id);
         }
     }
     
@@ -96,7 +103,9 @@ public class ResourceManagerImpl implements ResourceManager {
      */
     private RMItem removeData(int id, String key) {
         synchronized(getTable(id)) {
-            return getTable(id).put(key, RM_NULL);
+            RMItem deleted = getTable(id).put(key, RM_NULL);
+            writeTable(id);
+            return deleted;
         }
     }
     
@@ -577,10 +586,7 @@ public class ResourceManagerImpl implements ResourceManager {
                 }
             }
             deleteTable(transactionId);
-            writeTables();
-            // TODO Delete the ones that are not used
-            // TODO Maybe put this code in deleteTables ?
-            // TODO LockManager must be stored as well!
+            writeTable(GLOBAL_TABLE);
             return true;
         }
         throw new InvalidTransactionException("Transaction id " + transactionId + " is not available");
@@ -589,13 +595,12 @@ public class ResourceManagerImpl implements ResourceManager {
     @Override
     public void abort(int transactionId) throws RemoteException, InvalidTransactionException {
         deleteTable(transactionId);
-        writeTables();
+        writeTable(GLOBAL_TABLE);
     }
 
     @Override
     public boolean shutdown() throws RemoteException {
         logger.info("Shutting down ...");
-        writeTables();
         return true;
     }
 
@@ -622,13 +627,34 @@ public class ResourceManagerImpl implements ResourceManager {
     public void deleteTable(int transactionId) {
         m_tables.remove(transactionId);
         m_lockManager.UnlockAll(transactionId);
+
+        // Delete transaction file
+        File tFile = getTableFile(transactionId);
+        if(tFile.exists()) {
+            if(tFile.delete()) {
+                logger.info("File " + tFile.getAbsolutePath() + " deleted");
+            } else {
+                logger.error("File " + tFile.getAbsolutePath() + " could not be deleted");
+            }
+        } else {
+            logger.error("Failed to delete " + tFile.getAbsolutePath() + " because file was not found");
+        }
+    }
+
+    /**
+     * Get a table file
+     * @param tid
+     * @return file
+     */
+    private File getTableFile(int tid) {
+        return new File(m_name + "/" + m_name + "_" + tid);
     }
 
     /**
      * Load object files
      */
-    private void loadTables() {
-        File dir = new File(m_name);
+    private synchronized void loadTables() {
+        File dir = getTableFile(GLOBAL_TABLE).getParentFile();
         if(!dir.exists()) {
             logger.info("RM " + m_name + " did not find any files to load. Starting empty");
         } else {
@@ -654,11 +680,12 @@ public class ResourceManagerImpl implements ResourceManager {
     }
 
     /**
-     * Store tables into files
+     * Store table into files
      */
-    private void writeTables() {
+    private synchronized void writeTable(int tid) {
         // Create directory if not there
-        File dir = new File(m_name);
+        File tFile = getTableFile(tid);
+        File dir = tFile.getParentFile();
         if(!dir.exists()) {
             if(!dir.mkdir()) {
                 logger.error("Failed to create directory " + dir.getAbsolutePath() + ". Data will not be stored.");
@@ -668,44 +695,38 @@ public class ResourceManagerImpl implements ResourceManager {
             }
         }
 
-        // Start creating object files
-        for(Integer tid : m_tables.keySet()) {
-            String fileName = m_name + "_" + tid;
-            try(FileOutputStream fos = new FileOutputStream(dir.getPath() + "/" + fileName); ObjectOutputStream obj = new ObjectOutputStream(fos)) {
-                obj.writeObject(m_tables.get(tid));
-                logger.info("File " + fileName + " updated!");
-            } catch (IOException e) {
-                logger.error(e.getMessage());
-            }
+        // Create object file
+        try(FileOutputStream fos = new FileOutputStream(tFile); ObjectOutputStream obj = new ObjectOutputStream(fos)) {
+            obj.writeObject(m_tables.get(tid));
+            logger.info("File " + tFile.getAbsolutePath() + " updated!");
+        } catch (IOException e) {
+            logger.error(e.getMessage());
         }
     }
 
-//    Returns the number of reservations for this flight.
-//    public int queryFlightReservations(int id, int flightNum)
-//        throws RemoteException
-//    {
-//        logger.info("RM::queryFlightReservations(" + id + ", #" + flightNum + ") called" );
-//        RMInteger numReservations = (RMInteger) readData( id, Flight.getNumReservationsKey(flightNum) );
-//        if ( numReservations == null ) {
-//            numReservations = new RMInteger(0);
-//        } // if
-//        logger.info("RM::queryFlightReservations(" + id + ", #" + flightNum + ") returns " + numReservations );
-//        return numReservations.getValue();
-//    }
+    /**
+     * Write lock manager to file
+     */
+    private synchronized void writeLocks() {
+        String fileName = m_name + "_LM";
+        try(FileOutputStream fos = new FileOutputStream(fileName); ObjectOutputStream obj = new ObjectOutputStream(fos)) {
+            obj.writeObject(m_lockManager);
+            logger.info("File " + fileName + " updated!");
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+        }
+    }
 
-//     Frees flight reservation record. Flight reservation records help us make sure we
-//     don't delete a flight if one or more customers are holding reservations
-//    public boolean freeFlightReservation(int id, int flightNum)
-//        throws RemoteException
-//    {
-//        logger.info("RM::freeFlightReservations(" + id + ", " + flightNum + ") called" );
-//        RMInteger numReservations = (RMInteger) readData( id, Flight.getNumReservationsKey(flightNum) );
-//        if ( numReservations != null ) {
-//            numReservations = new RMInteger( Math.max( 0, numReservations.getValue()-1) );
-//        } // if
-//        writeData(id, Flight.getNumReservationsKey(flightNum), numReservations );
-//        logger.info("RM::freeFlightReservations(" + id + ", " + flightNum + ") succeeded, this flight now has "
-//                + numReservations + " reservations" );
-//        return true;
-//    }
+    /**
+     * Load lock manager from file
+     */
+    private synchronized void loadLocks() {
+        String fileName = m_name + "_LM";
+        File lockFile = new File(fileName);
+        try (FileInputStream fis = new FileInputStream(lockFile); ObjectInputStream ois = new ObjectInputStream(fis)){
+            m_lockManager = (LockManager) ois.readObject();
+        } catch (ClassNotFoundException | IOException e) {
+            logger.error(e.getMessage());
+        }
+    }
 }
