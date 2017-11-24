@@ -10,4 +10,5 @@ public interface ResourceManagerActions {
     boolean commit(int transactionId) throws RemoteException, TransactionAbortedException, InvalidTransactionException;
     void abort(int transactionId) throws RemoteException, InvalidTransactionException;
     boolean shutdown() throws RemoteException;
+    boolean voteRequest(int tid) throws RemoteException;
 }

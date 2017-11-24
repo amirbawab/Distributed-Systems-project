@@ -98,4 +98,15 @@ public class TransactionManager implements ResourceManagerActions {
     public boolean shutdown() throws RemoteException {
         return false;
     }
+
+    /**
+     * Nothing to do in TM
+     * @param tid
+     * @return
+     * @throws RemoteException
+     */
+    @Override
+    public boolean voteRequest(int tid) throws RemoteException {
+        return false;
+    }
 }

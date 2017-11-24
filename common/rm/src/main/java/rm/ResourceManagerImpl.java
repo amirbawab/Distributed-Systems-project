@@ -753,4 +753,10 @@ public class ResourceManagerImpl implements ResourceManager {
             logger.info("RM " + m_name + " did not file any lock file to load. Starting empty");
         }
     }
+
+    @Override
+    public boolean voteRequest(int tid) throws RemoteException {
+        logger.info("Received a vote request for transaction " + tid + ". Sending YES");
+        return true;
+    }
 }

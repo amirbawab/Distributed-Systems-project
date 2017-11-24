@@ -242,9 +242,10 @@ class MiddlewareServer implements ResourceManager {
                 m_tm.getTransaction(id).addRM(m_flightRM);
                 m_tm.getTransaction(id).addRM(m_carRM);
                 m_tm.getTransaction(id).addRM(m_roomRM);
-                return m_flightRM.newCustomer(id, cid) &
-                        m_carRM.newCustomer(id, cid) &
-                        m_roomRM.newCustomer(id, cid);
+                boolean flight = m_flightRM.newCustomer(id, cid);
+                boolean car = m_carRM.newCustomer(id, cid);
+                boolean room = m_roomRM.newCustomer(id, cid);
+                return  flight && car && room;
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
@@ -543,8 +544,17 @@ class MiddlewareServer implements ResourceManager {
 
     @Override
     public boolean commit(int transactionId) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
-        logger.info("Committing transaction " + transactionId);
+        logger.info("Received a commit request on transaction " + transactionId);
         m_tm.getTransaction(transactionId).updateLastActive();
+
+        // 2PC
+        logger.info("Applying 2 phase commit on all involved RMs");
+        if(!voteRequest(transactionId)) {
+            abort(transactionId);
+            return false;
+        }
+
+        // Apply commits
         for(ResourceManager rm : m_tm.getTransaction(transactionId).getRMs()) {
             String name = "UNKNOWN";
             if(rm == m_carRM) {
@@ -554,7 +564,7 @@ class MiddlewareServer implements ResourceManager {
             } else if(rm == m_roomRM) {
                 name = "Room";
             }
-            logger.info("Applying 1 phase commit on RM " + name);
+            logger.info("Commit on RM " + name);
             rm.commit(transactionId);
         }
         m_tm.removeTransaction(transactionId);
@@ -583,12 +593,38 @@ class MiddlewareServer implements ResourceManager {
                     return false;
                 }
             }
-            boolean shutdown = m_flightRM.shutdown() & m_carRM.shutdown() & m_roomRM.shutdown();
-            logger.info("All RMs are shutdown. Shutting down middleware server ...");
-            return shutdown;
+            boolean flight = m_flightRM.shutdown();
+            boolean car = m_carRM.shutdown();
+            boolean room = m_roomRM.shutdown();
+            if(flight && car && room) {
+                logger.info("All RMs are shutdown. Shutting down middleware server ...");
+            } else {
+                logger.error("Some RMs failed to shutdown");
+            }
+            return flight && car && room;
         } else {
             logger.info("Will not shutdown because there are still transactions");
         }
         return false;
+    }
+
+    @Override
+    public boolean voteRequest(int tid) throws RemoteException {
+        for(ResourceManager rm : m_tm.getTransaction(tid).getRMs()) {
+            String name = "UNKNOWN";
+            if(rm == m_carRM) {
+                name = "Car";
+            } else if(rm == m_flightRM) {
+                name = "Flight";
+            } else if(rm == m_roomRM) {
+                name = "Room";
+            }
+            boolean vr = rm.voteRequest(tid);
+            logger.info("RM " + name + " replied with a " + (vr ? "YES" : "NO"));
+            if(!vr) {
+                return false;
+            }
+        }
+        return true;
     }
 }
