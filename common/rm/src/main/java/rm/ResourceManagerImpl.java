@@ -651,14 +651,23 @@ public class ResourceManagerImpl implements ResourceManager {
     }
 
     /**
+     * Get the lock file
+     * @return lock file
+     */
+    private File getLockFile() {
+        return new File(m_name + "/" + m_name + "_LM");
+    }
+
+    /**
      * Load object files
      */
     private synchronized void loadTables() {
         File dir = getTableFile(GLOBAL_TABLE).getParentFile();
         if(!dir.exists()) {
-            logger.info("RM " + m_name + " did not find any files to load. Starting empty");
+            logger.info("RM " + m_name + " did not find any directory to fetch. Starting empty");
         } else {
             File[] files = dir.listFiles();
+            boolean fileLoaded = false;
             for(File file : files) {
                 try (FileInputStream fis = new FileInputStream(file); ObjectInputStream ois = new ObjectInputStream(fis)){
                     RMHashtable table = (RMHashtable) ois.readObject();
@@ -668,13 +677,19 @@ public class ResourceManagerImpl implements ResourceManager {
                         try {
                             int tid = Integer.parseInt(split[split.length-1]);
                             m_tables.put(tid, table);
+                            fileLoaded = true;
                         } catch (Exception e) {
                             throw new IOException("File does not contain transaction id. File will be ignored");
                         }
                     }
                 } catch (ClassNotFoundException | IOException e) {
-                    logger.error(e.getMessage());
+                    logger.error("Error loading table " + file.getAbsolutePath() + ". Message: " + e.getMessage());
                 }
+            }
+
+            // If no file were found
+            if(!fileLoaded) {
+                logger.info("RM " + m_name + " did not find any files to load. Starting empty");
             }
         }
     }
@@ -700,7 +715,7 @@ public class ResourceManagerImpl implements ResourceManager {
             obj.writeObject(m_tables.get(tid));
             logger.info("File " + tFile.getAbsolutePath() + " updated!");
         } catch (IOException e) {
-            logger.error(e.getMessage());
+            logger.error("Error writing file " + tFile.getAbsolutePath() + ". Message: " + e.getMessage());
         }
     }
 
@@ -708,12 +723,12 @@ public class ResourceManagerImpl implements ResourceManager {
      * Write lock manager to file
      */
     private synchronized void writeLocks() {
-        String fileName = m_name + "_LM";
-        try(FileOutputStream fos = new FileOutputStream(fileName); ObjectOutputStream obj = new ObjectOutputStream(fos)) {
+        File lockFile = getLockFile();
+        try(FileOutputStream fos = new FileOutputStream(lockFile); ObjectOutputStream obj = new ObjectOutputStream(fos)) {
             obj.writeObject(m_lockManager);
-            logger.info("File " + fileName + " updated!");
+            logger.info("File " + lockFile.getAbsolutePath() + " updated!");
         } catch (IOException e) {
-            logger.error(e.getMessage());
+            logger.error("Error writing file " + lockFile.getAbsolutePath() + ". Message: " + e.getMessage());
         }
     }
 
@@ -721,12 +736,15 @@ public class ResourceManagerImpl implements ResourceManager {
      * Load lock manager from file
      */
     private synchronized void loadLocks() {
-        String fileName = m_name + "_LM";
-        File lockFile = new File(fileName);
-        try (FileInputStream fis = new FileInputStream(lockFile); ObjectInputStream ois = new ObjectInputStream(fis)){
-            m_lockManager = (LockManager) ois.readObject();
-        } catch (ClassNotFoundException | IOException e) {
-            logger.error(e.getMessage());
+        File lockFile = getLockFile();
+        if(lockFile.exists()) {
+            try (FileInputStream fis = new FileInputStream(lockFile); ObjectInputStream ois = new ObjectInputStream(fis)){
+                m_lockManager = (LockManager) ois.readObject();
+            } catch (ClassNotFoundException | IOException e) {
+                logger.error("Error loading file " + lockFile.getAbsolutePath() + ". Message: " + e.getMessage());
+            }
+        } else {
+            logger.info("RM " + m_name + " did not file any lock file to load. Starting empty");
         }
     }
 }
