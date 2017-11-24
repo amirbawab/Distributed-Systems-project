@@ -32,24 +32,41 @@ public class RM {
             System.exit(CODE_ERROR);
         }
 
+        // Constants
+        final int BIND_SLEEP = 5000;
+
         // Read port
         int port = Integer.parseInt(args[0]);
         String objRef = args[1];
 
         // Bind object to reference key
-        try {
-            // Create a new Server object
-            ResourceManagerImpl obj = new ResourceManagerImpl(objRef);
-            // Dynamically generate the stub (client proxy)
-            ResourceManager rm = (ResourceManager) UnicastRemoteObject.exportObject(obj, 0);
+        boolean binded = false;
+        ResourceManagerImpl obj = new ResourceManagerImpl(objRef);
+        ResourceManager rm = null;
+        while (!binded) {
+            try {
 
-            // Bind the remote object's stub in the registry
-            Registry registry = LocateRegistry.getRegistry(port);
-            registry.rebind(objRef, rm);
-            logger.info("Server ready");
-        } catch (Exception e) {
-            logger.error("Server exception: " + e.toString());
-            throw new RuntimeException("Server failed to start. Terminating program ...");
+                // If already export
+                if(rm == null) {
+                    // Create a new Server object
+                    // Dynamically generate the stub (client proxy)
+                    rm = (ResourceManager) UnicastRemoteObject.exportObject(obj, 0);
+                }
+
+                // Bind the remote object's stub in the registry
+                Registry registry = LocateRegistry.getRegistry(port);
+                registry.rebind(objRef, rm);
+                logger.info("Server ready");
+                binded = true;
+            } catch (Exception e) {
+                logger.error("Server exception: " + e.getMessage());
+                try {
+                    logger.info("Trying again in " + BIND_SLEEP + " ms");
+                    Thread.sleep(BIND_SLEEP);
+                } catch (InterruptedException e1) {
+                    logger.error("Failed to put thread to sleep. Message: " + e1.getMessage());
+                }
+            }
         }
 
         // Create and install a security manager
