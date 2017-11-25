@@ -11,7 +11,7 @@ import java.util.Set;
 public class Transaction {
     private int m_xid;
     @Deprecated private List<TrxnObj> m_transactions;
-    private Set<ResourceManager> m_rms;
+    private Set<String> m_rms;
     private long m_lastActive;
 
     public Transaction(int xid) {
@@ -48,7 +48,7 @@ public class Transaction {
      * Get involved Resource managers
      * @return set of resource managers
      */
-    public Set<ResourceManager> getRMs() {
+    public Set<String> getRMs() {
         return m_rms;
     }
 
@@ -64,7 +64,7 @@ public class Transaction {
      * Add an involved RM
      * @param rm
      */
-    public void addRM(ResourceManager rm) {
+    public void addRM(String rm) {
         m_rms.add(rm);
     }
 

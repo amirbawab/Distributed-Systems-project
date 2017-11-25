@@ -759,4 +759,9 @@ public class ResourceManagerImpl implements ResourceManager {
         logger.info("Received a vote request for transaction " + tid + ". Sending YES");
         return true;
     }
+
+    @Override
+    public void healthCheck() throws RemoteException {
+        /*Do nothing*/
+    }
 }
