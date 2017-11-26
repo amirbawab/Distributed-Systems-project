@@ -1,5 +1,7 @@
 package inter;
 
+import tm.Transaction;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
@@ -216,5 +218,9 @@ public interface ResourceManager extends Remote, ResourceManagerActions {
 
     /*Check health of rmi*/
     void healthCheck()
+    throws RemoteException;
+
+    /*Sync rmi transactions*/
+    void syncTransactions(Set<Integer> transactions)
     throws RemoteException;
 }

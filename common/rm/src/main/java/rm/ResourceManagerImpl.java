@@ -11,6 +11,7 @@ import lm.TransactionAbortedException;
 import lm.TrxnObj;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import tm.Transaction;
 
 import javax.transaction.InvalidTransactionException;
 import java.io.*;
@@ -763,5 +764,23 @@ public class ResourceManagerImpl implements ResourceManager {
     @Override
     public void healthCheck() throws RemoteException {
         /*Do nothing*/
+    }
+
+    @Override
+    public void syncTransactions(Set<Integer> transactions) throws RemoteException {
+
+        // Keep track of wrong transactions
+        List<Integer> deleteTransactions = new ArrayList<>();
+        for (Integer key : m_tables.keySet()) {
+            if(key != GLOBAL_TABLE && !transactions.contains(key)) {
+                deleteTransactions.add(key);
+            }
+        }
+
+        // Delete transactions
+        for(Integer tid : deleteTransactions) {
+            logger.info("Transaction " + tid + " was not found while syncing.");
+            deleteTable(tid);
+        }
     }
 }

@@ -5,10 +5,7 @@ import lm.TransactionAbortedException;
 
 import javax.transaction.InvalidTransactionException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class TransactionManager implements ResourceManagerActions {
 
@@ -46,6 +43,19 @@ public class TransactionManager implements ResourceManagerActions {
         return m_transactionMap.get(id);
     }
 
+    /**
+     * Create a copy of the transaction key set
+     * @return key set
+     */
+    public Set<Integer> getTransactionsId() {
+        return new HashSet<>(m_transactionMap.keySet());
+    }
+
+    /**
+     * Remove transaction
+     * @param id
+     * @throws InvalidTransactionException
+     */
     public void removeTransaction(int id) throws InvalidTransactionException {
         if(!m_transactionMap.containsKey(id)) {
             throw new InvalidTransactionException("Transaction id " + id + " is not available");

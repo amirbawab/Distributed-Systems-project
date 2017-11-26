@@ -17,6 +17,8 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Semaphore;
 
@@ -65,6 +67,9 @@ class MiddlewareServer implements ResourceManager {
         // Build a middleware server
         m_ms = bindRM(ResourceManager.MID_SERVER_REF, serverRMIRegistryPort);
 
+        // Initialize the transaction manager
+        m_ms.m_tm = new TransactionManager();
+
         // RM Health check
         new Thread(() -> {
             while(true) {
@@ -74,7 +79,6 @@ class MiddlewareServer implements ResourceManager {
 
                     // Connect car RM if not connected
                     m_ms.m_carRM = m_ms.connectToRM(ResourceManager.RM_CAR_REF, rmRMIRegistryIP, rmRMIRegistryPort);
-                    // TODO Sync RMs transactions
 
                     // Connect flight RM if not connected
                     m_ms.m_flightRM = m_ms.connectToRM(ResourceManager.RM_FLIGHT_REF, rmRMIRegistryIP, rmRMIRegistryPort);
@@ -95,9 +99,6 @@ class MiddlewareServer implements ResourceManager {
         } catch (InterruptedException e) {
             logger.error("Error acquiring semaphore");
         }
-
-        // Initialize the transaction manager
-        m_ms.m_tm = new TransactionManager();
 
         // Create and install a security manager
         if (System.getSecurityManager() == null) {
@@ -178,17 +179,19 @@ class MiddlewareServer implements ResourceManager {
         final int CONNECT_SLEEP = 5000;
         while (true) {
             try {
-                // get a reference to the rmiregistry
+                // Connect to registry
                 Registry registry = LocateRegistry.getRegistry(server, port);
-                // get the proxy and the remote reference by rmiregistry lookup
+
+                // Lookup resource manager object
                 ResourceManager rm = (ResourceManager) registry.lookup(key);
+
+                // Verify connection is working
                 rm.healthCheck();
 
-                if(rm!=null) {
-                    logger.info("Connected to RM: " + key);
-                    return rm;
-                }
-                throw new Exception("Could not connect to RM: " + key);
+                // Sync transactions
+                rm.syncTransactions(m_tm.getTransactionsId());
+                logger.info("Connected to RM: " + key);
+                return rm;
             } catch (Exception e) {
                 logger.error("Exception while connecting to RM " + key + ". Message"+ e.toString());
                 try {
@@ -808,5 +811,10 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public void healthCheck() {
         /*Do nothing*/
+    }
+
+    @Override
+    public void syncTransactions(Set<Integer> transactions) throws RemoteException {
+        /*DO nothing*/
     }
 }
