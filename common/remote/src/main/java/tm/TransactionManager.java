@@ -4,10 +4,11 @@ import inter.ResourceManagerActions;
 import lm.TransactionAbortedException;
 
 import javax.transaction.InvalidTransactionException;
+import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.*;
 
-public class TransactionManager implements ResourceManagerActions {
+public class TransactionManager implements ResourceManagerActions, Serializable{
 
     // Keep track of transactions
     private Map<Integer, Transaction> m_transactionMap;

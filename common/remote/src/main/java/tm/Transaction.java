@@ -3,12 +3,13 @@ package tm;
 import inter.ResourceManager;
 import lm.TrxnObj;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class Transaction {
+public class Transaction implements Serializable {
     private int m_xid;
     @Deprecated private List<TrxnObj> m_transactions;
     private Set<String> m_rms;

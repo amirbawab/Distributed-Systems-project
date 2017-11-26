@@ -1,7 +1,8 @@
 package lm;
 
-public class XObj
-{
+import java.io.Serializable;
+
+public class XObj implements Serializable {
     protected int xid = 0;
     
     XObj() {
