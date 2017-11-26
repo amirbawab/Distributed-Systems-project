@@ -94,8 +94,8 @@ class MiddlewareServer implements ResourceManager {
 
         try {
             // Wait till all RMs  are connected
+            logger.info("Acquiring lock");
             m_ms.m_lock.acquire();
-            logger.info("Server ready");
         } catch (InterruptedException e) {
             logger.error("Error acquiring semaphore");
         }
@@ -223,6 +223,8 @@ class MiddlewareServer implements ResourceManager {
      * @return true if they are all healthy
      */
     private boolean healthyRMs() {
+        // A better way to check is to subtract the queue length from the available permits,
+        // but this needs further investigation
         return m_lock.getQueueLength() == 0;
     }
 
