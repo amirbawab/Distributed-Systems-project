@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.concurrent.Semaphore;
 
 public class Client {
 
@@ -28,16 +29,32 @@ public class Client {
         String server = args[0];
         int port = Integer.parseInt(args[1]);
 
-        // Connect to middleware server
-        ResourceManager resourceManager = connect(server, port);
+        // Create lock
+        Semaphore lock = new Semaphore(0);
 
-        // If failed to load resource manager
-        if(resourceManager == null) {
-            System.exit(CODE_ERROR);
+        // Create cli instance
+        CLI cli = new CLI(lock);
+
+        // Start health check thread
+        new Thread(() -> {
+            while(true) {
+                if(lock.getQueueLength() > 0) {
+                    // Connect to middleware server
+                    cli.setResourceManager(connect(server, port));
+
+                    // Release lock
+                    lock.release();
+                }
+            }
+        }).start();
+
+        try {
+            lock.acquire();
+        } catch (InterruptedException e) {
+            logger.error("Failed to acquire lock");
         }
 
         // Start the command line interface
-        CLI cli = new CLI(resourceManager);
         if(!cli.start()) {
             logger.error("Error occurred while interacting with the command line interface. Terminating program ...");
             System.exit(CODE_ERROR);
@@ -53,20 +70,30 @@ public class Client {
      * @param port
      */
     private static ResourceManager connect(String server, int port){
-        try  {
+        final int CONNECT_SLEEP = 5000;
+        while (true) {
+            try  {
 
-            // Lookup RM object
-            Registry registry = LocateRegistry.getRegistry(server, port);
-            ResourceManager rm = (ResourceManager) registry.lookup(ResourceManager.MID_SERVER_REF);
-            if(rm!=null) {
+                // Connect to registry
+                Registry registry = LocateRegistry.getRegistry(server, port);
+
+                // Lookup RM object
+                ResourceManager rm = (ResourceManager) registry.lookup(ResourceManager.MID_SERVER_REF);
+
+                // Check if connection was successful
+                rm.healthCheck();
                 logger.info("Connected successfully to Middleware Server");
                 return rm;
-            } else {
-                logger.error("Connection to Middleware Server was unsuccessful!");
+            } catch (Exception e) {
+                logger.error("Exception while connecting to server. Message: "+
+                        (e.getCause() != null ? e.getCause().toString() : e.toString()));
+                try {
+                    logger.info("Trying again in " + CONNECT_SLEEP + " ms");
+                    Thread.sleep(CONNECT_SLEEP);
+                } catch (InterruptedException e1) {
+                    logger.error("Failed to put thread to sleep. Message: " + e1.getMessage());
+                }
             }
-        } catch (Exception e) {
-            logger.error("Client exception: " + e.toString());
         }
-        return null;
     }
 }

@@ -8,22 +8,34 @@ import javax.transaction.InvalidTransactionException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.rmi.RemoteException;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.concurrent.Semaphore;
 
 public class CLI {
 
     // Store a reference to the resource manager
     private ResourceManager m_resourceManager= null;
 
+    // Store lock
+    private Semaphore m_lock = null;
+
     // Logger
     private static final Logger logger = LogManager.getLogger(CLI.class);
 
     /**
      * Construct a CLI
+     */
+    public CLI(Semaphore lock) {
+        this.m_lock = lock;
+    }
+
+    /**
+     * Set resource manager
      * @param resourceManager
      */
-    public CLI(ResourceManager resourceManager) {
+    public void setResourceManager(ResourceManager resourceManager) {
         this.m_resourceManager = resourceManager;
     }
 
@@ -42,6 +54,18 @@ public class CLI {
             arguments.add(argument);
         }
         return arguments;
+    }
+
+    /**
+     * Method to execute when the server crashes
+     */
+    private void onServerCrash() {
+        logger.error("Server crashed.");
+        try {
+            m_lock.acquire();
+        } catch (InterruptedException e) {
+            logger.error("Failed to acquire lock");
+        }
     }
 
     /**
@@ -101,6 +125,8 @@ public class CLI {
                             System.out.println("Flight added");
                         else
                             System.out.println("Flight could not be added");
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -128,6 +154,8 @@ public class CLI {
                             System.out.println("Cars added");
                         else
                             System.out.println("Cars could not be added");
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -155,6 +183,8 @@ public class CLI {
                             System.out.println("Rooms added");
                         else
                             System.out.println("Rooms could not be added");
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -174,6 +204,8 @@ public class CLI {
                         Id = Integer.parseInt(arguments.elementAt(1));
                         int customer=m_resourceManager.newCustomer(Id);
                         System.out.println("new customer id:"+customer);
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -197,6 +229,8 @@ public class CLI {
                             System.out.println("Flight Deleted");
                         else
                             System.out.println("Flight could not be deleted");
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -221,6 +255,8 @@ public class CLI {
                             System.out.println("Cars Deleted");
                         else
                             System.out.println("Cars could not be deleted");
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -244,6 +280,8 @@ public class CLI {
                             System.out.println("Rooms Deleted");
                         else
                             System.out.println("Rooms could not be deleted");
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -267,6 +305,8 @@ public class CLI {
                             System.out.println("Customer Deleted");
                         else
                             System.out.println("Customer could not be deleted");
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -288,6 +328,8 @@ public class CLI {
                         flightNum = Integer.parseInt(arguments.elementAt(2));
                         int seats=m_resourceManager.queryFlight(Id,flightNum);
                         System.out.println("Number of seats available:"+seats);
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -309,6 +351,8 @@ public class CLI {
                         location = arguments.elementAt(2);
                         numCars=m_resourceManager.queryCars(Id,location);
                         System.out.println("number of Cars at this location:"+numCars);
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -330,6 +374,8 @@ public class CLI {
                         location = arguments.elementAt(2);
                         numRooms=m_resourceManager.queryRooms(Id,location);
                         System.out.println("number of Rooms at this location:"+numRooms);
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -351,6 +397,8 @@ public class CLI {
                         int customer = Integer.parseInt(arguments.elementAt(2));
                         String bill=m_resourceManager.queryCustomerInfo(Id,customer);
                         System.out.println("Customer info:" + bill.replace("@","\n"));
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -372,6 +420,8 @@ public class CLI {
                         flightNum = Integer.parseInt(arguments.elementAt(2));
                         price=m_resourceManager.queryFlightPrice(Id,flightNum);
                         System.out.println("Price of a seat:"+price);
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -393,6 +443,8 @@ public class CLI {
                         location = arguments.elementAt(2);
                         price=m_resourceManager.queryCarsPrice(Id,location);
                         System.out.println("Price of a car at this location:"+price);
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -414,6 +466,8 @@ public class CLI {
                         location = arguments.elementAt(2);
                         price=m_resourceManager.queryRoomsPrice(Id,location);
                         System.out.println("Price of Rooms at this location:"+price);
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -439,6 +493,8 @@ public class CLI {
                             System.out.println("Flight Reserved");
                         else
                             System.out.println("Flight could not be reserved.");
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -466,6 +522,8 @@ public class CLI {
                             System.out.println("Car Reserved");
                         else
                             System.out.println("Car could not be reserved.");
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -492,6 +550,8 @@ public class CLI {
                             System.out.println("Room Reserved");
                         else
                             System.out.println("Room could not be reserved.");
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -527,6 +587,8 @@ public class CLI {
                             System.out.println("Itinerary Reserved");
                         else
                             System.out.println("Itinerary could not be reserved.");
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -556,6 +618,8 @@ public class CLI {
                         Cid = Integer.parseInt(arguments.elementAt(2));
                         m_resourceManager.newCustomer(Id,Cid);
                         System.out.println("new customer id:"+Cid);
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -574,6 +638,8 @@ public class CLI {
                     try{
                         int transactionId = m_resourceManager.start();
                         System.out.println("Your transaction id is:" + transactionId);
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -593,6 +659,8 @@ public class CLI {
                         System.out.println("Committing transaction:" + Id);
                         m_resourceManager.commit(Id);
                         System.out.println("Transaction " + Id + " committed successfully");
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -611,6 +679,8 @@ public class CLI {
                         System.out.println("Aborting transaction:" + Id);
                         m_resourceManager.abort(Id);
                         System.out.println("Transaction " + Id + " aborted successfully");
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
@@ -632,6 +702,8 @@ public class CLI {
                         } else {
                             System.out.println("System could not shutdown because it is in use");
                         }
+                    } catch (RemoteException e){
+                        onServerCrash();
                     } catch(Exception e){
                         if(e.getCause() != null) {
                             logger.error(e.getCause().getMessage());
