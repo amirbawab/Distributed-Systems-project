@@ -48,7 +48,7 @@ class MiddlewareServer implements ResourceManager {
     private static MiddlewareServer m_ms;
 
     // Semaphore used by threads
-    private Semaphore m_lock = new Semaphore(0);
+    private final Semaphore m_lock = new Semaphore(0);
 
     public static void main(String[] args) {
 
@@ -87,8 +87,13 @@ class MiddlewareServer implements ResourceManager {
                     m_ms.m_roomRM = m_ms.connectToRM(ResourceManager.RM_ROOM_REF, rmRMIRegistryIP, rmRMIRegistryPort);
 
                     // If all RMs are connected then release lock
-                    // FIXME Restrict the number of free locks to exactly one
-                    m_ms.m_lock.release();
+                    synchronized (m_ms.m_lock) {
+
+                        // Make sure we only release one lock at a time only
+                        if(!m_ms.m_lock.tryAcquire()) {
+                            m_ms.m_lock.release();
+                        }
+                    }
                 }
             }
         }).start();
@@ -209,14 +214,16 @@ class MiddlewareServer implements ResourceManager {
      * Code executed when RM crashes
      */
     private RemoteException onRMCrash() {
-        logger.error("One or more RM(s) crashed. The system will wait until the RM recovers");
-        try {
-            m_lock.acquire();
-        } catch (InterruptedException e) {
-            logger.fatal("Failed to acquire lock. Will shutdown server ...");
-            throw new RuntimeException("Fatal failure: Unexpected behavior while acquiring lock");
+        synchronized (m_lock) {
+            logger.error("One or more RM(s) crashed. The system will wait until the RM recovers");
+            try {
+                m_lock.acquire();
+            } catch (InterruptedException e) {
+                logger.fatal("Failed to acquire lock. Will shutdown server ...");
+                throw new RuntimeException("Fatal failure: Unexpected behavior while acquiring lock");
+            }
+            return new RemoteException("500 Internal server error");
         }
-        return new RemoteException("500 Internal server error");
     }
 
     /**
