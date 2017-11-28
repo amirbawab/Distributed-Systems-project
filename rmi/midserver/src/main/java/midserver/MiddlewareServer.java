@@ -87,6 +87,7 @@ class MiddlewareServer implements ResourceManager {
                     m_ms.m_roomRM = m_ms.connectToRM(ResourceManager.RM_ROOM_REF, rmRMIRegistryIP, rmRMIRegistryPort);
 
                     // If all RMs are connected then release lock
+                    // FIXME Restrict the number of free locks to exactly one
                     m_ms.m_lock.release();
                 }
             }
