@@ -87,13 +87,7 @@ class MiddlewareServer implements ResourceManager {
                     m_ms.m_roomRM = m_ms.connectToRM(ResourceManager.RM_ROOM_REF, rmRMIRegistryIP, rmRMIRegistryPort);
 
                     // If all RMs are connected then release lock
-                    synchronized (m_ms.m_lock) {
-
-                        // Make sure we only release one lock at a time only
-                        if(!m_ms.m_lock.tryAcquire()) {
-                            m_ms.m_lock.release();
-                        }
-                    }
+                    m_ms.m_lock.release();
                 }
             }
         }).start();
@@ -749,11 +743,11 @@ class MiddlewareServer implements ResourceManager {
         }
 
         boolean repeat = false;
-        do {
-            try {
-                repeat = false;
-                // Apply commits
-                for(String rmStr : m_tm.getTransaction(transactionId).getRMs()) {
+        // Apply commits
+        for(String rmStr : m_tm.getTransaction(transactionId).getRMs()) {
+            do {
+                try {
+                    repeat = false;
                     String name = "UNKNOWN";
                     ResourceManager rm = null;
                     if(rmStr.equals(ResourceManager.RM_CAR_REF)) {
@@ -770,12 +764,12 @@ class MiddlewareServer implements ResourceManager {
                     }
                     logger.info("Commit on RM " + name);
                     rm.commit(transactionId);
+                } catch (RemoteException e) {
+                    onRMCrash();
+                    repeat = true;
                 }
-            } catch (RemoteException e) {
-                onRMCrash();
-                repeat = true;
-            }
-        } while(repeat);
+            } while(repeat);
+        }
         m_tm.removeTransaction(transactionId);
         return true;
     }
