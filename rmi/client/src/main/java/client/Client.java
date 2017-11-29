@@ -28,16 +28,10 @@ public class Client {
         String server = args[0];
         int port = Integer.parseInt(args[1]);
 
-        // Connect to middleware server
-        ResourceManager resourceManager = connect(server, port);
-
-        // If failed to load resource manager
-        if(resourceManager == null) {
-            System.exit(CODE_ERROR);
-        }
-
         // Start the command line interface
-        CLI cli = new CLI(resourceManager);
+        CLI cli = new CLI(server, port);
+
+        // Start CLI
         if(!cli.start()) {
             logger.error("Error occurred while interacting with the command line interface. Terminating program ...");
             System.exit(CODE_ERROR);
@@ -45,28 +39,5 @@ public class Client {
 
         // All good!
         System.exit(CODE_SUCCESS);
-    }
-
-    /**
-     * Connect to Middleware server
-     * @param server
-     * @param port
-     */
-    private static ResourceManager connect(String server, int port){
-        try  {
-
-            // Lookup RM object
-            Registry registry = LocateRegistry.getRegistry(server, port);
-            ResourceManager rm = (ResourceManager) registry.lookup(ResourceManager.MID_SERVER_REF);
-            if(rm!=null) {
-                logger.info("Connected successfully to Middleware Server");
-                return rm;
-            } else {
-                logger.error("Connection to Middleware Server was unsuccessful!");
-            }
-        } catch (Exception e) {
-            logger.error("Client exception: " + e.toString());
-        }
-        return null;
     }
 }

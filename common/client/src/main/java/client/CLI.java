@@ -1,6 +1,7 @@
 package client;
 
 import inter.ResourceManager;
+import inter.ServerDownException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -8,6 +9,9 @@ import javax.transaction.InvalidTransactionException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -19,12 +23,17 @@ public class CLI {
     // Logger
     private static final Logger logger = LogManager.getLogger(CLI.class);
 
+    // Server info
+    private String m_server;
+    private int m_port;
+
     /**
      * Construct a CLI
-     * @param resourceManager
      */
-    public CLI(ResourceManager resourceManager) {
-        this.m_resourceManager = resourceManager;
+    public CLI(String server, int port) {
+        m_server = server;
+        m_port = port;
+        this.m_resourceManager = connect();
     }
 
     /**
@@ -42,6 +51,35 @@ public class CLI {
             arguments.add(argument);
         }
         return arguments;
+    }
+
+    /**
+     * Connect to Middleware server
+     */
+    private ResourceManager connect(){
+        final int CONNECT_SLEEP = 5000;
+        while (true) {
+            try  {
+                // Lookup RM object
+                Registry registry = LocateRegistry.getRegistry(m_server, m_port);
+
+                // Lookup object
+                ResourceManager rm = (ResourceManager) registry.lookup(ResourceManager.MID_SERVER_REF);
+
+                // Perform a health check
+                rm.healthCheck();
+                logger.info("Connected successfully to Middleware Server");
+                return rm;
+            } catch (Exception e) {
+                logger.error("Client exception: " + e.toString());
+                try {
+                    logger.info("Trying again in " + CONNECT_SLEEP + " ms");
+                    Thread.sleep(CONNECT_SLEEP);
+                } catch (InterruptedException e1) {
+                    logger.error("Failed to put thread to sleep. Message: " + e1.getMessage());
+                }
+            }
+        }
     }
 
     /**
@@ -70,29 +108,30 @@ public class CLI {
             // Remove heading and trailing white space
             command=command.trim();
             Vector<String> arguments = parse(command);
+            int customer = 0;
 
-            //decide which of the commands this was
-            switch(ResourceManager.Command.getFunctionByName(arguments.elementAt(0))){
-                case HELP:
-                    if(arguments.size()==1)   //command was "help"
-                        listCommands();
-                    else if (arguments.size()==2)  //command was "help <commandname>"
-                        listSpecific(arguments.elementAt(1));
-                    else  //wrong use of help command
-                        System.out.println("Improper use of help command. Type help or help, <commandname>");
-                    break;
-
-                case ADD_FLIGHT:
-                    if(arguments.size()!=5){
-                        wrongNumber();
+            try {
+                //decide which of the commands this was
+                switch (ResourceManager.Command.getFunctionByName(arguments.elementAt(0))) {
+                    case HELP:
+                        if (arguments.size() == 1)   //command was "help"
+                            listCommands();
+                        else if (arguments.size() == 2)  //command was "help <commandname>"
+                            listSpecific(arguments.elementAt(1));
+                        else  //wrong use of help command
+                            System.out.println("Improper use of help command. Type help or help, <commandname>");
                         break;
-                    }
-                    System.out.println("Adding a new Flight using id: "+arguments.elementAt(1));
-                    System.out.println("Flight number: "+arguments.elementAt(2));
-                    System.out.println("Add Flight Seats: "+arguments.elementAt(3));
-                    System.out.println("Set Flight Price: "+arguments.elementAt(4));
 
-                    try {
+                    case ADD_FLIGHT:
+                        if (arguments.size() != 5) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Adding a new Flight using id: " + arguments.elementAt(1));
+                        System.out.println("Flight number: " + arguments.elementAt(2));
+                        System.out.println("Add Flight Seats: " + arguments.elementAt(3));
+                        System.out.println("Set Flight Price: " + arguments.elementAt(4));
+
                         Id = Integer.parseInt(arguments.elementAt(1));
                         flightNum = Integer.parseInt(arguments.elementAt(2));
                         flightSeats = Integer.parseInt(arguments.elementAt(3));
@@ -101,552 +140,384 @@ public class CLI {
                             System.out.println("Flight added");
                         else
                             System.out.println("Flight could not be added");
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case ADD_CARS:
-                    if(arguments.size()!=5){
-                        wrongNumber();
                         break;
-                    }
-                    System.out.println("Adding a new Car using id: "+arguments.elementAt(1));
-                    System.out.println("Car Location: "+arguments.elementAt(2));
-                    System.out.println("Add Number of Cars: "+arguments.elementAt(3));
-                    System.out.println("Set Price: "+arguments.elementAt(4));
-                    try{
+
+                    case ADD_CARS:
+                        if (arguments.size() != 5) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Adding a new Car using id: " + arguments.elementAt(1));
+                        System.out.println("Car Location: " + arguments.elementAt(2));
+                        System.out.println("Add Number of Cars: " + arguments.elementAt(3));
+                        System.out.println("Set Price: " + arguments.elementAt(4));
                         Id = Integer.parseInt(arguments.elementAt(1));
                         location = arguments.elementAt(2);
                         numCars = Integer.parseInt(arguments.elementAt(3));
                         price = Integer.parseInt(arguments.elementAt(4));
-                        if(m_resourceManager.addCars(Id,location,numCars,price))
+                        if (m_resourceManager.addCars(Id, location, numCars, price))
                             System.out.println("Cars added");
                         else
                             System.out.println("Cars could not be added");
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case ADD_ROOMS:
-                    if(arguments.size()!=5){
-                        wrongNumber();
                         break;
-                    }
-                    System.out.println("Adding a new Room using id: "+arguments.elementAt(1));
-                    System.out.println("Room Location: "+arguments.elementAt(2));
-                    System.out.println("Add Number of Rooms: "+arguments.elementAt(3));
-                    System.out.println("Set Price: "+arguments.elementAt(4));
-                    try{
+
+                    case ADD_ROOMS:
+                        if (arguments.size() != 5) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Adding a new Room using id: " + arguments.elementAt(1));
+                        System.out.println("Room Location: " + arguments.elementAt(2));
+                        System.out.println("Add Number of Rooms: " + arguments.elementAt(3));
+                        System.out.println("Set Price: " + arguments.elementAt(4));
                         Id = Integer.parseInt(arguments.elementAt(1));
                         location = arguments.elementAt(2);
                         numRooms = Integer.parseInt(arguments.elementAt(3));
                         price = Integer.parseInt(arguments.elementAt(4));
-                        if(m_resourceManager.addRooms(Id,location,numRooms,price))
+                        if (m_resourceManager.addRooms(Id, location, numRooms, price))
                             System.out.println("Rooms added");
                         else
                             System.out.println("Rooms could not be added");
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case NEW_CUSTOMER:
-                    if(arguments.size()!=2){
-                        wrongNumber();
                         break;
-                    }
-                    System.out.println("Adding a new Customer using id:"+arguments.elementAt(1));
-                    try{
+
+                    case NEW_CUSTOMER:
+                        if (arguments.size() != 2) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Adding a new Customer using id:" + arguments.elementAt(1));
                         Id = Integer.parseInt(arguments.elementAt(1));
-                        int customer=m_resourceManager.newCustomer(Id);
-                        System.out.println("new customer id:"+customer);
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case DELETE_FLIGHT:
-                    if(arguments.size()!=3){
-                        wrongNumber();
+                        customer = m_resourceManager.newCustomer(Id);
+                        System.out.println("new customer id:" + customer);
                         break;
-                    }
-                    System.out.println("Deleting a flight using id: "+arguments.elementAt(1));
-                    System.out.println("Flight Number: "+arguments.elementAt(2));
-                    try{
+
+                    case DELETE_FLIGHT:
+                        if (arguments.size() != 3) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Deleting a flight using id: " + arguments.elementAt(1));
+                        System.out.println("Flight Number: " + arguments.elementAt(2));
                         Id = Integer.parseInt(arguments.elementAt(1));
                         flightNum = Integer.parseInt(arguments.elementAt(2));
-                        if(m_resourceManager.deleteFlight(Id,flightNum))
+                        if (m_resourceManager.deleteFlight(Id, flightNum))
                             System.out.println("Flight Deleted");
                         else
                             System.out.println("Flight could not be deleted");
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case DELETE_CARS:
-                    if(arguments.size()!=3){
-                        wrongNumber();
                         break;
-                    }
-                    System.out.println("Deleting the cars from a particular location  using id: "+arguments.elementAt(1));
-                    System.out.println("Car Location: "+arguments.elementAt(2));
-                    try{
+
+                    case DELETE_CARS:
+                        if (arguments.size() != 3) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Deleting the cars from a particular location  using id: " + arguments.elementAt(1));
+                        System.out.println("Car Location: " + arguments.elementAt(2));
                         Id = Integer.parseInt(arguments.elementAt(1));
                         location = arguments.elementAt(2);
 
-                        if(m_resourceManager.deleteCars(Id,location))
+                        if (m_resourceManager.deleteCars(Id, location))
                             System.out.println("Cars Deleted");
                         else
                             System.out.println("Cars could not be deleted");
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case DELETE_ROOMS:
-                    if(arguments.size()!=3){
-                        wrongNumber();
                         break;
-                    }
-                    System.out.println("Deleting all rooms from a particular location  using id: "+arguments.elementAt(1));
-                    System.out.println("Room Location: "+arguments.elementAt(2));
-                    try{
+
+                    case DELETE_ROOMS:
+                        if (arguments.size() != 3) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Deleting all rooms from a particular location  using id: " + arguments.elementAt(1));
+                        System.out.println("Room Location: " + arguments.elementAt(2));
                         Id = Integer.parseInt(arguments.elementAt(1));
                         location = arguments.elementAt(2);
-                        if(m_resourceManager.deleteRooms(Id,location))
+                        if (m_resourceManager.deleteRooms(Id, location))
                             System.out.println("Rooms Deleted");
                         else
                             System.out.println("Rooms could not be deleted");
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case DELETE_CUSTOMER:
-                    if(arguments.size()!=3){
-                        wrongNumber();
                         break;
-                    }
-                    System.out.println("Deleting a customer from the database using id: "+arguments.elementAt(1));
-                    System.out.println("Customer id: "+arguments.elementAt(2));
-                    try{
+
+                    case DELETE_CUSTOMER:
+                        if (arguments.size() != 3) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Deleting a customer from the database using id: " + arguments.elementAt(1));
+                        System.out.println("Customer id: " + arguments.elementAt(2));
                         Id = Integer.parseInt(arguments.elementAt(1));
-                        int customer = Integer.parseInt(arguments.elementAt(2));
-                        if(m_resourceManager.deleteCustomer(Id,customer))
+                        customer = Integer.parseInt(arguments.elementAt(2));
+                        if (m_resourceManager.deleteCustomer(Id, customer))
                             System.out.println("Customer Deleted");
                         else
                             System.out.println("Customer could not be deleted");
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case QUERY_FLIGHT:
-                    if(arguments.size()!=3){
-                        wrongNumber();
                         break;
-                    }
-                    System.out.println("Querying a flight using id: "+arguments.elementAt(1));
-                    System.out.println("Flight number: "+arguments.elementAt(2));
-                    try{
+
+                    case QUERY_FLIGHT:
+                        if (arguments.size() != 3) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Querying a flight using id: " + arguments.elementAt(1));
+                        System.out.println("Flight number: " + arguments.elementAt(2));
                         Id = Integer.parseInt(arguments.elementAt(1));
                         flightNum = Integer.parseInt(arguments.elementAt(2));
-                        int seats=m_resourceManager.queryFlight(Id,flightNum);
-                        System.out.println("Number of seats available:"+seats);
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case QUERY_CARS:
-                    if(arguments.size()!=3){
-                        wrongNumber();
+                        int seats = m_resourceManager.queryFlight(Id, flightNum);
+                        System.out.println("Number of seats available:" + seats);
                         break;
-                    }
-                    System.out.println("Querying a car location using id: "+arguments.elementAt(1));
-                    System.out.println("Car location: "+arguments.elementAt(2));
-                    try{
+
+                    case QUERY_CARS:
+                        if (arguments.size() != 3) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Querying a car location using id: " + arguments.elementAt(1));
+                        System.out.println("Car location: " + arguments.elementAt(2));
                         Id = Integer.parseInt(arguments.elementAt(1));
                         location = arguments.elementAt(2);
-                        numCars=m_resourceManager.queryCars(Id,location);
-                        System.out.println("number of Cars at this location:"+numCars);
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case QUERY_ROOMS:
-                    if(arguments.size()!=3){
-                        wrongNumber();
+                        numCars = m_resourceManager.queryCars(Id, location);
+                        System.out.println("number of Cars at this location:" + numCars);
                         break;
-                    }
-                    System.out.println("Querying a room location using id: "+arguments.elementAt(1));
-                    System.out.println("Room location: "+arguments.elementAt(2));
-                    try{
+
+                    case QUERY_ROOMS:
+                        if (arguments.size() != 3) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Querying a room location using id: " + arguments.elementAt(1));
+                        System.out.println("Room location: " + arguments.elementAt(2));
                         Id = Integer.parseInt(arguments.elementAt(1));
                         location = arguments.elementAt(2);
-                        numRooms=m_resourceManager.queryRooms(Id,location);
-                        System.out.println("number of Rooms at this location:"+numRooms);
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case QUERY_CUSTOMER_INFO:
-                    if(arguments.size()!=3){
-                        wrongNumber();
+                        numRooms = m_resourceManager.queryRooms(Id, location);
+                        System.out.println("number of Rooms at this location:" + numRooms);
                         break;
-                    }
-                    System.out.println("Querying Customer information using id: "+arguments.elementAt(1));
-                    System.out.println("Customer id: "+arguments.elementAt(2));
-                    try{
+
+                    case QUERY_CUSTOMER_INFO:
+                        if (arguments.size() != 3) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Querying Customer information using id: " + arguments.elementAt(1));
+                        System.out.println("Customer id: " + arguments.elementAt(2));
                         Id = Integer.parseInt(arguments.elementAt(1));
-                        int customer = Integer.parseInt(arguments.elementAt(2));
-                        String bill=m_resourceManager.queryCustomerInfo(Id,customer);
-                        System.out.println("Customer info:" + bill.replace("@","\n"));
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case QUERY_FLIGHT_PRICE:
-                    if(arguments.size()!=3){
-                        wrongNumber();
+                        customer = Integer.parseInt(arguments.elementAt(2));
+                        String bill = m_resourceManager.queryCustomerInfo(Id, customer);
+                        System.out.println("Customer info:" + bill.replace("@", "\n"));
                         break;
-                    }
-                    System.out.println("Querying a flight Price using id: "+arguments.elementAt(1));
-                    System.out.println("Flight number: "+arguments.elementAt(2));
-                    try{
+
+                    case QUERY_FLIGHT_PRICE:
+                        if (arguments.size() != 3) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Querying a flight Price using id: " + arguments.elementAt(1));
+                        System.out.println("Flight number: " + arguments.elementAt(2));
                         Id = Integer.parseInt(arguments.elementAt(1));
                         flightNum = Integer.parseInt(arguments.elementAt(2));
-                        price=m_resourceManager.queryFlightPrice(Id,flightNum);
-                        System.out.println("Price of a seat:"+price);
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case QUERY_CARS_PRICE:
-                    if(arguments.size()!=3){
-                        wrongNumber();
+                        price = m_resourceManager.queryFlightPrice(Id, flightNum);
+                        System.out.println("Price of a seat:" + price);
                         break;
-                    }
-                    System.out.println("Querying a car price using id: "+arguments.elementAt(1));
-                    System.out.println("Car location: "+arguments.elementAt(2));
-                    try{
+
+                    case QUERY_CARS_PRICE:
+                        if (arguments.size() != 3) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Querying a car price using id: " + arguments.elementAt(1));
+                        System.out.println("Car location: " + arguments.elementAt(2));
                         Id = Integer.parseInt(arguments.elementAt(1));
                         location = arguments.elementAt(2);
-                        price=m_resourceManager.queryCarsPrice(Id,location);
-                        System.out.println("Price of a car at this location:"+price);
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case QUERY_ROOMS_PRICE:
-                    if(arguments.size()!=3){
-                        wrongNumber();
+                        price = m_resourceManager.queryCarsPrice(Id, location);
+                        System.out.println("Price of a car at this location:" + price);
                         break;
-                    }
-                    System.out.println("Querying a room price using id: "+arguments.elementAt(1));
-                    System.out.println("Room Location: "+arguments.elementAt(2));
-                    try{
+
+                    case QUERY_ROOMS_PRICE:
+                        if (arguments.size() != 3) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Querying a room price using id: " + arguments.elementAt(1));
+                        System.out.println("Room Location: " + arguments.elementAt(2));
                         Id = Integer.parseInt(arguments.elementAt(1));
                         location = arguments.elementAt(2);
-                        price=m_resourceManager.queryRoomsPrice(Id,location);
-                        System.out.println("Price of Rooms at this location:"+price);
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case RESERVE_FLIGHT:
-                    if(arguments.size()!=4){
-                        wrongNumber();
+                        price = m_resourceManager.queryRoomsPrice(Id, location);
+                        System.out.println("Price of Rooms at this location:" + price);
                         break;
-                    }
-                    System.out.println("Reserving a seat on a flight using id: "+arguments.elementAt(1));
-                    System.out.println("Customer id: "+arguments.elementAt(2));
-                    System.out.println("Flight number: "+arguments.elementAt(3));
-                    try{
+
+                    case RESERVE_FLIGHT:
+                        if (arguments.size() != 4) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Reserving a seat on a flight using id: " + arguments.elementAt(1));
+                        System.out.println("Customer id: " + arguments.elementAt(2));
+                        System.out.println("Flight number: " + arguments.elementAt(3));
                         Id = Integer.parseInt(arguments.elementAt(1));
-                        int customer = Integer.parseInt(arguments.elementAt(2));
+                        customer = Integer.parseInt(arguments.elementAt(2));
                         flightNum = Integer.parseInt(arguments.elementAt(3));
-                        if(m_resourceManager.reserveFlight(Id,customer,flightNum))
+                        if (m_resourceManager.reserveFlight(Id, customer, flightNum))
                             System.out.println("Flight Reserved");
                         else
                             System.out.println("Flight could not be reserved.");
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case RESERVE_CAR:
-                    if(arguments.size()!=4){
-                        wrongNumber();
                         break;
-                    }
-                    System.out.println("Reserving a car at a location using id: "+arguments.elementAt(1));
-                    System.out.println("Customer id: "+arguments.elementAt(2));
-                    System.out.println("Location: "+arguments.elementAt(3));
 
-                    try{
+                    case RESERVE_CAR:
+                        if (arguments.size() != 4) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Reserving a car at a location using id: " + arguments.elementAt(1));
+                        System.out.println("Customer id: " + arguments.elementAt(2));
+                        System.out.println("Location: " + arguments.elementAt(3));
+
                         Id = Integer.parseInt(arguments.elementAt(1));
-                        int customer = Integer.parseInt(arguments.elementAt(2));
+                        customer = Integer.parseInt(arguments.elementAt(2));
                         location = arguments.elementAt(3);
 
-                        if(m_resourceManager.reserveCar(Id,customer,location))
+                        if (m_resourceManager.reserveCar(Id, customer, location))
                             System.out.println("Car Reserved");
                         else
                             System.out.println("Car could not be reserved.");
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case RESERVE_ROOM:
-                    if(arguments.size()!=4){
-                        wrongNumber();
                         break;
-                    }
-                    System.out.println("Reserving a room at a location using id: "+arguments.elementAt(1));
-                    System.out.println("Customer id: "+arguments.elementAt(2));
-                    System.out.println("Location: "+arguments.elementAt(3));
-                    try{
+
+                    case RESERVE_ROOM:
+                        if (arguments.size() != 4) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Reserving a room at a location using id: " + arguments.elementAt(1));
+                        System.out.println("Customer id: " + arguments.elementAt(2));
+                        System.out.println("Location: " + arguments.elementAt(3));
                         Id = Integer.parseInt(arguments.elementAt(1));
-                        int customer = Integer.parseInt(arguments.elementAt(2));
+                        customer = Integer.parseInt(arguments.elementAt(2));
                         location = arguments.elementAt(3);
 
-                        if(m_resourceManager.reserveRoom(Id,customer,location))
+                        if (m_resourceManager.reserveRoom(Id, customer, location))
                             System.out.println("Room Reserved");
                         else
                             System.out.println("Room could not be reserved.");
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case ITINERARY:
-                    if(arguments.size()<7){
-                        wrongNumber();
                         break;
-                    }
-                    System.out.println("Reserving an Itinerary using id:"+arguments.elementAt(1));
-                    System.out.println("Customer id:"+arguments.elementAt(2));
-                    for(int i=0;i<arguments.size()-6;i++)
-                        System.out.println("Flight number"+arguments.elementAt(3+i));
-                    System.out.println("Location for Car/Room booking:"+arguments.elementAt(arguments.size()-3));
-                    System.out.println("Car to book?:"+arguments.elementAt(arguments.size()-2));
-                    System.out.println("Room to book?:"+arguments.elementAt(arguments.size()-1));
-                    try{
+
+                    case ITINERARY:
+                        if (arguments.size() < 7) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Reserving an Itinerary using id:" + arguments.elementAt(1));
+                        System.out.println("Customer id:" + arguments.elementAt(2));
+                        for (int i = 0; i < arguments.size() - 6; i++)
+                            System.out.println("Flight number" + arguments.elementAt(3 + i));
+                        System.out.println("Location for Car/Room booking:" + arguments.elementAt(arguments.size() - 3));
+                        System.out.println("Car to book?:" + arguments.elementAt(arguments.size() - 2));
+                        System.out.println("Room to book?:" + arguments.elementAt(arguments.size() - 1));
                         Id = Integer.parseInt(arguments.elementAt(1));
-                        int customer = Integer.parseInt(arguments.elementAt(2));
+                        customer = Integer.parseInt(arguments.elementAt(2));
                         Vector<String> flightNumbers = new Vector<>();
-                        for(int i=0;i<arguments.size()-6;i++) {
+                        for (int i = 0; i < arguments.size() - 6; i++) {
                             flightNumbers.addElement(arguments.elementAt(3 + i));
                         }
-                        location = arguments.elementAt(arguments.size()-3);
-                        boolean Car = Boolean.parseBoolean(arguments.elementAt(arguments.size()-2));
-                        boolean Room = Boolean.parseBoolean(arguments.elementAt(arguments.size()-1));
-                        if(m_resourceManager.itinerary(Id,customer,flightNumbers,location,Car,Room))
+                        location = arguments.elementAt(arguments.size() - 3);
+                        boolean Car = Boolean.parseBoolean(arguments.elementAt(arguments.size() - 2));
+                        boolean Room = Boolean.parseBoolean(arguments.elementAt(arguments.size() - 1));
+                        if (m_resourceManager.itinerary(Id, customer, flightNumbers, location, Car, Room))
                             System.out.println("Itinerary Reserved");
                         else
                             System.out.println("Itinerary could not be reserved.");
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
+                        break;
+
+                    case QUIT:
+                        if (arguments.size() != 1) {
+                            wrongNumber();
+                            break;
                         }
-                    }
-                    break;
-
-                case QUIT:
-                    if(arguments.size()!=1){
-                        wrongNumber();
+                        System.out.println("Quitting client.");
+                        inputEnabled = false;
                         break;
-                    }
-                    System.out.println("Quitting client.");
-                    inputEnabled = false;
-                    break;
 
-                case NEW_CUSTOMER_ID:
-                    if(arguments.size()!=3){
-                        wrongNumber();
-                        break;
-                    }
-                    System.out.println("Adding a new Customer using id:"+arguments.elementAt(1) + " and cid " +arguments.elementAt(2));
-                    try{
+                    case NEW_CUSTOMER_ID:
+                        if (arguments.size() != 3) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Adding a new Customer using id:" + arguments.elementAt(1) + " and cid " + arguments.elementAt(2));
                         Id = Integer.parseInt(arguments.elementAt(1));
                         Cid = Integer.parseInt(arguments.elementAt(2));
-                        m_resourceManager.newCustomer(Id,Cid);
-                        System.out.println("new customer id:"+Cid);
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case START:
-                    if(arguments.size()!=1){
-                        wrongNumber();
+                        m_resourceManager.newCustomer(Id, Cid);
+                        System.out.println("new customer id:" + Cid);
                         break;
-                    }
-                    System.out.println("Getting a new transaction id:");
-                    try{
+
+                    case START:
+                        if (arguments.size() != 1) {
+                            wrongNumber();
+                            break;
+                        }
+                        System.out.println("Getting a new transaction id:");
                         int transactionId = m_resourceManager.start();
                         System.out.println("Your transaction id is:" + transactionId);
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-
-                case COMMIT:
-                    if(arguments.size()!=2){
-                        wrongNumber();
                         break;
-                    }
-                    try{
+
+                    case COMMIT:
+                        if (arguments.size() != 2) {
+                            wrongNumber();
+                            break;
+                        }
                         Id = Integer.parseInt(arguments.elementAt(1));
                         System.out.println("Committing transaction:" + Id);
                         m_resourceManager.commit(Id);
                         System.out.println("Transaction " + Id + " committed successfully");
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-                case ABORT:
-                    if(arguments.size()!=2){
-                        wrongNumber();
                         break;
-                    }
-                    try{
+                    case ABORT:
+                        if (arguments.size() != 2) {
+                            wrongNumber();
+                            break;
+                        }
                         Id = Integer.parseInt(arguments.elementAt(1));
                         System.out.println("Aborting transaction:" + Id);
                         m_resourceManager.abort(Id);
                         System.out.println("Transaction " + Id + " aborted successfully");
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
-                case SHUTDOWN:
-                    if(arguments.size()!=1){
-                        wrongNumber();
                         break;
-                    }
+                    case SHUTDOWN:
+                        if (arguments.size() != 1) {
+                            wrongNumber();
+                            break;
+                        }
 
-                    try{
                         System.out.println("Shutting down system");
-                        if(m_resourceManager.shutdown()) {
+                        if (m_resourceManager.shutdown()) {
                             System.out.println("System shutdown successfully");
                         } else {
                             System.out.println("System could not shutdown because it is in use");
                         }
-                    } catch(Exception e){
-                        if(e.getCause() != null) {
-                            logger.error(e.getCause().getMessage());
-                        } else {
-                            logger.error(e.getMessage());
-                        }
-                    }
-                    break;
+                        break;
 
-                default:
-                    System.out.println("The interface does not support this command.");
-                    break;
+                    default:
+                        System.out.println("The interface does not support this command.");
+                        break;
+                }
+            } catch (ServerDownException e) {
+                if(e.getCause() != null) {
+                    logger.error(e.getCause().getMessage());
+                } else {
+                    logger.error(e.getMessage());
+                }
+            } catch (RemoteException e) {
+                onMSCrash();
+            } catch(Exception e){
+                if(e.getCause() != null) {
+                    logger.error(e.getCause().getMessage());
+                } else {
+                    logger.error(e.getMessage());
+                }
             }
         }
         return true;
+    }
+
+    /**
+     * On MS crash
+     */
+    private void onMSCrash() {
+        logger.error("Middleware server crashed!");
+        m_resourceManager = connect();
     }
 
     /**

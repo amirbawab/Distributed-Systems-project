@@ -19,7 +19,7 @@ public class TransactionManager implements ResourceManagerActions, Serializable 
     private Map<Integer, Transaction> m_transactionMap;
 
     // Unique transaction id
-    private static int m_uniqId = 1;
+    private int m_uniqId = 1;
 
     /**
      * Construct a transaction manager
