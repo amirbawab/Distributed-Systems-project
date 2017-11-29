@@ -1042,4 +1042,9 @@ class MiddlewareServer implements ResourceManager {
     public void syncTransactions(Set<Integer> transactionsId) throws RemoteException {
         /*Do nothing*/
     }
+
+    @Override
+    public boolean crashCase(int id) throws RemoteException {
+        return false;
+    }
 }

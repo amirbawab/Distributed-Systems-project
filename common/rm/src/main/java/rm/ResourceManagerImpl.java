@@ -817,4 +817,9 @@ public class ResourceManagerImpl implements ResourceManager {
         System.exit(1);
         return false;
     }
+
+    @Override
+    public boolean crashCase(int id) throws RemoteException {
+        return false;
+    }
 }

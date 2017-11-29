@@ -58,7 +58,8 @@ public interface ResourceManager extends Remote, ResourceManagerActions {
         ABORT("abort"),
         SHUTDOWN("shutdown"),
         PING("ping"),
-        CRASH("crash")
+        CRASH("crash"),
+        CRASH_CASE("crashCase")
         ;
         private String m_functionName;
         private int m_id = 0;
@@ -224,4 +225,7 @@ public interface ResourceManager extends Remote, ResourceManagerActions {
 
     /*Crash*/
     boolean crash(String comp) throws RemoteException;
+
+    /*Crash case*/
+    boolean crashCase(int id) throws RemoteException;
 }

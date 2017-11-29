@@ -523,6 +523,15 @@ public class CLI {
                                     System.err.println("Unknown component " + arguments.elementAt(1));
                         }
                         break;
+                    case CRASH_CASE:
+                        if (arguments.size() != 2) {
+                            wrongNumber();
+                            break;
+                        }
+                        Id = Integer.parseInt(arguments.elementAt(1));
+                        System.out.println("Simulating crash case #" + Id);
+                        m_resourceManager.crashCase(Id);
+                        break;
 
                     default:
                         System.out.println("The interface does not support this command.");
@@ -796,6 +805,26 @@ public class CLI {
                 System.out.println("\tPing MS");
                 System.out.println("\nUsage:");
                 System.out.println("\t" + command.getName());
+                break;
+            case CRASH_CASE:
+                System.out.println("Crash case");
+                System.out.println("Purpose:");
+                System.out.println("Simulate a crash scenario");
+                System.out.println("\nUsage:");
+                System.out.println("\tCrash case:");
+                System.out.println("\tAt coordinator:");
+                System.out.println("\t>> 1) Crash before sending vote request");
+                System.out.println("\t>> 2) Crash after sending vote request and before receiving any replies");
+                System.out.println("\t>> 3) Crash after receiving some replies but not all");
+                System.out.println("\t>> 4) Crash after receiving all replies but before deciding");
+                System.out.println("\t>> 5) Crash after deciding but before sending decision");
+                System.out.println("\t>> 6) Crash after sending some but not all decisions");
+                System.out.println("\t>> 7) Crash after having sent all decisions");
+                System.out.println("\tAt RM:");
+                System.out.println("\t>> 8) Crash after receive vote request but before sending answer");
+                System.out.println("\t>> 9) Crash after sending answer");
+                System.out.println("\t>> 10) Crash after receiving decision but before committing/aborting");
+                System.out.println("\t" + command.getName() + ",<num>");
                 break;
 
             default:
