@@ -811,4 +811,10 @@ public class ResourceManagerImpl implements ResourceManager {
             deleteTable(tid);
         }
     }
+
+    @Override
+    public boolean crashTM() throws RemoteException {
+        /*Do nothing*/
+        return false;
+    }
 }

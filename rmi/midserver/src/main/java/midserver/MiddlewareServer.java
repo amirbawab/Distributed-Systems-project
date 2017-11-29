@@ -1,14 +1,12 @@
 package midserver;
 
 import inter.ResourceManager;
-import inter.ServerDownException;
+import inter.RMServerDownException;
+import inter.TMException;
 import lm.DeadlockException;
-import lm.LockManager;
 import lm.TransactionAbortedException;
-import lm.TrxnObj;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.omg.CORBA.COMM_FAILURE;
 import tm.Transaction;
 import tm.TransactionManager;
 
@@ -21,7 +19,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
@@ -203,7 +200,7 @@ class MiddlewareServer implements ResourceManager {
      * Load TM from file
      */
     private synchronized void loadTM() {
-        File tmFile = m_tm.getTMFile();
+        File tmFile = TransactionManager.getTMFile();
         if(tmFile.exists()) {
             try (FileInputStream fis = new FileInputStream(tmFile); ObjectInputStream ois = new ObjectInputStream(fis)){
                 m_tm = (TransactionManager) ois.readObject();
@@ -318,10 +315,12 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (NullPointerException e) {
+                throw new TMException();
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
-                throw new ServerDownException();
+                throw new RMServerDownException();
             }
         }
     }
@@ -337,10 +336,12 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (NullPointerException e) {
+                throw new TMException();
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
-                throw new ServerDownException();
+                throw new RMServerDownException();
             }
         }
     }
@@ -356,10 +357,12 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (NullPointerException e) {
+                throw new TMException();
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
-                throw new ServerDownException();
+                throw new RMServerDownException();
             }
         }
     }
@@ -382,10 +385,12 @@ class MiddlewareServer implements ResourceManager {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
                         throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                    } catch (NullPointerException e) {
+                        throw new TMException();
                     } catch (RemoteException e) {
                         onRMCrash();
                         abort(id);
-                        throw new ServerDownException();
+                        throw new RMServerDownException();
                     }
                 }
             }
@@ -411,10 +416,12 @@ class MiddlewareServer implements ResourceManager {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
                         throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                    } catch (NullPointerException e) {
+                        throw new TMException();
                     } catch (RemoteException e) {
                         onRMCrash();
                         abort(id);
-                        throw new ServerDownException();
+                        throw new RMServerDownException();
                     }
                 }
             }
@@ -432,10 +439,12 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (NullPointerException e) {
+                throw new TMException();
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
-                throw new ServerDownException();
+                throw new RMServerDownException();
             }
         }
     }
@@ -451,10 +460,12 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (NullPointerException e) {
+                throw new TMException();
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
-                throw new ServerDownException();
+                throw new RMServerDownException();
             }
         }
     }
@@ -470,10 +481,12 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (NullPointerException e) {
+                throw new TMException();
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
-                throw new ServerDownException();
+                throw new RMServerDownException();
             }
         }
     }
@@ -497,10 +510,12 @@ class MiddlewareServer implements ResourceManager {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
                         throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                    } catch (NullPointerException e) {
+                        throw new TMException();
                     } catch (RemoteException e) {
                         onRMCrash();
                         abort(id);
-                        throw new ServerDownException();
+                        throw new RMServerDownException();
                     }
                 }
             }
@@ -518,10 +533,12 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (NullPointerException e) {
+                throw new TMException();
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
-                throw new ServerDownException();
+                throw new RMServerDownException();
             }
         }
     }
@@ -536,10 +553,12 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (NullPointerException e) {
+                throw new TMException();
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
-                throw new ServerDownException();
+                throw new RMServerDownException();
             }
         }
     }
@@ -555,10 +574,12 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (NullPointerException e) {
+                throw new TMException();
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
-                throw new ServerDownException();
+                throw new RMServerDownException();
             }
         }
     }
@@ -583,10 +604,12 @@ class MiddlewareServer implements ResourceManager {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
                         throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                    } catch (NullPointerException e) {
+                        throw new TMException();
                     } catch (RemoteException e) {
                         onRMCrash();
                         abort(id);
-                        throw new ServerDownException();
+                        throw new RMServerDownException();
                     }
                 }
             }
@@ -604,10 +627,12 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (NullPointerException e) {
+                throw new TMException();
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
-                throw new ServerDownException();
+                throw new RMServerDownException();
             }
         }
     }
@@ -623,10 +648,12 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (NullPointerException e) {
+                throw new TMException();
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
-                throw new ServerDownException();
+                throw new RMServerDownException();
             }
         }
     }
@@ -642,10 +669,12 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (NullPointerException e) {
+                throw new TMException();
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
-                throw new ServerDownException();
+                throw new RMServerDownException();
             }
         }
     }
@@ -661,10 +690,12 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (NullPointerException e) {
+                throw new TMException();
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
-                throw new ServerDownException();
+                throw new RMServerDownException();
             }
         }
     }
@@ -680,10 +711,12 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (NullPointerException e) {
+                throw new TMException();
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
-                throw new ServerDownException();
+                throw new RMServerDownException();
             }
         }
     }
@@ -699,10 +732,12 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (NullPointerException e) {
+                throw new TMException();
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
-                throw new ServerDownException();
+                throw new RMServerDownException();
             }
         }
     }
@@ -765,10 +800,12 @@ class MiddlewareServer implements ResourceManager {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
                         throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                    } catch (NullPointerException e) {
+                        throw new TMException();
                     } catch (RemoteException e) {
                         onRMCrash();
                         abort(id);
-                        throw new ServerDownException();
+                        throw new RMServerDownException();
                     }
                 }
             }
@@ -777,140 +814,184 @@ class MiddlewareServer implements ResourceManager {
 
     @Override
     public int start() throws RemoteException {
-        int transactionId = m_tm.start();
-        logger.info("Started a new transaction with id: " + transactionId);
-        return transactionId;
+        try {
+            int transactionId = m_tm.start();
+            logger.info("Started a new transaction with id: " + transactionId);
+            return transactionId;
+        } catch (NullPointerException e) {
+            throw new TMException();
+        }
     }
 
     @Override
     public boolean commit(int transactionId) throws RemoteException, InvalidTransactionException, TransactionAbortedException {
-        // Update function
-        commitRF(transactionId);
-        logger.info("Received a commit request on transaction " + transactionId);
-        m_tm.updateLastActive(transactionId);
+        try {
+            // Update function
+            commitRF(transactionId);
+            logger.info("Received a commit request on transaction " + transactionId);
+            m_tm.updateLastActive(transactionId);
 
-        // 2PC
-        logger.info("Applying 2 phase commit on all involved RMs");
-        if(!voteRequest(transactionId)) {
-            abort(transactionId);
-            return false;
-        }
+            // 2PC
+            logger.info("Applying 2 phase commit on all involved RMs");
+            if (!voteRequest(transactionId)) {
+                abort(transactionId);
+                return false;
+            }
 
-        // Apply commits
-        for(String rmStr : m_tm.getTransaction(transactionId).getRMs()) {
-            while (true) {
-                try {
-                    ResourceManager rm = null;
-                    String name = "UNKNOWN";
-                    if (rmStr.equals(ResourceManager.RM_CAR_REF)) {
-                        name = "Car";
-                        rm = m_carRM;
-                    } else if (rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
-                        name = "Flight";
-                        rm = m_flightRM;
-                    } else if (rmStr.equals(ResourceManager.RM_ROOM_REF)) {
-                        name = "Room";
-                        rm = m_roomRM;
-                    } else {
-                        throw new RuntimeException("Unknown resource manager");
+            // Apply commits
+            for (String rmStr : m_tm.getTransaction(transactionId).getRMs()) {
+                while (true) {
+                    try {
+                        ResourceManager rm = null;
+                        String name = "UNKNOWN";
+                        if (rmStr.equals(ResourceManager.RM_CAR_REF)) {
+                            name = "Car";
+                            rm = m_carRM;
+                        } else if (rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
+                            name = "Flight";
+                            rm = m_flightRM;
+                        } else if (rmStr.equals(ResourceManager.RM_ROOM_REF)) {
+                            name = "Room";
+                            rm = m_roomRM;
+                        } else {
+                            throw new RuntimeException("Unknown resource manager");
+                        }
+                        logger.info("Commit on RM " + name);
+                        rm.commit(transactionId);
+                        break;
+                    } catch (RemoteException e) {
+                        onRMCrash();
                     }
-                    logger.info("Commit on RM " + name);
-                    rm.commit(transactionId);
-                    break;
-                } catch (RemoteException e) {
-                    onRMCrash();
                 }
             }
+            m_tm.removeTransaction(transactionId);
+            deleteRF(transactionId);
+            return true;
+        } catch (NullPointerException e) {
+            throw new TMException();
         }
-        m_tm.removeTransaction(transactionId);
-        deleteRF(transactionId);
-        return true;
     }
 
     @Override
     public void abort(int transactionId) throws RemoteException, InvalidTransactionException {
-        abortRF(transactionId);
-        logger.info("Aborting transaction " + transactionId);
-        m_tm.updateLastActive(transactionId);
-        for(String rmStr : m_tm.getTransaction(transactionId).getRMs()) {
-            while(true) {
-                try {
-                    if(rmStr.equals(ResourceManager.RM_ROOM_REF)) {
-                        m_roomRM.abort(transactionId);
-                    } else if(rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
-                        m_flightRM.abort(transactionId);
-                    } else if(rmStr.equals(ResourceManager.RM_CAR_REF)) {
-                        m_carRM.abort(transactionId);
-                    } else {
-                        throw new RuntimeException("Unknow resource manager");
+        try {
+            abortRF(transactionId);
+            logger.info("Aborting transaction " + transactionId);
+            m_tm.updateLastActive(transactionId);
+            for (String rmStr : m_tm.getTransaction(transactionId).getRMs()) {
+                while (true) {
+                    try {
+                        if (rmStr.equals(ResourceManager.RM_ROOM_REF)) {
+                            m_roomRM.abort(transactionId);
+                        } else if (rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
+                            m_flightRM.abort(transactionId);
+                        } else if (rmStr.equals(ResourceManager.RM_CAR_REF)) {
+                            m_carRM.abort(transactionId);
+                        } else {
+                            throw new RuntimeException("Unknow resource manager");
+                        }
+                        break;
+                    } catch (RemoteException e) {
+                        onRMCrash();
                     }
-                    break;
-                }catch (RemoteException e) {
-                    onRMCrash();
                 }
             }
+            m_tm.removeTransaction(transactionId);
+            deleteRF(transactionId);
+        } catch (NullPointerException e) {
+            throw new TMException();
         }
-        m_tm.removeTransaction(transactionId);
-        deleteRF(transactionId);
     }
 
     @Override
     public boolean shutdown() throws RemoteException {
-        if(m_tm.getTransactions().isEmpty()){
-            for(String key : s_registry.list()) {
-                try {
-                    s_registry.unbind(key);
-                    UnicastRemoteObject.unexportObject(this, true);
-                } catch (NotBoundException e) {
-                    logger.error("Error unbinding remote object with key: " + key);
-                    return false;
+        try {
+            if (m_tm.getTransactions().isEmpty()) {
+                for (String key : s_registry.list()) {
+                    try {
+                        s_registry.unbind(key);
+                        UnicastRemoteObject.unexportObject(this, true);
+                    } catch (NotBoundException e) {
+                        logger.error("Error unbinding remote object with key: " + key);
+                        return false;
+                    }
                 }
-            }
-            boolean flight = m_flightRM.shutdown();
-            boolean car = m_carRM.shutdown();
-            boolean room = m_roomRM.shutdown();
-            if(flight && car && room) {
-                logger.info("All RMs are shutdown. Shutting down middleware server ...");
+                boolean flight = m_flightRM.shutdown();
+                boolean car = m_carRM.shutdown();
+                boolean room = m_roomRM.shutdown();
+                if (flight && car && room) {
+                    logger.info("All RMs are shutdown. Shutting down middleware server ...");
+                } else {
+                    logger.error("Some RMs failed to shutdown");
+                }
+                return flight && car && room;
             } else {
-                logger.error("Some RMs failed to shutdown");
+                logger.info("Will not shutdown because there are still transactions");
             }
-            return flight && car && room;
-        } else {
-            logger.info("Will not shutdown because there are still transactions");
+            return false;
+        } catch (NullPointerException e) {
+            throw new TMException();
         }
-        return false;
     }
 
     @Override
     public boolean voteRequest(int tid) throws RemoteException {
-        for(String rmStr : m_tm.getTransaction(tid).getRMs()) {
-            while (true) {
-                try {
-                    String name = "UNKNOWN";
-                    ResourceManager rm = null;
-                    if(rmStr.equals(ResourceManager.RM_CAR_REF)) {
-                        name = "Car";
-                        rm = m_carRM;
-                    } else if(rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
-                        name = "Flight";
-                        rm = m_flightRM;
-                    } else if(rmStr.equals(ResourceManager.RM_ROOM_REF)) {
-                        name = "Room";
-                        rm = m_roomRM;
-                    } else {
-                        throw new RuntimeException("Unknown resource manager");
+        try {
+            for (String rmStr : m_tm.getTransaction(tid).getRMs()) {
+                while (true) {
+                    try {
+                        String name = "UNKNOWN";
+                        ResourceManager rm = null;
+                        if (rmStr.equals(ResourceManager.RM_CAR_REF)) {
+                            name = "Car";
+                            rm = m_carRM;
+                        } else if (rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
+                            name = "Flight";
+                            rm = m_flightRM;
+                        } else if (rmStr.equals(ResourceManager.RM_ROOM_REF)) {
+                            name = "Room";
+                            rm = m_roomRM;
+                        } else {
+                            throw new RuntimeException("Unknown resource manager");
+                        }
+                        boolean vr = rm.voteRequest(tid);
+                        logger.info("RM " + name + " replied with a " + (vr ? "YES" : "NO"));
+                        if (!vr) {
+                            return false;
+                        }
+                        break;
+                    } catch (RemoteException e) {
+                        onRMCrash();
                     }
-                    boolean vr = rm.voteRequest(tid);
-                    logger.info("RM " + name + " replied with a " + (vr ? "YES" : "NO"));
-                    if(!vr) {
-                        return false;
-                    }
-                    break;
-                }catch (RemoteException e) {
-                    onRMCrash();
                 }
             }
+            return true;
+        } catch (NullPointerException e) {
+            throw new TMException();
         }
+    }
+
+    @Override
+    public boolean crashTM() throws RemoteException {
+        if(m_tm == null) {
+            return false;
+        }
+
+        // Write TM just in case
+        m_tm.writeTM();
+
+        // Unbind TM
+        m_tm = null;
+
+        final int TM_SLEEP = 10000;
+        new Thread(() -> {
+            try {
+                Thread.sleep(TM_SLEEP);
+                loadTM();
+            } catch (InterruptedException e) {
+                logger.error("Failed to sleep");
+            }
+        }).start();
         return true;
     }
 

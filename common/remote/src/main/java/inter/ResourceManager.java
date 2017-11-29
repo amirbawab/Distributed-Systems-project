@@ -56,7 +56,8 @@ public interface ResourceManager extends Remote, ResourceManagerActions {
         START("start"),
         COMMIT("commit"),
         ABORT("abort"),
-        SHUTDOWN("shutdown")
+        SHUTDOWN("shutdown"),
+        CRASH_TM("crashTM")
         ;
         private String m_functionName;
         private int m_id = 0;
@@ -219,4 +220,7 @@ public interface ResourceManager extends Remote, ResourceManagerActions {
 
     /*Synch transactions*/
     void syncTransactions(Set<Integer> transactionsId) throws RemoteException;
+
+    /*Crash TM*/
+    boolean crashTM() throws RemoteException;
 }

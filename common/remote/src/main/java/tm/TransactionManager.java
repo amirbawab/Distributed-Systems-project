@@ -127,14 +127,14 @@ public class TransactionManager implements ResourceManagerActions, Serializable 
      * Get the TM file
      * @return TM file
      */
-    public File getTMFile() {
+    public static File getTMFile() {
         return new File("TM_table");
     }
 
     /**
      * Write transaction manager to file
      */
-    private synchronized void writeTM() {
+    public synchronized void writeTM() {
         File tmFile = getTMFile();
         try(FileOutputStream fos = new FileOutputStream(tmFile); ObjectOutputStream obj = new ObjectOutputStream(fos)) {
             obj.writeObject(this);

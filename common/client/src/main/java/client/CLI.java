@@ -1,11 +1,11 @@
 package client;
 
 import inter.ResourceManager;
-import inter.ServerDownException;
+import inter.RMServerDownException;
+import inter.TMException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.transaction.InvalidTransactionException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -488,19 +488,32 @@ public class CLI {
                             System.out.println("System could not shutdown because it is in use");
                         }
                         break;
+                    case CRASH_TM:
+                        if (arguments.size() != 1) {
+                            wrongNumber();
+                            break;
+                        }
+
+                        System.out.println("Crashing TM");
+                        if (m_resourceManager.crashTM()) {
+                            System.out.println("TM Crashed");
+                        } else {
+                            System.out.println("Couldn't crash TM");
+                        }
+                        break;
 
                     default:
                         System.out.println("The interface does not support this command.");
                         break;
                 }
-            } catch (ServerDownException e) {
-                if(e.getCause() != null) {
-                    logger.error(e.getCause().getMessage());
-                } else {
-                    logger.error(e.getMessage());
-                }
             } catch (RemoteException e) {
-                onMSCrash();
+                if(e.getCause() instanceof TMException) {
+                    logger.error("Transaction manager is crashed. Please try again later.");
+                } else if(e.getCause() instanceof RMServerDownException) {
+                    logger.error("Internal server error (RM down)");
+                } else {
+                    onMSCrash();
+                }
             } catch(Exception e){
                 if(e.getCause() != null) {
                     logger.error(e.getCause().getMessage());
@@ -740,6 +753,13 @@ public class CLI {
                 System.out.println("Shutdown system");
                 System.out.println("Purpose:");
                 System.out.println("\tShutdown system components");
+                System.out.println("\nUsage:");
+                System.out.println("\t" + command.getName());
+                break;
+            case CRASH_TM:
+                System.out.println("Crash transaction manager");
+                System.out.println("Purpose:");
+                System.out.println("\tCrash transaction manager");
                 System.out.println("\nUsage:");
                 System.out.println("\t" + command.getName());
                 break;
