@@ -973,7 +973,9 @@ class MiddlewareServer implements ResourceManager {
 
     @Override
     public boolean crashTM() throws RemoteException {
+        logger.info("Received TM crash request");
         if(m_tm == null) {
+            logger.warn("TM is crashed already. Won't crash again");
             return false;
         }
 
@@ -982,12 +984,14 @@ class MiddlewareServer implements ResourceManager {
 
         // Unbind TM
         m_tm = null;
+        logger.info("TM is now crashed");
 
         final int TM_SLEEP = 10000;
         new Thread(() -> {
             try {
                 Thread.sleep(TM_SLEEP);
                 loadTM();
+                logger.info("TM is now up and running");
             } catch (InterruptedException e) {
                 logger.error("Failed to sleep");
             }
