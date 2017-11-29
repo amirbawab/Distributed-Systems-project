@@ -177,6 +177,9 @@ public class TPHashTable implements Serializable {
                 sb.append("\n");
             }
         }
+        if(sb.length() == 0) {
+            return "EMPTY TABLE";
+        }
         return sb.toString();
     }
 }
