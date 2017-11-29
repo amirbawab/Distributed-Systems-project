@@ -706,22 +706,29 @@ class MiddlewareServer implements ResourceManager {
 
         // Apply commits
         for(String rmStr : m_tm.getTransaction(transactionId).getRMs()) {
-            ResourceManager rm = null;
-            String name = "UNKNOWN";
-            if(rmStr.equals(ResourceManager.RM_CAR_REF)) {
-                name = "Car";
-                rm = m_carRM;
-            } else if(rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
-                name = "Flight";
-                rm = m_flightRM;
-            } else if(rmStr.equals(ResourceManager.RM_ROOM_REF)) {
-                name = "Room";
-                rm = m_roomRM;
-            } else {
-                throw new RuntimeException("Unknown resource manager");
+            while (true) {
+                try {
+                    ResourceManager rm = null;
+                    String name = "UNKNOWN";
+                    if (rmStr.equals(ResourceManager.RM_CAR_REF)) {
+                        name = "Car";
+                        rm = m_carRM;
+                    } else if (rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
+                        name = "Flight";
+                        rm = m_flightRM;
+                    } else if (rmStr.equals(ResourceManager.RM_ROOM_REF)) {
+                        name = "Room";
+                        rm = m_roomRM;
+                    } else {
+                        throw new RuntimeException("Unknown resource manager");
+                    }
+                    logger.info("Commit on RM " + name);
+                    rm.commit(transactionId);
+                    break;
+                } catch (RemoteException e) {
+                    onRMCrash();
+                }
             }
-            logger.info("Commit on RM " + name);
-            rm.commit(transactionId);
         }
         m_tm.removeTransaction(transactionId);
         return true;
@@ -732,14 +739,21 @@ class MiddlewareServer implements ResourceManager {
         logger.info("Aborting transaction " + transactionId);
         m_tm.updateLastActive(transactionId);
         for(String rmStr : m_tm.getTransaction(transactionId).getRMs()) {
-            if(rmStr.equals(ResourceManager.RM_ROOM_REF)) {
-                m_roomRM.abort(transactionId);
-            } else if(rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
-                m_flightRM.abort(transactionId);
-            } else if(rmStr.equals(ResourceManager.RM_CAR_REF)) {
-                m_carRM.abort(transactionId);
-            } else {
-                throw new RuntimeException("Unknow resource manager");
+            while(true) {
+                try {
+                    if(rmStr.equals(ResourceManager.RM_ROOM_REF)) {
+                        m_roomRM.abort(transactionId);
+                    } else if(rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
+                        m_flightRM.abort(transactionId);
+                    } else if(rmStr.equals(ResourceManager.RM_CAR_REF)) {
+                        m_carRM.abort(transactionId);
+                    } else {
+                        throw new RuntimeException("Unknow resource manager");
+                    }
+                    break;
+                }catch (RemoteException e) {
+                    onRMCrash();
+                }
             }
         }
         m_tm.removeTransaction(transactionId);
@@ -775,24 +789,31 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public boolean voteRequest(int tid) throws RemoteException {
         for(String rmStr : m_tm.getTransaction(tid).getRMs()) {
-            String name = "UNKNOWN";
-            ResourceManager rm = null;
-            if(rmStr.equals(ResourceManager.RM_CAR_REF)) {
-                name = "Car";
-                rm = m_carRM;
-            } else if(rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
-                name = "Flight";
-                rm = m_flightRM;
-            } else if(rmStr.equals(ResourceManager.RM_ROOM_REF)) {
-                name = "Room";
-                rm = m_roomRM;
-            } else {
-                throw new RuntimeException("Unknown resource manager");
-            }
-            boolean vr = rm.voteRequest(tid);
-            logger.info("RM " + name + " replied with a " + (vr ? "YES" : "NO"));
-            if(!vr) {
-                return false;
+            while (true) {
+                try {
+                    String name = "UNKNOWN";
+                    ResourceManager rm = null;
+                    if(rmStr.equals(ResourceManager.RM_CAR_REF)) {
+                        name = "Car";
+                        rm = m_carRM;
+                    } else if(rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
+                        name = "Flight";
+                        rm = m_flightRM;
+                    } else if(rmStr.equals(ResourceManager.RM_ROOM_REF)) {
+                        name = "Room";
+                        rm = m_roomRM;
+                    } else {
+                        throw new RuntimeException("Unknown resource manager");
+                    }
+                    boolean vr = rm.voteRequest(tid);
+                    logger.info("RM " + name + " replied with a " + (vr ? "YES" : "NO"));
+                    if(!vr) {
+                        return false;
+                    }
+                    break;
+                }catch (RemoteException e) {
+                    onRMCrash();
+                }
             }
         }
         return true;

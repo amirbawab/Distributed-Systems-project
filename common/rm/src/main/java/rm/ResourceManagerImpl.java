@@ -37,6 +37,14 @@ public class ResourceManagerImpl implements ResourceManager {
     // Name of the resource manager object
     private String m_name;
 
+    // Vote request constants
+    private final int VR_REQUESTED = 1;
+    private final int VR_COMMITED = 2;
+    private final int VR_ABORT = 3;
+
+    // Vote request
+    private Map<Integer, Integer> m_vrMap;
+
     /**
      * Construct a new resource manager
      */
@@ -45,6 +53,7 @@ public class ResourceManagerImpl implements ResourceManager {
         m_tables.put(GLOBAL_TABLE, new RMHashtable());
         m_lockManager = new LockManager();
         m_name = name;
+        m_vrMap = new HashMap<>();
 
         // Resume RM
         loadLocks();
@@ -574,6 +583,11 @@ public class ResourceManagerImpl implements ResourceManager {
 
     @Override
     public boolean commit(int transactionId) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
+        if(m_vrMap.containsKey(transactionId) && m_vrMap.get(transactionId) == VR_COMMITED) {
+            logger.warn("Received a commit requested, but already committed. Will ignore transaction.");
+            return false;
+        }
+
         if(m_tables.containsKey(transactionId)) {
             // Copy changes
             for(String key : getTable(transactionId).keySet()) {
@@ -587,6 +601,7 @@ public class ResourceManagerImpl implements ResourceManager {
             }
             deleteTable(transactionId);
             writeTable(GLOBAL_TABLE);
+            m_vrMap.put(transactionId, VR_COMMITED);
             return true;
         }
         throw new InvalidTransactionException("Transaction id " + transactionId + " is not available");
@@ -596,6 +611,7 @@ public class ResourceManagerImpl implements ResourceManager {
     public void abort(int transactionId) throws RemoteException, InvalidTransactionException {
         deleteTable(transactionId);
         writeTable(GLOBAL_TABLE);
+        m_vrMap.put(transactionId, VR_ABORT);
     }
 
     @Override
@@ -756,8 +772,21 @@ public class ResourceManagerImpl implements ResourceManager {
 
     @Override
     public boolean voteRequest(int tid) throws RemoteException {
-        logger.info("Received a vote request for transaction " + tid + ". Sending YES");
-        return true;
+        if(!m_vrMap.containsKey(tid)) {
+            logger.info("Received a vote request for transaction " + tid + ". Sending YES");
+            m_vrMap.put(tid, VR_REQUESTED);
+            return true;
+        } else if(m_vrMap.get(tid) == VR_REQUESTED) {
+            logger.warn("Received a vote request, will resend a YES");
+            return true;
+        } else if(m_vrMap.get(tid) == VR_COMMITED) {
+            logger.warn("Received a vote request but already committed. Sending a YES but commit will be ignored");
+            return true;
+        } else if(m_vrMap.get(tid) == VR_ABORT) {
+            logger.warn("Received a vote request but already aborted. Sending a NO");
+            return false;
+        }
+        throw new RuntimeException("Unhandled vote request case");
     }
 
     @Override
