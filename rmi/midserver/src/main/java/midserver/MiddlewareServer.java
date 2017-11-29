@@ -696,6 +696,8 @@ class MiddlewareServer implements ResourceManager {
             } else if(rmStr.equals(ResourceManager.RM_ROOM_REF)) {
                 name = "Room";
                 rm = m_roomRM;
+            } else {
+                throw new RuntimeException("Unknown resource manager");
             }
             logger.info("Commit on RM " + name);
             rm.commit(transactionId);
