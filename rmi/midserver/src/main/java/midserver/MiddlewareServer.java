@@ -17,6 +17,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Set;
 import java.util.Vector;
 
 class MiddlewareServer implements ResourceManager {
@@ -142,15 +143,19 @@ class MiddlewareServer implements ResourceManager {
         final int CONNECT_SLEEP = 5000;
         while (true) {
             try {
-                // get a reference to the rmiregistry
+                // Connect to registry
                 Registry registry = LocateRegistry.getRegistry(server, port);
-                // get the proxy and the remote reference by rmiregistry lookup
+
+                // Lookup resource manager
                 ResourceManager rm = (ResourceManager) registry.lookup(key);
-                if(rm!=null) {
-                    logger.info("Connected to RM: " + key);
-                    return rm;
-                }
-                throw new Exception("Could not connect to RM: " + key);
+
+                // Verify connection is working
+                rm.healthCheck();
+
+                // Sync transactions
+                rm.syncTransactions(m_tm.getTransactionsId());
+                logger.info("Connected to RM: " + key);
+                return rm;
             } catch (Exception e) {
                 logger.error("Exception while connecting to RM " + key + ". Message"+ e.toString());
                 try {
@@ -308,9 +313,10 @@ class MiddlewareServer implements ResourceManager {
                 m_tm.getTransaction(id).addRM(ResourceManager.RM_ROOM_REF);
                 m_tm.getTransaction(id).addRM(ResourceManager.RM_CAR_REF);
                 m_tm.getTransaction(id).addRM(ResourceManager.RM_FLIGHT_REF);
-                return m_roomRM.deleteCustomer(id, customer) &
-                        m_carRM.deleteCustomer(id, customer) &
-                        m_flightRM.deleteCustomer(id, customer);
+                boolean room = m_roomRM.deleteCustomer(id, customer);
+                boolean car = m_carRM.deleteCustomer(id, customer);
+                boolean flight = m_flightRM.deleteCustomer(id, customer);
+                return room && car && flight;
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
@@ -644,5 +650,15 @@ class MiddlewareServer implements ResourceManager {
             }
         }
         return true;
+    }
+
+    @Override
+    public void healthCheck() throws RemoteException {
+        /*Do nothing*/
+    }
+
+    @Override
+    public void syncTransactions(Set<Integer> transactionsId) throws RemoteException {
+        /*Do nothing*/
     }
 }

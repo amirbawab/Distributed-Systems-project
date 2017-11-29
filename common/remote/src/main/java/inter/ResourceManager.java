@@ -213,4 +213,10 @@ public interface ResourceManager extends Remote, ResourceManagerActions {
     /* reserve an itinerary */
     boolean itinerary(int id,int customer,Vector flightNumbers,String location, boolean Car, boolean Room)
 	throws RemoteException;
+
+    /*Health check*/
+    void healthCheck() throws RemoteException;
+
+    /*Synch transactions*/
+    void syncTransactions(Set<Integer> transactionsId) throws RemoteException;
 }

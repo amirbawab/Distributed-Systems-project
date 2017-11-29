@@ -759,4 +759,27 @@ public class ResourceManagerImpl implements ResourceManager {
         logger.info("Received a vote request for transaction " + tid + ". Sending YES");
         return true;
     }
+
+    @Override
+    public void healthCheck() throws RemoteException {
+        /*Do nothing*/
+    }
+
+    @Override
+    public void syncTransactions(Set<Integer> transactions) throws RemoteException {
+
+        // Keep track of wrong transactions
+        List<Integer> deleteTransactions = new ArrayList<>();
+        for (Integer key : m_tables.keySet()) {
+            if(key != GLOBAL_TABLE && !transactions.contains(key)) {
+                deleteTransactions.add(key);
+            }
+        }
+
+        // Delete transactions
+        for(Integer tid : deleteTransactions) {
+            logger.info("Transaction " + tid + " was not found while syncing.");
+            deleteTable(tid);
+        }
+    }
 }

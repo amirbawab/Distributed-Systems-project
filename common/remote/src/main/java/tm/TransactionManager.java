@@ -5,10 +5,7 @@ import lm.TransactionAbortedException;
 
 import javax.transaction.InvalidTransactionException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class TransactionManager implements ResourceManagerActions {
 
@@ -108,5 +105,13 @@ public class TransactionManager implements ResourceManagerActions {
     @Override
     public boolean voteRequest(int tid) throws RemoteException {
         return false;
+    }
+
+    /**
+     * Create a copy of the transaction key set
+     * @return key set
+     */
+    public Set<Integer> getTransactionsId() {
+        return new HashSet<>(m_transactionMap.keySet());
     }
 }
