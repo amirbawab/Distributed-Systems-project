@@ -1,7 +1,6 @@
 package lm;
 
-public class TrxnObj extends XObj
-{
+public class TrxnObj extends XObj {
     public static final int READ = 0;
     public static final int WRITE = 1;
     

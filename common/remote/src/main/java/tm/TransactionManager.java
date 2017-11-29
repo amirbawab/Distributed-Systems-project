@@ -2,12 +2,18 @@ package tm;
 
 import inter.ResourceManagerActions;
 import lm.TransactionAbortedException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.transaction.InvalidTransactionException;
+import java.io.*;
 import java.rmi.RemoteException;
 import java.util.*;
 
-public class TransactionManager implements ResourceManagerActions {
+public class TransactionManager implements ResourceManagerActions, Serializable {
+
+    // Logger
+    private static final Logger logger = LogManager.getLogger(TransactionManager.class);
 
     // Keep track of transactions
     private Map<Integer, Transaction> m_transactionMap;
@@ -48,6 +54,7 @@ public class TransactionManager implements ResourceManagerActions {
             throw new InvalidTransactionException("Transaction id " + id + " is not available");
         }
         m_transactionMap.remove(id);
+        writeTM();
     }
 
     /**
@@ -59,6 +66,7 @@ public class TransactionManager implements ResourceManagerActions {
     public int start() throws RemoteException {
        Transaction transaction = new Transaction(m_uniqId++);
        m_transactionMap.put(transaction.getXID(), transaction);
+       writeTM();
        return transaction.getXID();
     }
 
@@ -113,5 +121,45 @@ public class TransactionManager implements ResourceManagerActions {
      */
     public Set<Integer> getTransactionsId() {
         return new HashSet<>(m_transactionMap.keySet());
+    }
+
+    /**
+     * Get the TM file
+     * @return TM file
+     */
+    public File getTMFile() {
+        return new File("TM_table");
+    }
+
+    /**
+     * Write transaction manager to file
+     */
+    private synchronized void writeTM() {
+        File tmFile = getTMFile();
+        try(FileOutputStream fos = new FileOutputStream(tmFile); ObjectOutputStream obj = new ObjectOutputStream(fos)) {
+            obj.writeObject(this);
+            logger.info("File " + tmFile.getAbsolutePath() + " updated!");
+        } catch (IOException e) {
+            logger.error("Error writing file " + tmFile.getAbsolutePath() + ". Message: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Update last activity for this transcation
+     * @param id
+     * @throws InvalidTransactionException
+     */
+    public void updateLastActive(int id) throws InvalidTransactionException {
+        getTransaction(id).updateLastActive();
+    }
+
+    /**
+     * Add RM to transaction
+     * @param id
+     * @param rm
+     * @throws InvalidTransactionException
+     */
+    public void addRM(int id, String rm) throws InvalidTransactionException {
+        getTransaction(id).addRM(rm);
     }
 }
