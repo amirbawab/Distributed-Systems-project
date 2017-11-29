@@ -8,6 +8,7 @@ import lm.TransactionAbortedException;
 import lm.TrxnObj;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.omg.CORBA.COMM_FAILURE;
 import tm.Transaction;
 import tm.TransactionManager;
 
@@ -19,6 +20,8 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
@@ -53,6 +56,13 @@ class MiddlewareServer implements ResourceManager {
     private static String rmRMIRegistryIP;
     private static int rmRMIRegistryPort;
 
+    // Function call constants
+    private final int RF_COMMIT = 1;
+    private final int RF_ABORT = 2;
+
+    // Recover function call
+    private HashMap<Integer, Integer> m_recoverFunction;
+
     public static void main(String[] args) {
 
         // Figure out where server is running
@@ -72,9 +82,11 @@ class MiddlewareServer implements ResourceManager {
 
         // Initialize the transaction manager
         m_ms.m_tm = new TransactionManager();
+        m_ms.m_recoverFunction = new HashMap<>();
 
         // Try to load TM
         m_ms.loadTM();
+        m_ms.loadRF();
 
         // Connect to all RMs
         m_ms.connectToAllRm();
@@ -202,6 +214,84 @@ class MiddlewareServer implements ResourceManager {
         } else {
             logger.info("TM did not file a TM file to load. Starting empty");
         }
+    }
+
+    /**
+     * Commit RF
+     * @param tid
+     */
+    public void commitRF(int tid) {
+        m_recoverFunction.put(tid, RF_COMMIT);
+        writeRF();
+    }
+
+    /**
+     * Abort RF
+     * @param tid
+     */
+    public void abortRF(int tid) {
+        m_recoverFunction.put(tid, RF_ABORT);
+        writeRF();
+    }
+
+    /**
+     * Deleted RF
+     * @param tid
+     */
+    public void deleteRF(int tid) {
+        m_recoverFunction.remove(tid);
+        writeRF();
+    }
+
+    /**
+     * Get the TM file
+     * @return TM file
+     */
+    public File getRFFile() {
+        return new File("RF_table");
+    }
+
+    /**
+     * Write transaction manager to file
+     */
+    private synchronized void writeRF() {
+        File rfFile = getRFFile();
+        try(FileOutputStream fos = new FileOutputStream(rfFile); ObjectOutputStream obj = new ObjectOutputStream(fos)) {
+            obj.writeObject(m_recoverFunction);
+            logger.info("File " + rfFile.getAbsolutePath() + " updated!");
+        } catch (IOException e) {
+            logger.error("Error writing file " + rfFile.getAbsolutePath() + ". Message: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Load recovery function from file
+     */
+    private synchronized void loadRF() {
+        File rfFile = getRFFile();
+        if(rfFile.exists()) {
+            try (FileInputStream fis = new FileInputStream(rfFile); ObjectInputStream ois = new ObjectInputStream(fis)){
+                m_recoverFunction = (HashMap) ois.readObject();
+                logger.info("RF file " + rfFile.getAbsolutePath() + " loaded");
+            } catch (ClassNotFoundException | IOException e) {
+                logger.error("Error loading file " + rfFile.getAbsolutePath() + ". Message: " + e.getMessage());
+            }
+        } else {
+            logger.info("RF did not file a TM file to load. Starting empty");
+        }
+
+            // Reapply function on transactions
+            for(int tid : m_recoverFunction.keySet()) {
+                try {
+                    if(m_recoverFunction.get(tid) == RF_COMMIT) {
+                        commit(tid);
+                    } else if(m_recoverFunction.get(tid) == RF_ABORT) {
+                        abort(tid);
+                    }
+                } catch (Exception e) {
+                    logger.error("Error recovering commit/abort function call for transaction " + tid);
+                }
+            }
     }
 
     /**
@@ -693,7 +783,9 @@ class MiddlewareServer implements ResourceManager {
     }
 
     @Override
-    public boolean commit(int transactionId) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
+    public boolean commit(int transactionId) throws RemoteException, InvalidTransactionException, TransactionAbortedException {
+        // Update function
+        commitRF(transactionId);
         logger.info("Received a commit request on transaction " + transactionId);
         m_tm.updateLastActive(transactionId);
 
@@ -731,11 +823,13 @@ class MiddlewareServer implements ResourceManager {
             }
         }
         m_tm.removeTransaction(transactionId);
+        deleteRF(transactionId);
         return true;
     }
 
     @Override
     public void abort(int transactionId) throws RemoteException, InvalidTransactionException {
+        abortRF(transactionId);
         logger.info("Aborting transaction " + transactionId);
         m_tm.updateLastActive(transactionId);
         for(String rmStr : m_tm.getTransaction(transactionId).getRMs()) {
@@ -757,6 +851,7 @@ class MiddlewareServer implements ResourceManager {
             }
         }
         m_tm.removeTransaction(transactionId);
+        deleteRF(transactionId);
     }
 
     @Override
