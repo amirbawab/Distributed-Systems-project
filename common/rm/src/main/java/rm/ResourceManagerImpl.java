@@ -813,8 +813,8 @@ public class ResourceManagerImpl implements ResourceManager {
     }
 
     @Override
-    public boolean crashTM() throws RemoteException {
-        /*Do nothing*/
+    public boolean crash(String name) throws RemoteException {
+        System.exit(1);
         return false;
     }
 }

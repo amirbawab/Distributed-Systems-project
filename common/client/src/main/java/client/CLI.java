@@ -3,9 +3,11 @@ package client;
 import inter.ResourceManager;
 import inter.RMServerDownException;
 import inter.TMException;
+import lm.DeadlockException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.transaction.InvalidTransactionException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -488,17 +490,37 @@ public class CLI {
                             System.out.println("System could not shutdown because it is in use");
                         }
                         break;
-                    case CRASH_TM:
+                    case PING:
                         if (arguments.size() != 1) {
                             wrongNumber();
                             break;
                         }
 
-                        System.out.println("Crashing TM");
-                        if (m_resourceManager.crashTM()) {
-                            System.out.println("TM Crashed");
-                        } else {
-                            System.out.println("Couldn't crash TM");
+                        System.out.println("Ping system");
+                        m_resourceManager.healthCheck();
+                        break;
+                    case CRASH:
+                        if (arguments.size() != 2) {
+                            wrongNumber();
+                            break;
+                        }
+
+                        switch (arguments.elementAt(1)) {
+                            case "flight":
+                            case "car":
+                            case "room":
+                            case "ms":
+                            case "tm":
+                                System.out.println("Crashing " + arguments.elementAt(1));
+                                if (m_resourceManager.crash(arguments.elementAt(1))) {
+                                    System.out.println(arguments.elementAt(1) + " crashed");
+                                } else {
+                                    System.out.println("Could not crash " + arguments.elementAt(1));
+                                }
+
+                                break;
+                                default:
+                                    System.err.println("Unknown component " + arguments.elementAt(1));
                         }
                         break;
 
@@ -511,7 +533,12 @@ public class CLI {
                     logger.error("Transaction manager is crashed. Please try again later.");
                 } else if(e.getCause() instanceof RMServerDownException) {
                     logger.error("Internal server error (RM down)");
+                } else if(e.getCause() instanceof DeadlockException) {
+                    logger.error(e.getCause().getMessage());
+                } else if(e.getCause() instanceof InvalidTransactionException) {
+                    logger.error(e.getCause().getMessage());
                 } else {
+                    logger.debug("Exception cause: " + e.getCause().getClass().getSimpleName());
                     onMSCrash();
                 }
             } catch(Exception e){
@@ -756,10 +783,17 @@ public class CLI {
                 System.out.println("\nUsage:");
                 System.out.println("\t" + command.getName());
                 break;
-            case CRASH_TM:
-                System.out.println("Crash transaction manager");
+            case CRASH:
+                System.out.println("Crash component");
                 System.out.println("Purpose:");
-                System.out.println("\tCrash transaction manager");
+                System.out.println("\tCrash a component");
+                System.out.println("\nUsage:");
+                System.out.println("\t" + command.getName() + ",<tm|flight|car|room|ms>");
+                break;
+            case PING:
+                System.out.println("Ping MS");
+                System.out.println("Purpose:");
+                System.out.println("\tPing MS");
                 System.out.println("\nUsage:");
                 System.out.println("\t" + command.getName());
                 break;

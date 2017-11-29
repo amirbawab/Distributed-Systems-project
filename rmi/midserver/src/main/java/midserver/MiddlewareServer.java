@@ -314,7 +314,7 @@ class MiddlewareServer implements ResourceManager {
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
-                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (RemoteException e) {
@@ -335,7 +335,7 @@ class MiddlewareServer implements ResourceManager {
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
-                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (RemoteException e) {
@@ -356,7 +356,7 @@ class MiddlewareServer implements ResourceManager {
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
-                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (RemoteException e) {
@@ -384,7 +384,7 @@ class MiddlewareServer implements ResourceManager {
                     } catch (DeadlockException e) {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
-                        throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                        throw e;
                     } catch (NullPointerException e) {
                         throw new TMException();
                     } catch (RemoteException e) {
@@ -415,7 +415,7 @@ class MiddlewareServer implements ResourceManager {
                     } catch (DeadlockException e) {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
-                        throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                        throw e;
                     } catch (NullPointerException e) {
                         throw new TMException();
                     } catch (RemoteException e) {
@@ -438,7 +438,7 @@ class MiddlewareServer implements ResourceManager {
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
-                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (RemoteException e) {
@@ -459,7 +459,7 @@ class MiddlewareServer implements ResourceManager {
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
-                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (RemoteException e) {
@@ -480,7 +480,7 @@ class MiddlewareServer implements ResourceManager {
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
-                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (RemoteException e) {
@@ -509,7 +509,7 @@ class MiddlewareServer implements ResourceManager {
                     } catch (DeadlockException e) {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
-                        throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                        throw e;
                     } catch (NullPointerException e) {
                         throw new TMException();
                     } catch (RemoteException e) {
@@ -532,7 +532,7 @@ class MiddlewareServer implements ResourceManager {
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
-                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (RemoteException e) {
@@ -552,7 +552,7 @@ class MiddlewareServer implements ResourceManager {
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
-                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (RemoteException e) {
@@ -573,7 +573,7 @@ class MiddlewareServer implements ResourceManager {
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
-                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (RemoteException e) {
@@ -603,7 +603,7 @@ class MiddlewareServer implements ResourceManager {
                     } catch (DeadlockException e) {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
-                        throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                        throw e;
                     } catch (NullPointerException e) {
                         throw new TMException();
                     } catch (RemoteException e) {
@@ -626,7 +626,7 @@ class MiddlewareServer implements ResourceManager {
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
-                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (RemoteException e) {
@@ -647,7 +647,7 @@ class MiddlewareServer implements ResourceManager {
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
-                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (RemoteException e) {
@@ -668,7 +668,7 @@ class MiddlewareServer implements ResourceManager {
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
-                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (RemoteException e) {
@@ -689,7 +689,7 @@ class MiddlewareServer implements ResourceManager {
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
-                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (RemoteException e) {
@@ -710,7 +710,7 @@ class MiddlewareServer implements ResourceManager {
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
-                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (RemoteException e) {
@@ -731,7 +731,7 @@ class MiddlewareServer implements ResourceManager {
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
-                throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (RemoteException e) {
@@ -799,7 +799,7 @@ class MiddlewareServer implements ResourceManager {
                     } catch (DeadlockException e) {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
-                        throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                        throw e;
                     } catch (NullPointerException e) {
                         throw new TMException();
                     } catch (RemoteException e) {
@@ -900,6 +900,9 @@ class MiddlewareServer implements ResourceManager {
             deleteRF(transactionId);
         } catch (NullPointerException e) {
             throw new TMException();
+        } catch (InvalidTransactionException e) {
+            logger.warn("Transaction " + transactionId + " was not found. Will delete from RF");
+            deleteRF(transactionId);
         }
     }
 
@@ -972,31 +975,62 @@ class MiddlewareServer implements ResourceManager {
     }
 
     @Override
-    public boolean crashTM() throws RemoteException {
-        logger.info("Received TM crash request");
-        if(m_tm == null) {
-            logger.warn("TM is crashed already. Won't crash again");
-            return false;
+    public boolean crash(String comp) throws RemoteException {
+        switch (comp) {
+            case "tm":
+                logger.info("Received TM crash request");
+                if(m_tm == null) {
+                    logger.warn("TM is crashed already. Won't crash again");
+                    return false;
+                }
+
+                // Write TM just in case
+                m_tm.writeTM();
+
+                // Unbind TM
+                m_tm = null;
+                logger.info("TM is now crashed");
+
+                final int TM_SLEEP = 10000;
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(TM_SLEEP);
+                        loadTM();
+                        logger.info("TM is now up and running");
+                    } catch (InterruptedException e) {
+                        logger.error("Failed to sleep");
+                    }
+                }).start();
+                return true;
+
+            case "ms":
+                logger.info("MS will crash now");
+                System.exit(1);
+                break;
+
+            case "flight":
+                try {
+                    logger.info("Trying to crash flight RM");
+                    m_flightRM.crash(null);
+                } catch (Exception e) {}
+                return true;
+
+            case "car":
+                try {
+                    logger.info("Trying to crash car RM");
+                    m_carRM.crash(null);
+                } catch (Exception e) {}
+                return true;
+
+            case "room":
+                try {
+                    logger.info("Trying to crash room RM");
+                    m_roomRM.crash(null);
+                } catch (Exception e) {}
+                return true;
         }
-
-        // Write TM just in case
-        m_tm.writeTM();
-
-        // Unbind TM
-        m_tm = null;
-        logger.info("TM is now crashed");
-
-        final int TM_SLEEP = 10000;
-        new Thread(() -> {
-            try {
-                Thread.sleep(TM_SLEEP);
-                loadTM();
-                logger.info("TM is now up and running");
-            } catch (InterruptedException e) {
-                logger.error("Failed to sleep");
-            }
-        }).start();
-        return true;
+        logger.warn("Unknown component to crash");
+        return false;
     }
 
     @Override
