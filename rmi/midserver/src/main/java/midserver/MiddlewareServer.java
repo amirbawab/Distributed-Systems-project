@@ -173,7 +173,7 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock) {
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_flightRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_FLIGHT_REF);
                 return m_flightRM.addFlight(m_tm.getTransaction(id).getXID(), flightNum, flightSeats, flightPrice);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -188,7 +188,7 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock) {
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_carRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_CAR_REF);
                 return m_carRM.addCars(m_tm.getTransaction(id).getXID(), location, numCars, price);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -203,7 +203,7 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock){
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_roomRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_ROOM_REF);
                 return m_roomRM.addRooms(m_tm.getTransaction(id).getXID(), location, numRooms, price);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -218,9 +218,9 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock) {
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_roomRM);
-                m_tm.getTransaction(id).addRM(m_carRM);
-                m_tm.getTransaction(id).addRM(m_flightRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_ROOM_REF);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_CAR_REF);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_FLIGHT_REF);
                 int cid = m_carRM.newCustomer(m_tm.getTransaction(id).getXID());
                 m_roomRM.newCustomer(id, cid);
                 m_flightRM.newCustomer(id, cid);
@@ -239,9 +239,9 @@ class MiddlewareServer implements ResourceManager {
             try {
                 id = m_tm.getTransaction(id).getXID();
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_flightRM);
-                m_tm.getTransaction(id).addRM(m_carRM);
-                m_tm.getTransaction(id).addRM(m_roomRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_FLIGHT_REF);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_CAR_REF);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_ROOM_REF);
                 boolean flight = m_flightRM.newCustomer(id, cid);
                 boolean car = m_carRM.newCustomer(id, cid);
                 boolean room = m_roomRM.newCustomer(id, cid);
@@ -259,7 +259,7 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock) {
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_flightRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_FLIGHT_REF);
                 return m_flightRM.deleteFlight(m_tm.getTransaction(id).getXID(), flightNum);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -274,7 +274,7 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock) {
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_carRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_CAR_REF);
                 return m_carRM.deleteCars(m_tm.getTransaction(id).getXID(), location);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -289,7 +289,7 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock) {
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_roomRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_ROOM_REF);
                 return m_roomRM.deleteRooms(m_tm.getTransaction(id).getXID(), location);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -305,9 +305,9 @@ class MiddlewareServer implements ResourceManager {
             try {
                 id = m_tm.getTransaction(id).getXID();
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_roomRM);
-                m_tm.getTransaction(id).addRM(m_carRM);
-                m_tm.getTransaction(id).addRM(m_flightRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_ROOM_REF);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_CAR_REF);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_FLIGHT_REF);
                 return m_roomRM.deleteCustomer(id, customer) &
                         m_carRM.deleteCustomer(id, customer) &
                         m_flightRM.deleteCustomer(id, customer);
@@ -324,7 +324,7 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock) {
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_flightRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_FLIGHT_REF);
                 return m_flightRM.queryFlight(m_tm.getTransaction(id).getXID(), flightNumber);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -338,7 +338,7 @@ class MiddlewareServer implements ResourceManager {
     public int queryCars(int id, String location) throws RemoteException {
         synchronized (lock) {
             try {
-                m_tm.getTransaction(id).addRM(m_carRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_CAR_REF);
                 return m_carRM.queryCars(m_tm.getTransaction(id).getXID(), location);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -353,7 +353,7 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock) {
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_roomRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_ROOM_REF);
                 return m_roomRM.queryRooms(m_tm.getTransaction(id).getXID(), location);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -368,9 +368,9 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock) {
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_carRM);
-                m_tm.getTransaction(id).addRM(m_flightRM);
-                m_tm.getTransaction(id).addRM(m_roomRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_CAR_REF);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_FLIGHT_REF);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_ROOM_REF);
                 StringBuilder sb = new StringBuilder();
                 id = m_tm.getTransaction(id).getXID();
                 sb.append("\nCar info:\n").append(m_carRM.queryCustomerInfo(id, customer))
@@ -390,7 +390,7 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock) {
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_flightRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_FLIGHT_REF);
                 return m_flightRM.queryFlightPrice(m_tm.getTransaction(id).getXID(), flightNumber);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -405,7 +405,7 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock) {
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_carRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_CAR_REF);
                 return m_carRM.queryCarsPrice(m_tm.getTransaction(id).getXID(), location);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -420,7 +420,7 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock) {
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_roomRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_ROOM_REF);
                 return m_roomRM.queryRoomsPrice(m_tm.getTransaction(id).getXID(), location);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -435,7 +435,7 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock) {
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_flightRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_FLIGHT_REF);
                 return m_flightRM.reserveFlight(m_tm.getTransaction(id).getXID(), customer, flightNumber);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -450,7 +450,7 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock) {
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_carRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_CAR_REF);
                 return m_carRM.reserveCar(m_tm.getTransaction(id).getXID(), customer, location);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -465,7 +465,7 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lock) {
             try {
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_roomRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_ROOM_REF);
                 return m_roomRM.reserveRoom(m_tm.getTransaction(id).getXID(), customer, locationd);
             } catch (DeadlockException e) {
                 logger.error(e.getMessage());
@@ -482,9 +482,9 @@ class MiddlewareServer implements ResourceManager {
             try {
                 id = m_tm.getTransaction(id).getXID();
                 m_tm.getTransaction(id).updateLastActive();
-                m_tm.getTransaction(id).addRM(m_flightRM);
-                m_tm.getTransaction(id).addRM(m_carRM);
-                m_tm.getTransaction(id).addRM(m_roomRM);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_FLIGHT_REF);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_CAR_REF);
+                m_tm.getTransaction(id).addRM(ResourceManager.RM_ROOM_REF);
 
                 // Check if can reserve flight
                 for(Object fNum : flightNumbers) {
@@ -555,14 +555,18 @@ class MiddlewareServer implements ResourceManager {
         }
 
         // Apply commits
-        for(ResourceManager rm : m_tm.getTransaction(transactionId).getRMs()) {
+        for(String rmStr : m_tm.getTransaction(transactionId).getRMs()) {
+            ResourceManager rm = null;
             String name = "UNKNOWN";
-            if(rm == m_carRM) {
+            if(rmStr.equals(ResourceManager.RM_CAR_REF)) {
                 name = "Car";
-            } else if(rm == m_flightRM) {
+                rm = m_carRM;
+            } else if(rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
                 name = "Flight";
-            } else if(rm == m_roomRM) {
+                rm = m_flightRM;
+            } else if(rmStr.equals(ResourceManager.RM_ROOM_REF)) {
                 name = "Room";
+                rm = m_roomRM;
             }
             logger.info("Commit on RM " + name);
             rm.commit(transactionId);
@@ -575,8 +579,16 @@ class MiddlewareServer implements ResourceManager {
     public void abort(int transactionId) throws RemoteException, InvalidTransactionException {
         logger.info("Aborting transaction " + transactionId);
         m_tm.getTransaction(transactionId).updateLastActive();
-        for(ResourceManager rm : m_tm.getTransaction(transactionId).getRMs()) {
-            rm.abort(transactionId);
+        for(String rmStr : m_tm.getTransaction(transactionId).getRMs()) {
+            if(rmStr.equals(ResourceManager.RM_ROOM_REF)) {
+                m_roomRM.abort(transactionId);
+            } else if(rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
+                m_flightRM.abort(transactionId);
+            } else if(rmStr.equals(ResourceManager.RM_CAR_REF)) {
+                m_carRM.abort(transactionId);
+            } else {
+                throw new RuntimeException("Unknow resource manager");
+            }
         }
         m_tm.removeTransaction(transactionId);
     }
@@ -610,14 +622,20 @@ class MiddlewareServer implements ResourceManager {
 
     @Override
     public boolean voteRequest(int tid) throws RemoteException {
-        for(ResourceManager rm : m_tm.getTransaction(tid).getRMs()) {
+        for(String rmStr : m_tm.getTransaction(tid).getRMs()) {
             String name = "UNKNOWN";
-            if(rm == m_carRM) {
+            ResourceManager rm = null;
+            if(rmStr.equals(ResourceManager.RM_CAR_REF)) {
                 name = "Car";
-            } else if(rm == m_flightRM) {
+                rm = m_carRM;
+            } else if(rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
                 name = "Flight";
-            } else if(rm == m_roomRM) {
+                rm = m_flightRM;
+            } else if(rmStr.equals(ResourceManager.RM_ROOM_REF)) {
                 name = "Room";
+                rm = m_roomRM;
+            } else {
+                throw new RuntimeException("Unknown resource manager");
             }
             boolean vr = rm.voteRequest(tid);
             logger.info("RM " + name + " replied with a " + (vr ? "YES" : "NO"));
