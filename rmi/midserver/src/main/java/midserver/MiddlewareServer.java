@@ -226,6 +226,10 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (RemoteException e) {
+                onRMCrash();
+                abort(id);
+                throw new ServerDownException();
             }
         }
     }
@@ -241,6 +245,10 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (RemoteException e) {
+                onRMCrash();
+                abort(id);
+                throw new ServerDownException();
             }
         }
     }
@@ -263,6 +271,10 @@ class MiddlewareServer implements ResourceManager {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
                         throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                    } catch (RemoteException e) {
+                        onRMCrash();
+                        abort(id);
+                        throw new ServerDownException();
                     }
                 }
             }
@@ -288,6 +300,10 @@ class MiddlewareServer implements ResourceManager {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
                         throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                    } catch (RemoteException e) {
+                        onRMCrash();
+                        abort(id);
+                        throw new ServerDownException();
                     }
                 }
             }
@@ -305,6 +321,10 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (RemoteException e) {
+                onRMCrash();
+                abort(id);
+                throw new ServerDownException();
             }
         }
     }
@@ -320,6 +340,10 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (RemoteException e) {
+                onRMCrash();
+                abort(id);
+                throw new ServerDownException();
             }
         }
     }
@@ -335,6 +359,10 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (RemoteException e) {
+                onRMCrash();
+                abort(id);
+                throw new ServerDownException();
             }
         }
     }
@@ -358,6 +386,10 @@ class MiddlewareServer implements ResourceManager {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
                         throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                    } catch (RemoteException e) {
+                        onRMCrash();
+                        abort(id);
+                        throw new ServerDownException();
                     }
                 }
             }
@@ -375,6 +407,10 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (RemoteException e) {
+                onRMCrash();
+                abort(id);
+                throw new ServerDownException();
             }
         }
     }
@@ -389,6 +425,10 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (RemoteException e) {
+                onRMCrash();
+                abort(id);
+                throw new ServerDownException();
             }
         }
     }
@@ -404,6 +444,10 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (RemoteException e) {
+                onRMCrash();
+                abort(id);
+                throw new ServerDownException();
             }
         }
     }
@@ -428,6 +472,10 @@ class MiddlewareServer implements ResourceManager {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
                         throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                    } catch (RemoteException e) {
+                        onRMCrash();
+                        abort(id);
+                        throw new ServerDownException();
                     }
                 }
             }
@@ -445,6 +493,10 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (RemoteException e) {
+                onRMCrash();
+                abort(id);
+                throw new ServerDownException();
             }
         }
     }
@@ -460,6 +512,10 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (RemoteException e) {
+                onRMCrash();
+                abort(id);
+                throw new ServerDownException();
             }
         }
     }
@@ -475,6 +531,10 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (RemoteException e) {
+                onRMCrash();
+                abort(id);
+                throw new ServerDownException();
             }
         }
     }
@@ -490,6 +550,10 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (RemoteException e) {
+                onRMCrash();
+                abort(id);
+                throw new ServerDownException();
             }
         }
     }
@@ -505,6 +569,10 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (RemoteException e) {
+                onRMCrash();
+                abort(id);
+                throw new ServerDownException();
             }
         }
     }
@@ -520,6 +588,10 @@ class MiddlewareServer implements ResourceManager {
                 logger.error(e.getMessage());
                 abort(e.GetXId());
                 throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+            } catch (RemoteException e) {
+                onRMCrash();
+                abort(id);
+                throw new ServerDownException();
             }
         }
     }
@@ -582,6 +654,10 @@ class MiddlewareServer implements ResourceManager {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
                         throw new InvalidTransactionException("Request aborted: Deadlock detected ...");
+                    } catch (RemoteException e) {
+                        onRMCrash();
+                        abort(id);
+                        throw new ServerDownException();
                     }
                 }
             }
