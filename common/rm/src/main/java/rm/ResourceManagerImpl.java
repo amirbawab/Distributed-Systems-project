@@ -586,6 +586,7 @@ public class ResourceManagerImpl implements ResourceManager {
 
     @Override
     public boolean commit(int transactionId) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
+        logger.info("Received a commit request for transaction " + transactionId);
         // Crash case: CC_12
         if(m_crashCase[CC_12]) {
             crash(null);
@@ -610,6 +611,7 @@ public class ResourceManagerImpl implements ResourceManager {
             deleteTable(transactionId);
             writeTable(GLOBAL_TABLE);
             m_vrMap.put(transactionId, VR_COMMITED);
+            logger.info("Commit for transaction " + transactionId + " has been successfully performed");
             return true;
         }
         throw new InvalidTransactionException("Transaction id " + transactionId + " is not available");
