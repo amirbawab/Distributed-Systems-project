@@ -801,7 +801,7 @@ public class ResourceManagerImpl implements ResourceManager {
             m_vrMap.put(tid, VR_REQUESTED);
             answer = true;
         } else if(m_vrMap.get(tid) == VR_REQUESTED) {
-            logger.warn("Received a vote request, will resend a YES");
+            logger.warn("Received same vote request, will resend a YES");
             answer = true;
         } else if(m_vrMap.get(tid) == VR_COMMITED) {
             logger.warn("Received a vote request but already committed. Sending a YES but commit will be ignored");
