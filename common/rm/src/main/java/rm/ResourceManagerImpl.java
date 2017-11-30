@@ -42,6 +42,9 @@ public class ResourceManagerImpl implements ResourceManager {
     private final int VR_COMMITED = 2;
     private final int VR_ABORT = 3;
 
+    // Crash case array
+    private boolean[] m_crashCase = new boolean[ResourceManager.CC_TOTAL];
+
     // Vote request
     private Map<Integer, Integer> m_vrMap;
 
@@ -772,6 +775,16 @@ public class ResourceManagerImpl implements ResourceManager {
 
     @Override
     public boolean voteRequest(int tid) throws RemoteException {
+
+        // Crash case: CC_2
+        if(m_crashCase[ResourceManager.CC_2]) {
+            try {
+                Thread.sleep(Long.MAX_VALUE);
+            } catch (InterruptedException e) {
+                logger.error("Failed to sleep in CC_2");
+            }
+        }
+
         if(!m_vrMap.containsKey(tid)) {
             logger.info("Received a vote request for transaction " + tid + ". Sending YES");
             m_vrMap.put(tid, VR_REQUESTED);
@@ -819,7 +832,37 @@ public class ResourceManagerImpl implements ResourceManager {
     }
 
     @Override
-    public void crashCase(int id) throws RemoteException {
+    public boolean crashCase(int id) throws RemoteException {
+        // Do nothing
+        return false;
+    }
 
+    /**
+     * Select crash case
+     * @param id
+     */
+    @Override
+    public void setCrashCase(int id) {
+        for(int i=0; i < m_crashCase.length; i++) {
+            if(i == id) {
+                m_crashCase[i] = true;
+            } else {
+                m_crashCase[i] = false;
+            }
+        }
+    }
+
+    /**
+     * Get crash case index
+     * @return
+     */
+    @Override
+    public int getCrashCase() {
+        for(int i=0; i<m_crashCase.length; i++) {
+            if(m_crashCase[i]) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

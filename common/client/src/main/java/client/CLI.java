@@ -534,7 +534,11 @@ public class CLI {
                             break;
                         }
                         System.out.println("Simulating crash case #" + Id);
-                        m_resourceManager.crashCase(Id);
+                        if(m_resourceManager.crashCase(Id)) {
+                            System.out.println("Flag was set, now you can perform the use case");
+                        } else {
+                            System.err.println("An error occurred while applying this use case. Please see the MS logs");
+                        }
                         break;
 
                     default:

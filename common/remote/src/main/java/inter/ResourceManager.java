@@ -29,6 +29,8 @@ public interface ResourceManager extends Remote, ResourceManagerActions {
     String RM_FLIGHT_REF = "flight";
 
     // Crash cases
+    int CC_TOTAL = 50;
+    int CC_0 = 0;
     int CC_1 = 1;
     int CC_2 = 2;
     int CC_3 = 3;
@@ -242,5 +244,11 @@ public interface ResourceManager extends Remote, ResourceManagerActions {
     boolean crash(String comp) throws RemoteException;
 
     /*Crash case*/
-    void crashCase(int id) throws RemoteException;
+    boolean crashCase(int id) throws RemoteException;
+
+    /*Set crash case*/
+    void setCrashCase(int id) throws RemoteException;
+
+    /*Get crash case*/
+    int getCrashCase() throws RemoteException;
 }

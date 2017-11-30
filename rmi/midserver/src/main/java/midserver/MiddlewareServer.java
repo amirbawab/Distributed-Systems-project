@@ -57,8 +57,18 @@ class MiddlewareServer implements ResourceManager {
     private final int RF_COMMIT = 1;
     private final int RF_ABORT = 2;
 
+    // Crash component constants
+    private final String COMP_MS = "ms";
+    private final String COMP_FLIGHT = "flight";
+    private final String COMP_ROOM = "room";
+    private final String COMP_CAR = "car";
+    private final String COMP_TM = "tm";
+
     // Recover function call
     private HashMap<Integer, Integer> m_recoverFunction;
+
+    // Crash case
+    private boolean[] m_crashCase = new boolean[ResourceManager.CC_TOTAL];
 
     public static void main(String[] args) {
 
@@ -831,9 +841,36 @@ class MiddlewareServer implements ResourceManager {
             logger.info("Received a commit request on transaction " + transactionId);
             m_tm.updateLastActive(transactionId);
 
+            // Crash case: CC_1
+            if(m_crashCase[CC_1]) {
+                crash(COMP_MS);
+            }
+
+            // Crash case: CC_2
+            if(m_crashCase[CC_2]) {
+                new Thread(()->{
+                    try {
+                        try {
+                            Thread.sleep(5000);
+                        } catch (InterruptedException e) {
+                            logger.error("Failed to sleep CC_2");
+                        }
+                        crash(COMP_MS);
+                    } catch (RemoteException e) {/*Will not throw exception*/}
+                }).start();
+            }
+
             // 2PC
             logger.info("Applying 2 phase commit on all involved RMs");
-            if (!voteRequest(transactionId)) {
+            boolean allVR = voteRequest(transactionId);
+
+            // Crash case: CC_4 || CC_5
+            if(m_crashCase[CC_4] || m_crashCase[CC_5]) {
+                crash(COMP_MS);
+            }
+
+            // If at least one VR replied NO, then abort
+            if(!allVR) {
                 abort(transactionId);
                 return false;
             }
@@ -858,6 +895,11 @@ class MiddlewareServer implements ResourceManager {
                         }
                         logger.info("Commit on RM " + name);
                         rm.commit(transactionId);
+
+                        // Crash case: CC_6
+                        if(m_crashCase[CC_6]) {
+                            crash(COMP_MS);
+                        }
                         break;
                     } catch (RemoteException e) {
                         onRMCrash();
@@ -866,6 +908,11 @@ class MiddlewareServer implements ResourceManager {
             }
             m_tm.removeTransaction(transactionId);
             deleteRF(transactionId);
+
+            // Crash case: CC_7
+            if(m_crashCase[CC_7]) {
+                crash(COMP_MS);
+            }
             return true;
         } catch (NullPointerException e) {
             throw new TMException();
@@ -962,6 +1009,12 @@ class MiddlewareServer implements ResourceManager {
                         if (!vr) {
                             return false;
                         }
+
+                        // Crash case: CC_3
+                        if(m_crashCase[CC_3]) {
+                            crash(COMP_MS);
+                        }
+
                         break;
                     } catch (RemoteException e) {
                         onRMCrash();
@@ -977,7 +1030,7 @@ class MiddlewareServer implements ResourceManager {
     @Override
     public boolean crash(String comp) throws RemoteException {
         switch (comp) {
-            case "tm":
+            case COMP_TM:
                 logger.info("Received TM crash request");
                 if(m_tm == null) {
                     logger.warn("TM is crashed already. Won't crash again");
@@ -1003,26 +1056,26 @@ class MiddlewareServer implements ResourceManager {
                 }).start();
                 return true;
 
-            case "ms":
+            case COMP_MS:
                 logger.info("MS will crash now");
                 System.exit(1);
                 break;
 
-            case "flight":
+            case COMP_FLIGHT:
                 try {
                     logger.info("Trying to crash flight RM");
                     m_flightRM.crash(null);
                 } catch (Exception e) {}
                 return true;
 
-            case "car":
+            case COMP_CAR:
                 try {
                     logger.info("Trying to crash car RM");
                     m_carRM.crash(null);
                 } catch (Exception e) {}
                 return true;
 
-            case "room":
+            case COMP_ROOM:
                 try {
                     logger.info("Trying to crash room RM");
                     m_roomRM.crash(null);
@@ -1044,15 +1097,75 @@ class MiddlewareServer implements ResourceManager {
     }
 
     @Override
-    public void crashCase(int id) throws RemoteException {
+    public boolean crashCase(int id) throws RemoteException {
         switch (id) {
             case CC_8:
             case CC_13:
                 logger.info("Crash case " + id + " cannot recover from the system, this has to be done manually");
-                break;
+                return false;
 
+            case CC_0:
             case CC_1:
-                break;
+            case CC_2:
+            case CC_3:
+            case CC_4:
+            case CC_5:
+            case CC_6:
+            case CC_7:
+            case CC_9:
+            case CC_10:
+            case CC_11:
+            case CC_12:
+                logger.info("Will perform crash case " + id);
+                try {
+                    setCrashCase(id);
+                } catch (Exception e) {
+                    logger.error("Failed to set crash case flag");
+                    try {
+                        // Reset flags on crash
+                        setCrashCase(ResourceManager.CC_0);
+                    } catch (Exception e2){}
+                    return false;
+                }
+                return true;
+            default:
+                return false;
         }
+    }
+
+    /**
+     * Select crash case
+     * @param id
+     */
+    @Override
+    public void setCrashCase(int id) throws RemoteException {
+
+        // Set for current object
+        for(int i=0; i < m_crashCase.length; i++) {
+            if(i == id) {
+                m_crashCase[i] = true;
+            } else {
+                m_crashCase[i] = false;
+            }
+        }
+
+        // Set for RMs
+        m_roomRM.setCrashCase(id);
+        m_carRM.setCrashCase(id);
+        m_flightRM.setCrashCase(id);
+    }
+
+    /**
+     * Get crash case index
+     * @return
+     */
+    @Override
+    public int getCrashCase() {
+        for(int i=0; i<m_crashCase.length; i++) {
+            if(m_crashCase[i]) {
+                return i;
+            }
+        }
+        return -1;
     }
 }
