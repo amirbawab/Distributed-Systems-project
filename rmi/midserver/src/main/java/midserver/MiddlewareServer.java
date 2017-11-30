@@ -327,6 +327,8 @@ class MiddlewareServer implements ResourceManager {
                 throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
+            } catch (InvalidTransactionException e) {
+                throw e;
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
@@ -348,6 +350,8 @@ class MiddlewareServer implements ResourceManager {
                 throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
+            } catch (InvalidTransactionException e) {
+                throw e;
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
@@ -369,6 +373,8 @@ class MiddlewareServer implements ResourceManager {
                 throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
+            } catch (InvalidTransactionException e) {
+                throw e;
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
@@ -397,6 +403,8 @@ class MiddlewareServer implements ResourceManager {
                         throw e;
                     } catch (NullPointerException e) {
                         throw new TMException();
+                    } catch (InvalidTransactionException e) {
+                        throw e;
                     } catch (RemoteException e) {
                         onRMCrash();
                         abort(id);
@@ -428,6 +436,8 @@ class MiddlewareServer implements ResourceManager {
                         throw e;
                     } catch (NullPointerException e) {
                         throw new TMException();
+                    } catch (InvalidTransactionException e) {
+                        throw e;
                     } catch (RemoteException e) {
                         onRMCrash();
                         abort(id);
@@ -451,6 +461,8 @@ class MiddlewareServer implements ResourceManager {
                 throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
+            } catch (InvalidTransactionException e) {
+                throw e;
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
@@ -472,6 +484,8 @@ class MiddlewareServer implements ResourceManager {
                 throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
+            } catch (InvalidTransactionException e) {
+                throw e;
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
@@ -493,6 +507,8 @@ class MiddlewareServer implements ResourceManager {
                 throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
+            } catch (InvalidTransactionException e) {
+                throw e;
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
@@ -522,6 +538,8 @@ class MiddlewareServer implements ResourceManager {
                         throw e;
                     } catch (NullPointerException e) {
                         throw new TMException();
+                    } catch (InvalidTransactionException e) {
+                        throw e;
                     } catch (RemoteException e) {
                         onRMCrash();
                         abort(id);
@@ -545,6 +563,8 @@ class MiddlewareServer implements ResourceManager {
                 throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
+            } catch (InvalidTransactionException e) {
+                throw e;
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
@@ -565,6 +585,8 @@ class MiddlewareServer implements ResourceManager {
                 throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
+            } catch (InvalidTransactionException e) {
+                throw e;
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
@@ -586,6 +608,8 @@ class MiddlewareServer implements ResourceManager {
                 throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
+            } catch (InvalidTransactionException e) {
+                throw e;
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
@@ -616,6 +640,8 @@ class MiddlewareServer implements ResourceManager {
                         throw e;
                     } catch (NullPointerException e) {
                         throw new TMException();
+                    } catch (InvalidTransactionException e) {
+                        throw e;
                     } catch (RemoteException e) {
                         onRMCrash();
                         abort(id);
@@ -639,6 +665,8 @@ class MiddlewareServer implements ResourceManager {
                 throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
+            } catch (InvalidTransactionException e) {
+                throw e;
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
@@ -660,6 +688,8 @@ class MiddlewareServer implements ResourceManager {
                 throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
+            } catch (InvalidTransactionException e) {
+                throw e;
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
@@ -681,6 +711,8 @@ class MiddlewareServer implements ResourceManager {
                 throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
+            } catch (InvalidTransactionException e) {
+                throw e;
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
@@ -702,6 +734,8 @@ class MiddlewareServer implements ResourceManager {
                 throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
+            } catch (InvalidTransactionException e) {
+                throw e;
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
@@ -723,6 +757,8 @@ class MiddlewareServer implements ResourceManager {
                 throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
+            } catch (InvalidTransactionException e) {
+                throw e;
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
@@ -744,6 +780,8 @@ class MiddlewareServer implements ResourceManager {
                 throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
+            } catch (InvalidTransactionException e) {
+                throw e;
             } catch (RemoteException e) {
                 onRMCrash();
                 abort(id);
@@ -812,6 +850,8 @@ class MiddlewareServer implements ResourceManager {
                         throw e;
                     } catch (NullPointerException e) {
                         throw new TMException();
+                    } catch (InvalidTransactionException e) {
+                        throw e;
                     } catch (RemoteException e) {
                         onRMCrash();
                         abort(id);
@@ -828,6 +868,8 @@ class MiddlewareServer implements ResourceManager {
             int transactionId = m_tm.start();
             logger.info("Started a new transaction with id: " + transactionId);
             return transactionId;
+        } catch (InvalidTransactionException e) {
+            throw e;
         } catch (NullPointerException e) {
             throw new TMException();
         }
@@ -914,6 +956,8 @@ class MiddlewareServer implements ResourceManager {
                 crash(COMP_MS);
             }
             return true;
+        } catch (InvalidTransactionException e) {
+            throw e;
         } catch (NullPointerException e) {
             throw new TMException();
         }
@@ -950,6 +994,7 @@ class MiddlewareServer implements ResourceManager {
         } catch (InvalidTransactionException e) {
             logger.warn("Transaction " + transactionId + " was not found. Will delete from RF");
             deleteRF(transactionId);
+            throw e;
         }
     }
 
@@ -979,6 +1024,8 @@ class MiddlewareServer implements ResourceManager {
                 logger.info("Will not shutdown because there are still transactions");
             }
             return false;
+        } catch (InvalidTransactionException e) {
+            throw e;
         } catch (NullPointerException e) {
             throw new TMException();
         }
@@ -1022,6 +1069,8 @@ class MiddlewareServer implements ResourceManager {
                 }
             }
             return true;
+        } catch (InvalidTransactionException e) {
+            throw e;
         } catch (NullPointerException e) {
             throw new TMException();
         }
