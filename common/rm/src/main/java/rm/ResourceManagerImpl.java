@@ -812,16 +812,6 @@ public class ResourceManagerImpl implements ResourceManager {
         } else if(m_vrMap.get(tid) == VR_ABORT) {
             logger.warn("Sending a NO because already aborted");
         }
-
-        // Crash case: CC_10 || CC_11
-        if(m_crashCase[CC_10] || m_crashCase[CC_11]) {
-            new Thread(() -> {
-                try {
-                    Thread.sleep(5000);
-                    crash(null);
-                } catch (Exception e) {/*Will not crash*/}
-            }).start();
-        }
         return answer;
     }
 

@@ -1048,13 +1048,13 @@ class MiddlewareServer implements ResourceManager {
                         String name = "UNKNOWN";
                         ResourceManager rm = null;
                         if (rmStr.equals(ResourceManager.RM_CAR_REF)) {
-                            name = "Car";
+                            name = "car";
                             rm = m_carRM;
                         } else if (rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
-                            name = "Flight";
+                            name = "flight";
                             rm = m_flightRM;
                         } else if (rmStr.equals(ResourceManager.RM_ROOM_REF)) {
-                            name = "Room";
+                            name = "room";
                             rm = m_roomRM;
                         } else {
                             throw new RuntimeException("Unknown resource manager");
@@ -1063,6 +1063,11 @@ class MiddlewareServer implements ResourceManager {
                         logger.info("RM " + name + " replied with a " + (vr ? "YES" : "NO"));
                         if (!vr) {
                             return false;
+                        }
+
+                        // Crash case: CC_10 || CC_11
+                        if(m_crashCase[CC_10] || m_crashCase[CC_11]) {
+                            crash(name);
                         }
 
                         // Crash case: CC_3
