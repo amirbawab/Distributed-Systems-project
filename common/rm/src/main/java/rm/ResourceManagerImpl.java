@@ -780,6 +780,7 @@ public class ResourceManagerImpl implements ResourceManager {
 
     @Override
     public boolean voteRequest(int tid) throws RemoteException {
+        logger.info("Received a vote request for transaction " + tid + ". Will reply shortly");
 
         // Crash case: CC_2
         if(m_crashCase[CC_2]) {
@@ -797,18 +798,17 @@ public class ResourceManagerImpl implements ResourceManager {
 
         boolean answer = false;
         if(!m_vrMap.containsKey(tid)) {
-            logger.info("Received a vote request for transaction " + tid + ". Sending YES");
+            logger.info("Sending YES");
             m_vrMap.put(tid, VR_REQUESTED);
             answer = true;
         } else if(m_vrMap.get(tid) == VR_REQUESTED) {
-            logger.warn("Received same vote request, will resend a YES");
+            logger.warn("Resending a YES");
             answer = true;
         } else if(m_vrMap.get(tid) == VR_COMMITED) {
-            logger.warn("Received a vote request but already committed. Sending a YES but commit will be ignored");
+            logger.warn("Resending a YES but commit will be ignored");
             answer = true;
         } else if(m_vrMap.get(tid) == VR_ABORT) {
-            logger.warn("Received a vote request but already aborted. Sending a NO");
-            answer = false;
+            logger.warn("Sending a NO because already aborted");
         }
 
         // Crash case: CC_10 || CC_11

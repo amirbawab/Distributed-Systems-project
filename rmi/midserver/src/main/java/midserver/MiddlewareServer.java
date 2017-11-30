@@ -123,7 +123,7 @@ class MiddlewareServer implements ResourceManager {
         final int MAX_IDLE_TIME = 60000;
 
         // Abort old transactions
-        new Thread(() -> {
+        Thread abortThread =new Thread(() -> {
             try {
                 while (true) {
                     if(MiddlewareServer.this.m_tm != null) {
@@ -138,7 +138,9 @@ class MiddlewareServer implements ResourceManager {
             } catch (RemoteException | InterruptedException e) {
                 logger.error("Exception occurred in abort thread. Long transactions will not be auto-aborted");
             }
-        }).start();
+        });
+        abortThread.setName("Abort-thread");
+        abortThread.start();
     }
 
     private static MiddlewareServer bindRM(String key, int port) {
