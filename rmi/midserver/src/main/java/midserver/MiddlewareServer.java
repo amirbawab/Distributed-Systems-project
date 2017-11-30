@@ -1044,7 +1044,15 @@ class MiddlewareServer implements ResourceManager {
     }
 
     @Override
-    public boolean crashCase(int id) throws RemoteException {
-        return false;
+    public void crashCase(int id) throws RemoteException {
+        switch (id) {
+            case CC_8:
+            case CC_13:
+                logger.info("Crash case " + id + " cannot recover from the system, this has to be done manually");
+                break;
+
+            case CC_1:
+                break;
+        }
     }
 }

@@ -21,6 +21,9 @@ public class TransactionManager implements ResourceManagerActions, Serializable 
     // Unique transaction id
     private int m_uniqId = 1;
 
+    // Crash case
+    private boolean[] m_crashCase = new boolean[15];
+
     /**
      * Construct a transaction manager
      */
@@ -161,5 +164,32 @@ public class TransactionManager implements ResourceManagerActions, Serializable 
      */
     public void addRM(int id, String rm) throws InvalidTransactionException {
         getTransaction(id).addRM(rm);
+    }
+
+    /**
+     * Select crash case
+     * @param id
+     */
+    public void setCrashCase(int id) {
+        for(int i=0; i < m_crashCase.length; i++) {
+            if(i == id) {
+                m_crashCase[i] = true;
+            } else {
+                m_crashCase[i] = false;
+            }
+        }
+    }
+
+    /**
+     * Get crash case index
+     * @return
+     */
+    public int getCrashCase() {
+        for(int i=0; i<m_crashCase.length; i++) {
+            if(m_crashCase[i]) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

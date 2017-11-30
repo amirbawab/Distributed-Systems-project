@@ -819,7 +819,7 @@ public class ResourceManagerImpl implements ResourceManager {
     }
 
     @Override
-    public boolean crashCase(int id) throws RemoteException {
-        return false;
+    public void crashCase(int id) throws RemoteException {
+
     }
 }

@@ -529,6 +529,10 @@ public class CLI {
                             break;
                         }
                         Id = Integer.parseInt(arguments.elementAt(1));
+                        if(Id < 0 || Id > 13) {
+                            System.err.println("Crash case id has to be valid");
+                            break;
+                        }
                         System.out.println("Simulating crash case #" + Id);
                         m_resourceManager.crashCase(Id);
                         break;
@@ -812,6 +816,7 @@ public class CLI {
                 System.out.println("Simulate a crash scenario");
                 System.out.println("\nUsage:");
                 System.out.println("\tCrash case:");
+                System.out.println("\t>> 0) Clear flags");
                 System.out.println("\tAt coordinator:");
                 System.out.println("\t>> 1) Crash before sending vote request");
                 System.out.println("\t>> 2) Crash after sending vote request and before receiving any replies");
@@ -820,10 +825,13 @@ public class CLI {
                 System.out.println("\t>> 5) Crash after deciding but before sending decision");
                 System.out.println("\t>> 6) Crash after sending some but not all decisions");
                 System.out.println("\t>> 7) Crash after having sent all decisions");
+                System.out.println("\t>> 8) Recovery of the coordinator");
                 System.out.println("\tAt RM:");
-                System.out.println("\t>> 8) Crash after receive vote request but before sending answer");
-                System.out.println("\t>> 9) Crash after sending answer");
-                System.out.println("\t>> 10) Crash after receiving decision but before committing/aborting");
+                System.out.println("\t>> 9) Crash after receive vote request but before sending answer");
+                System.out.println("\t>> 10) Which answer to send (commit/abort)");
+                System.out.println("\t>> 11) Crash after sending answer");
+                System.out.println("\t>> 12) Crash after receiving decision but before committing/aborting");
+                System.out.println("\t>> 13) Recovery of RM");
                 System.out.println("\t" + command.getName() + ",<num>");
                 break;
 

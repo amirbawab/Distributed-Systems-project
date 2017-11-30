@@ -28,6 +28,21 @@ public interface ResourceManager extends Remote, ResourceManagerActions {
     String RM_ROOM_REF = "room";
     String RM_FLIGHT_REF = "flight";
 
+    // Crash cases
+    int CC_1 = 1;
+    int CC_2 = 2;
+    int CC_3 = 3;
+    int CC_4 = 4;
+    int CC_5 = 5;
+    int CC_6 = 6;
+    int CC_7 = 7;
+    int CC_8 = 8;
+    int CC_9 = 9;
+    int CC_10 = 10;
+    int CC_11 = 11;
+    int CC_12 = 12;
+    int CC_13 = 13;
+
     // Function names
     public enum Command {
         HELP("help"),
@@ -227,5 +242,5 @@ public interface ResourceManager extends Remote, ResourceManagerActions {
     boolean crash(String comp) throws RemoteException;
 
     /*Crash case*/
-    boolean crashCase(int id) throws RemoteException;
+    void crashCase(int id) throws RemoteException;
 }
