@@ -91,7 +91,7 @@ public class TransactionManager implements ResourceManagerActions, Serializable 
      */
     @Override
     public void abort(int transactionId) throws RemoteException, InvalidTransactionException {
-
+        // Do nothing
     }
 
     /**
@@ -151,6 +151,7 @@ public class TransactionManager implements ResourceManagerActions, Serializable 
      */
     public void updateLastActive(int id) throws InvalidTransactionException {
         getTransaction(id).updateLastActive();
+        writeTM();
     }
 
     /**
@@ -161,5 +162,6 @@ public class TransactionManager implements ResourceManagerActions, Serializable 
      */
     public void addRM(int id, String rm) throws InvalidTransactionException {
         getTransaction(id).addRM(rm);
+        writeTM();
     }
 }

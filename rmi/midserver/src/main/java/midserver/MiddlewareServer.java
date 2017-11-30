@@ -126,7 +126,7 @@ class MiddlewareServer implements ResourceManager {
                 while (true) {
                     if(MiddlewareServer.this.m_tm != null) {
                         for(Transaction tx : MiddlewareServer.this.m_tm.getTransactions()) {
-                            if(tx.getIdleTime() > MAX_IDLE_TIME) {
+                            if(tx.getIdleTime() > MAX_IDLE_TIME && !m_recoverFunction.containsKey(tx.getXID())) {
                                 abort(tx.getXID());
                             }
                         }
@@ -1070,6 +1070,7 @@ class MiddlewareServer implements ResourceManager {
             }
             return true;
         } catch (InvalidTransactionException e) {
+            logger.warn("Vote request for an non-existing transaction " + tid);
             throw e;
         } catch (NullPointerException e) {
             throw new TMException();
