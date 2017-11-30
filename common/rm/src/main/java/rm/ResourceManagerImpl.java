@@ -586,6 +586,11 @@ public class ResourceManagerImpl implements ResourceManager {
 
     @Override
     public boolean commit(int transactionId) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
+        // Crash case: CC_12
+        if(m_crashCase[CC_12]) {
+            crash(null);
+        }
+
         if(m_vrMap.containsKey(transactionId) && m_vrMap.get(transactionId) == VR_COMMITED) {
             logger.warn("Received a commit requested, but already committed. Will ignore transaction.");
             return false;
@@ -777,7 +782,7 @@ public class ResourceManagerImpl implements ResourceManager {
     public boolean voteRequest(int tid) throws RemoteException {
 
         // Crash case: CC_2
-        if(m_crashCase[ResourceManager.CC_2]) {
+        if(m_crashCase[CC_2]) {
             try {
                 Thread.sleep(Long.MAX_VALUE);
             } catch (InterruptedException e) {
@@ -785,21 +790,37 @@ public class ResourceManagerImpl implements ResourceManager {
             }
         }
 
+        // Crash case: CC_9
+        if(m_crashCase[CC_9]) {
+            crash(null);
+        }
+
+        boolean answer = false;
         if(!m_vrMap.containsKey(tid)) {
             logger.info("Received a vote request for transaction " + tid + ". Sending YES");
             m_vrMap.put(tid, VR_REQUESTED);
-            return true;
+            answer = true;
         } else if(m_vrMap.get(tid) == VR_REQUESTED) {
             logger.warn("Received a vote request, will resend a YES");
-            return true;
+            answer = true;
         } else if(m_vrMap.get(tid) == VR_COMMITED) {
             logger.warn("Received a vote request but already committed. Sending a YES but commit will be ignored");
-            return true;
+            answer = true;
         } else if(m_vrMap.get(tid) == VR_ABORT) {
             logger.warn("Received a vote request but already aborted. Sending a NO");
-            return false;
+            answer = false;
         }
-        throw new RuntimeException("Unhandled vote request case");
+
+        // Crash case: CC_10 || CC_11
+        if(m_crashCase[CC_10] || m_crashCase[CC_11]) {
+            new Thread(() -> {
+                try {
+                    Thread.sleep(5000);
+                    crash(null);
+                } catch (Exception e) {/*Will not crash*/}
+            }).start();
+        }
+        return answer;
     }
 
     @Override
@@ -827,6 +848,7 @@ public class ResourceManagerImpl implements ResourceManager {
 
     @Override
     public boolean crash(String name) throws RemoteException {
+        logger.info("RM will crash now");
         System.exit(1);
         return false;
     }
