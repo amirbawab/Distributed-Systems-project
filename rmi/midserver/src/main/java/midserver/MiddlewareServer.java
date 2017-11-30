@@ -93,10 +93,12 @@ class MiddlewareServer implements ResourceManager {
 
         // Try to load TM
         m_ms.loadTM();
-        m_ms.loadRF();
 
         // Connect to all RMs
         m_ms.connectToAllRm();
+
+        // Try to load RF
+        m_ms.loadRF();
 
         // Create and install a security manager
         if (System.getSecurityManager() == null) {
@@ -287,18 +289,19 @@ class MiddlewareServer implements ResourceManager {
             logger.info("RF did not file a TM file to load. Starting empty");
         }
 
-            // Reapply function on transactions
-            for(int tid : m_recoverFunction.keySet()) {
-                try {
-                    if(m_recoverFunction.get(tid) == RF_COMMIT) {
-                        commit(tid);
-                    } else if(m_recoverFunction.get(tid) == RF_ABORT) {
-                        abort(tid);
-                    }
-                } catch (Exception e) {
-                    logger.error("Error recovering commit/abort function call for transaction " + tid);
+        // Reapply function on transactions
+        for(int tid : m_recoverFunction.keySet()) {
+            try {
+                if(m_recoverFunction.get(tid) == RF_COMMIT) {
+                    commit(tid);
+                } else if(m_recoverFunction.get(tid) == RF_ABORT) {
+                    abort(tid);
                 }
+            } catch (Exception e) {
+                logger.error("Error recovering commit/abort function call for transaction " + tid +
+                        ". Message: " + e.getMessage());
             }
+        }
     }
 
     /**
@@ -911,6 +914,8 @@ class MiddlewareServer implements ResourceManager {
                 crash(COMP_MS);
             }
 
+            logger.info("Commit phase 2: Sending decision");
+
             // If at least one VR replied NO, then abort
             if(!allVR) {
                 abort(transactionId);
@@ -1033,6 +1038,7 @@ class MiddlewareServer implements ResourceManager {
 
     @Override
     public boolean voteRequest(int tid) throws RemoteException {
+        logger.info("Commit phase 1: Sending vote request");
         try {
             for (String rmStr : m_tm.getTransaction(tid).getRMs()) {
                 while (true) {
