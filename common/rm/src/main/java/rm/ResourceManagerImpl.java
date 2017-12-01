@@ -663,7 +663,7 @@ public class ResourceManagerImpl implements ResourceManager {
                 logger.error("File " + tFile.getAbsolutePath() + " could not be deleted");
             }
         } else {
-            logger.error("Failed to delete " + tFile.getAbsolutePath() + " because file was not found");
+            logger.warn("Failed to delete " + tFile.getAbsolutePath() + " because file was not found");
         }
     }
 
