@@ -755,6 +755,16 @@ public class ResourceManagerImpl implements ResourceManager {
      */
     private synchronized void writeLocks() {
         File lockFile = getLockFile();
+        File dir = lockFile.getParentFile();
+        if(!dir.exists()) {
+            if(!dir.mkdir()) {
+                logger.error("Failed to create directory " + dir.getAbsolutePath() + ". Data will not be stored.");
+                return;
+            } else {
+                logger.info("Directory " + dir.getAbsolutePath() + " created");
+            }
+        }
+
         try(FileOutputStream fos = new FileOutputStream(lockFile); ObjectOutputStream obj = new ObjectOutputStream(fos)) {
             obj.writeObject(m_lockManager);
             logger.info("File " + lockFile.getAbsolutePath() + " updated!");
