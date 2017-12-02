@@ -585,7 +585,7 @@ public class ResourceManagerImpl implements ResourceManager {
     }
 
     @Override
-    public boolean commit(int transactionId) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
+    public boolean commit(int transactionId) throws RemoteException, InvalidTransactionException {
         logger.info("Received a commit request for transaction " + transactionId);
         // Crash case: CC_12
         if(m_crashCase[CC_12]) {
@@ -786,7 +786,7 @@ public class ResourceManagerImpl implements ResourceManager {
                 logger.error("Error loading file " + lockFile.getAbsolutePath() + ". Message: " + e.getMessage());
             }
         } else {
-            logger.info("RM " + m_name + " did not file any lock file to load. Starting empty");
+            logger.info("RM " + m_name + " did not find any lock file to load. Starting empty");
         }
     }
 

@@ -1,5 +1,6 @@
 package midserver;
 
+import inter.RMTimeOutException;
 import inter.ResourceManager;
 import inter.RMServerDownException;
 import inter.TMException;
@@ -14,13 +15,12 @@ import javax.transaction.InvalidTransactionException;
 import java.io.*;
 import java.rmi.NotBoundException;
 import java.rmi.RMISecurityManager;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 
 class MiddlewareServer implements ResourceManager {
 
@@ -64,8 +64,15 @@ class MiddlewareServer implements ResourceManager {
     private final String COMP_CAR = "car";
     private final String COMP_TM = "tm";
 
+    // Decision
+    private final String DECISION_COMMIT = "commit";
+    private final String DECISION_ABORT = "abort";
+
     // Recover function call
     private HashMap<Integer, Integer> m_recoverFunction;
+
+    // RM function call
+    private HashMap<String, Set<Integer>> m_RMFunction;
 
     // Crash case
     private boolean[] m_crashCase = new boolean[ResourceManager.CC_TOTAL];
@@ -90,15 +97,24 @@ class MiddlewareServer implements ResourceManager {
         // Initialize the transaction manager
         m_ms.m_tm = new TransactionManager();
         m_ms.m_recoverFunction = new HashMap<>();
+        m_ms.m_RMFunction = new HashMap<>();
 
         // Try to load TM
         m_ms.loadTM();
 
         // Connect to all RMs
-        m_ms.connectToAllRm();
+        while (true) {
+            try {
+                m_ms.connectToAllRm();
+                break;
+            } catch (RMTimeOutException e) {
+                logger.info("RM " + e.getName() + " timed out. Will keep trying because the MS just started ...");
+            }
+        }
 
-        // Try to load RF
+        // Try to load RF & RMF
         m_ms.loadRF();
+        m_ms.loadRMF();
 
         // Create and install a security manager
         if (System.getSecurityManager() == null) {
@@ -109,7 +125,7 @@ class MiddlewareServer implements ResourceManager {
     /**
      * Connect to RM
      */
-    private void connectToAllRm() {
+    private void connectToAllRm() throws RMTimeOutException {
         m_ms.m_carRM = m_ms.connectToRM(ResourceManager.RM_CAR_REF, rmRMIRegistryIP, rmRMIRegistryPort);
         m_ms.m_flightRM = m_ms.connectToRM(ResourceManager.RM_FLIGHT_REF, rmRMIRegistryIP, rmRMIRegistryPort);
         m_ms.m_roomRM = m_ms.connectToRM(ResourceManager.RM_ROOM_REF, rmRMIRegistryIP, rmRMIRegistryPort);
@@ -180,9 +196,11 @@ class MiddlewareServer implements ResourceManager {
      * Connect to RM
      * @param key
      */
-    private ResourceManager connectToRM(String key, String server, int port) {
+    private ResourceManager connectToRM(String key, String server, int port) throws RMTimeOutException {
         final int CONNECT_SLEEP = 5000;
-        while (true) {
+        final int MAX_TRIALS = 5;
+        int count = 0;
+        while (count++ < MAX_TRIALS) {
             try {
 
                 // Connect to registry
@@ -193,6 +211,9 @@ class MiddlewareServer implements ResourceManager {
 
                 // Verify connection is working
                 rm.healthCheck();
+
+                // Apply all missed commit/abort
+                RMFapply(key);
 
                 // Sync transactions
                 rm.syncTransactions(m_tm.getTransactionsId());
@@ -208,6 +229,7 @@ class MiddlewareServer implements ResourceManager {
                 }
             }
         }
+        throw new RMTimeOutException(key);
     }
 
     /**
@@ -223,7 +245,7 @@ class MiddlewareServer implements ResourceManager {
                 logger.error("Error loading file " + tmFile.getAbsolutePath() + ". Message: " + e.getMessage());
             }
         } else {
-            logger.info("TM did not file a TM file to load. Starting empty");
+            logger.info("TM did not find a TM file to load. Starting empty");
         }
     }
 
@@ -255,11 +277,32 @@ class MiddlewareServer implements ResourceManager {
     }
 
     /**
-     * Get the TM file
-     * @return TM file
+     * Get the Recovery file
+     * @return Recovery file
      */
     public File getRFFile() {
         return new File("RF_table");
+    }
+
+    /**
+     * Get the RM file
+     * @return RM file
+     */
+    public File getRMFFile() {
+        return new File("RMF_table");
+    }
+
+    /**
+     * Write transaction manager to file
+     */
+    private synchronized void writeRMF() {
+        File rmfFile = getRMFFile();
+        try(FileOutputStream fos = new FileOutputStream(rmfFile); ObjectOutputStream obj = new ObjectOutputStream(fos)) {
+            obj.writeObject(m_RMFunction);
+            logger.info("File " + rmfFile.getAbsolutePath() + " updated!");
+        } catch (IOException e) {
+            logger.error("Error writing file " + rmfFile.getAbsolutePath() + ". Message: " + e.getMessage());
+        }
     }
 
     /**
@@ -288,7 +331,7 @@ class MiddlewareServer implements ResourceManager {
                 logger.error("Error loading file " + rfFile.getAbsolutePath() + ". Message: " + e.getMessage());
             }
         } else {
-            logger.info("RF did not file a TM file to load. Starting empty");
+            logger.info("RF did not find a RF file to load. Starting empty");
         }
 
         // Reapply function on transactions
@@ -307,11 +350,115 @@ class MiddlewareServer implements ResourceManager {
     }
 
     /**
+     * Load RM function from file
+     */
+    private synchronized void loadRMF() {
+        File rmfFile = getRMFFile();
+        if(rmfFile.exists()) {
+            try (FileInputStream fis = new FileInputStream(rmfFile); ObjectInputStream ois = new ObjectInputStream(fis)){
+                m_RMFunction = (HashMap) ois.readObject();
+                logger.info("RMF file " + rmfFile.getAbsolutePath() + " loaded");
+            } catch (ClassNotFoundException | IOException e) {
+                logger.error("Error loading file " + rmfFile.getAbsolutePath() + ". Message: " + e.getMessage());
+            }
+        } else {
+            logger.info("RMF did not find a RMF file to load. Starting empty");
+        }
+
+    }
+
+    private void RMFapply(String rmName) {
+
+        // Reapply function on transactions
+        List<String> keyList = Arrays.asList(rmName + "_" + DECISION_ABORT, rmName + "_" + DECISION_COMMIT);
+        for(String key: keyList) {
+            String[] keyArray = key.split("_");
+            String rm = keyArray[0];
+            String decision = keyArray[1];
+            if(!m_RMFunction.containsKey(key)) {
+                continue;
+            }
+            Set<Integer> valueSet = new HashSet<>(m_RMFunction.get(key));
+            ResourceManager rmObj = null;
+            if(rm.equals(RM_CAR_REF)) {
+                rmObj = m_carRM;
+            } else if(rm.equals(RM_FLIGHT_REF)) {
+                rmObj = m_flightRM;
+            } else if(rm.equals(RM_ROOM_REF)) {
+                rmObj = m_roomRM;
+            } else {
+                throw new RuntimeException("Unknown resource manager");
+            }
+
+            for(Integer tid : valueSet) {
+                try {
+                    if (decision.equals(DECISION_COMMIT)) {
+                        rmObj.commit(tid);
+                    } else if(decision.equals(DECISION_ABORT)) {
+                        rmObj.abort(tid);
+                    } else {
+                        throw new RuntimeException("Unknown decision");
+                    }
+                    unbufferDecision(rm, tid, decision);
+                    break;
+                }catch (RemoteException e) {
+                    // Do nothing because RM is down already
+                }
+            }
+        }
+    }
+
+    /**
      * Execute code on RM crash
      */
-    public void onRMCrash() {
-        logger.info("One or more RM crashed. RM health check will be performed");
+    public void onRMCrash(String name) throws RMTimeOutException {
+        logger.info("RM " + name + " crashed. RM health check will be performed");
         connectToAllRm();
+    }
+
+    /**
+     * Get decision key
+     * @param rm
+     * @param decision
+     * @return
+     */
+    private String getBufferedKey(String rm, String decision) {
+        switch (decision) {
+            case DECISION_ABORT:
+            case DECISION_COMMIT:
+                return rm + "_" + decision;
+            default:
+                throw new RuntimeException("Unknown decision");
+        }
+    }
+
+    /**
+     * Buffer decision
+     * @param rm
+     * @param tid
+     */
+    private void bufferDecision(String rm, int tid, String decision) {
+        String key = getBufferedKey(rm, decision);
+        if(!m_RMFunction.containsKey(key)) {
+            m_RMFunction.put(key, new HashSet<>());
+        }
+        logger.info("Buffering commit decision on transaction " + tid + " for RM " + rm);
+        m_RMFunction.get(key).add(tid);
+        writeRMF();
+    }
+
+    /**
+     * Unbuffer decision
+     * @param rm
+     * @param tid
+     */
+    private void unbufferDecision(String rm, int tid, String decision) {
+        String key = getBufferedKey(rm, decision);
+        if(m_RMFunction.containsKey(key) && m_RMFunction.get(key).contains(tid)) {
+            logger.info("Unbuffering commit decision on transaction " + tid + " for RM " + rm);
+            m_RMFunction.get(key).remove(tid);
+            writeRMF();
+        }
     }
 
     /****************************
@@ -325,19 +472,27 @@ class MiddlewareServer implements ResourceManager {
             try {
                 m_tm.updateLastActive(id);
                 m_tm.addRM(id, ResourceManager.RM_FLIGHT_REF);
-                return m_flightRM.addFlight(m_tm.getTransaction(id).getXID(), flightNum, flightSeats, flightPrice);
-            } catch (DeadlockException e) {
-                logger.error(e.getMessage());
-                abort(e.GetXId());
-                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
-            } catch (InvalidTransactionException e) {
+            } catch (InvalidTransactionException e){
                 throw e;
-            } catch (RemoteException e) {
-                onRMCrash();
-                abort(id);
-                throw new RMServerDownException();
+            }
+
+            while (true) {
+                try {
+                    return m_flightRM.addFlight(id, flightNum, flightSeats, flightPrice);
+                } catch (DeadlockException e) {
+                    logger.error(e.getMessage());
+                    abort(e.GetXId());
+                    throw e;
+                } catch (RemoteException e) {
+                    try {
+                        onRMCrash(RM_FLIGHT_REF);
+                    } catch (RMTimeOutException e1) {
+                        abort(id);
+                        throw new RMServerDownException();
+                    }
+                }
             }
         }
     }
@@ -348,19 +503,27 @@ class MiddlewareServer implements ResourceManager {
             try {
                 m_tm.updateLastActive(id);
                 m_tm.addRM(id, ResourceManager.RM_CAR_REF);
-                return m_carRM.addCars(m_tm.getTransaction(id).getXID(), location, numCars, price);
-            } catch (DeadlockException e) {
-                logger.error(e.getMessage());
-                abort(e.GetXId());
-                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (InvalidTransactionException e) {
                 throw e;
-            } catch (RemoteException e) {
-                onRMCrash();
-                abort(id);
-                throw new RMServerDownException();
+            }
+
+            while (true) {
+                try {
+                    return m_carRM.addCars(id, location, numCars, price);
+                } catch (DeadlockException e) {
+                    logger.error(e.getMessage());
+                    abort(e.GetXId());
+                    throw e;
+                } catch (RemoteException e) {
+                    try {
+                        onRMCrash(RM_CAR_REF);
+                    } catch (RMTimeOutException e1) {
+                        abort(id);
+                        throw new RMServerDownException();
+                    }
+                }
             }
         }
     }
@@ -371,19 +534,27 @@ class MiddlewareServer implements ResourceManager {
             try {
                 m_tm.updateLastActive(id);
                 m_tm.addRM(id, ResourceManager.RM_ROOM_REF);
-                return m_roomRM.addRooms(m_tm.getTransaction(id).getXID(), location, numRooms, price);
-            } catch (DeadlockException e) {
-                logger.error(e.getMessage());
-                abort(e.GetXId());
-                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (InvalidTransactionException e) {
                 throw e;
-            } catch (RemoteException e) {
-                onRMCrash();
-                abort(id);
-                throw new RMServerDownException();
+            }
+
+            while (true) {
+                try {
+                    return m_roomRM.addRooms(id, location, numRooms, price);
+                } catch (DeadlockException e) {
+                    logger.error(e.getMessage());
+                    abort(e.GetXId());
+                    throw e;
+                } catch (RemoteException e) {
+                    try {
+                        onRMCrash(RM_ROOM_REF);
+                    } catch (RMTimeOutException e1) {
+                        abort(id);
+                        throw new RMServerDownException();
+                    }
+                }
             }
         }
     }
@@ -394,26 +565,65 @@ class MiddlewareServer implements ResourceManager {
             synchronized (lockCar) {
                 synchronized (lockFlight) {
                     try {
-                        m_tm.updateLastActive(id);
-                        m_tm.addRM(id, ResourceManager.RM_ROOM_REF);
-                        m_tm.addRM(id, ResourceManager.RM_CAR_REF);
-                        m_tm.addRM(id, ResourceManager.RM_FLIGHT_REF);
-                        int cid = m_carRM.newCustomer(m_tm.getTransaction(id).getXID());
-                        m_roomRM.newCustomer(id, cid);
-                        m_flightRM.newCustomer(id, cid);
+                        try {
+                            m_tm.updateLastActive(id);
+                            m_tm.addRM(id, ResourceManager.RM_ROOM_REF);
+                            m_tm.addRM(id, ResourceManager.RM_CAR_REF);
+                            m_tm.addRM(id, ResourceManager.RM_FLIGHT_REF);
+                        } catch (NullPointerException e) {
+                            throw new TMException();
+                        } catch (InvalidTransactionException e) {
+                            throw e;
+                        }
+
+                        int cid = 0;
+                        while (true) {
+                            try {
+                                cid = m_carRM.newCustomer(id);
+                                break;
+                            } catch (RemoteException e) {
+                                try {
+                                    onRMCrash(RM_CAR_REF);
+                                } catch (RMTimeOutException e1) {
+                                    abort(id);
+                                    throw new RMServerDownException();
+                                }
+                            }
+                        }
+
+                        while (true) {
+                            try {
+                                m_roomRM.newCustomer(id, cid);
+                                break;
+                            } catch (RemoteException e) {
+                                try {
+                                    onRMCrash(RM_ROOM_REF);
+                                } catch (RMTimeOutException e1) {
+                                    abort(id);
+                                    throw new RMServerDownException();
+                                }
+                            }
+                        }
+
+                        while (true) {
+                            try {
+                                m_flightRM.newCustomer(id, cid);
+                                break;
+                            } catch (RemoteException e) {
+                                try {
+                                    onRMCrash(RM_FLIGHT_REF);
+                                } catch (RMTimeOutException e1) {
+                                    abort(id);
+                                    throw new RMServerDownException();
+                                }
+                            }
+                        }
+
                         return cid;
                     } catch (DeadlockException e) {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
                         throw e;
-                    } catch (NullPointerException e) {
-                        throw new TMException();
-                    } catch (InvalidTransactionException e) {
-                        throw e;
-                    } catch (RemoteException e) {
-                        onRMCrash();
-                        abort(id);
-                        throw new RMServerDownException();
                     }
                 }
             }
@@ -426,27 +636,66 @@ class MiddlewareServer implements ResourceManager {
             synchronized (lockCar) {
                 synchronized (lockFlight) {
                     try {
-                        id = m_tm.getTransaction(id).getXID();
-                        m_tm.updateLastActive(id);
-                        m_tm.addRM(id, ResourceManager.RM_FLIGHT_REF);
-                        m_tm.addRM(id, ResourceManager.RM_CAR_REF);
-                        m_tm.addRM(id, ResourceManager.RM_ROOM_REF);
-                        boolean flight = m_flightRM.newCustomer(id, cid);
-                        boolean car = m_carRM.newCustomer(id, cid);
-                        boolean room = m_roomRM.newCustomer(id, cid);
+                        try {
+                            m_tm.updateLastActive(id);
+                            m_tm.addRM(id, ResourceManager.RM_ROOM_REF);
+                            m_tm.addRM(id, ResourceManager.RM_CAR_REF);
+                            m_tm.addRM(id, ResourceManager.RM_FLIGHT_REF);
+                        } catch (NullPointerException e) {
+                            throw new TMException();
+                        } catch (InvalidTransactionException e) {
+                            throw e;
+                        }
+
+                        boolean flight = false;
+                        boolean car = false;
+                        boolean room = false;
+                        while (true) {
+                            try {
+                                car = m_carRM.newCustomer(id, cid);
+                                break;
+                            } catch (RemoteException e) {
+                                try {
+                                    onRMCrash(RM_CAR_REF);
+                                } catch (RMTimeOutException e1) {
+                                    abort(id);
+                                    throw new RMServerDownException();
+                                }
+                            }
+                        }
+
+                        while (true) {
+                            try {
+                                room = m_roomRM.newCustomer(id, cid);
+                                break;
+                            } catch (RemoteException e) {
+                                try {
+                                    onRMCrash(RM_ROOM_REF);
+                                } catch (RMTimeOutException e1) {
+                                    abort(id);
+                                    throw new RMServerDownException();
+                                }
+                            }
+                        }
+
+                        while (true) {
+                            try {
+                                flight = m_flightRM.newCustomer(id, cid);
+                                break;
+                            } catch (RemoteException e) {
+                                try {
+                                    onRMCrash(RM_FLIGHT_REF);
+                                } catch (RMTimeOutException e1) {
+                                    abort(id);
+                                    throw new RMServerDownException();
+                                }
+                            }
+                        }
                         return flight && car && room;
                     } catch (DeadlockException e) {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
                         throw e;
-                    } catch (NullPointerException e) {
-                        throw new TMException();
-                    } catch (InvalidTransactionException e) {
-                        throw e;
-                    } catch (RemoteException e) {
-                        onRMCrash();
-                        abort(id);
-                        throw new RMServerDownException();
                     }
                 }
             }
@@ -459,19 +708,27 @@ class MiddlewareServer implements ResourceManager {
             try {
                 m_tm.updateLastActive(id);
                 m_tm.addRM(id, ResourceManager.RM_FLIGHT_REF);
-                return m_flightRM.deleteFlight(m_tm.getTransaction(id).getXID(), flightNum);
-            } catch (DeadlockException e) {
-                logger.error(e.getMessage());
-                abort(e.GetXId());
-                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (InvalidTransactionException e) {
                 throw e;
-            } catch (RemoteException e) {
-                onRMCrash();
-                abort(id);
-                throw new RMServerDownException();
+            }
+
+            while (true) {
+                try {
+                    return m_flightRM.deleteFlight(id, flightNum);
+                } catch (DeadlockException e) {
+                    logger.error(e.getMessage());
+                    abort(e.GetXId());
+                    throw e;
+                } catch (RemoteException e) {
+                    try {
+                        onRMCrash(RM_FLIGHT_REF);
+                    } catch (RMTimeOutException e1) {
+                        abort(id);
+                        throw new RMServerDownException();
+                    }
+                }
             }
         }
     }
@@ -482,19 +739,27 @@ class MiddlewareServer implements ResourceManager {
             try {
                 m_tm.updateLastActive(id);
                 m_tm.addRM(id, ResourceManager.RM_CAR_REF);
-                return m_carRM.deleteCars(m_tm.getTransaction(id).getXID(), location);
-            } catch (DeadlockException e) {
-                logger.error(e.getMessage());
-                abort(e.GetXId());
-                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (InvalidTransactionException e) {
                 throw e;
-            } catch (RemoteException e) {
-                onRMCrash();
-                abort(id);
-                throw new RMServerDownException();
+            }
+
+            while (true) {
+                try {
+                    return m_carRM.deleteCars(id, location);
+                } catch (DeadlockException e) {
+                    logger.error(e.getMessage());
+                    abort(e.GetXId());
+                    throw e;
+                } catch (RemoteException e) {
+                    try {
+                        onRMCrash(RM_CAR_REF);
+                    } catch (RMTimeOutException e1) {
+                        abort(id);
+                        throw new RMServerDownException();
+                    }
+                }
             }
         }
     }
@@ -505,19 +770,27 @@ class MiddlewareServer implements ResourceManager {
             try {
                 m_tm.updateLastActive(id);
                 m_tm.addRM(id, ResourceManager.RM_ROOM_REF);
-                return m_roomRM.deleteRooms(m_tm.getTransaction(id).getXID(), location);
-            } catch (DeadlockException e) {
-                logger.error(e.getMessage());
-                abort(e.GetXId());
-                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (InvalidTransactionException e) {
                 throw e;
-            } catch (RemoteException e) {
-                onRMCrash();
-                abort(id);
-                throw new RMServerDownException();
+            }
+
+            while (true) {
+                try {
+                    return m_roomRM.deleteRooms(id, location);
+                } catch (DeadlockException e) {
+                    logger.error(e.getMessage());
+                    abort(e.GetXId());
+                    throw e;
+                } catch (RemoteException e) {
+                    try {
+                        onRMCrash(RM_ROOM_REF);
+                    } catch (RMTimeOutException e1) {
+                        abort(id);
+                        throw new RMServerDownException();
+                    }
+                }
             }
         }
     }
@@ -528,27 +801,67 @@ class MiddlewareServer implements ResourceManager {
             synchronized (lockCar) {
                 synchronized (lockFlight) {
                     try {
-                        id = m_tm.getTransaction(id).getXID();
-                        m_tm.updateLastActive(id);
-                        m_tm.addRM(id, ResourceManager.RM_ROOM_REF);
-                        m_tm.addRM(id, ResourceManager.RM_CAR_REF);
-                        m_tm.addRM(id, ResourceManager.RM_FLIGHT_REF);
-                        boolean room = m_roomRM.deleteCustomer(id, customer);
-                        boolean car = m_carRM.deleteCustomer(id, customer);
-                        boolean flight = m_flightRM.deleteCustomer(id, customer);
+                        try {
+                            m_tm.updateLastActive(id);
+                            m_tm.addRM(id, ResourceManager.RM_ROOM_REF);
+                            m_tm.addRM(id, ResourceManager.RM_CAR_REF);
+                            m_tm.addRM(id, ResourceManager.RM_FLIGHT_REF);
+                        } catch (NullPointerException e) {
+                            throw new TMException();
+                        } catch (InvalidTransactionException e) {
+                            throw e;
+                        }
+
+                        boolean room = false;
+                        boolean car = false;
+                        boolean flight = false;
+                        while (true) {
+                            try {
+                                room = m_roomRM.deleteCustomer(id, customer);
+                                break;
+                            } catch (RemoteException e) {
+                                try {
+                                    onRMCrash(RM_ROOM_REF);
+                                } catch (RMTimeOutException e1) {
+                                    abort(id);
+                                    throw new RMServerDownException();
+                                }
+                            }
+                        }
+
+                        while (true) {
+                            try {
+                                car = m_carRM.deleteCustomer(id, customer);
+                                break;
+                            } catch (RemoteException e) {
+                                try {
+                                    onRMCrash(RM_CAR_REF);
+                                } catch (RMTimeOutException e1) {
+                                    abort(id);
+                                    throw new RMServerDownException();
+                                }
+                            }
+                        }
+
+                        while (true) {
+                            try {
+                                flight = m_flightRM.deleteCustomer(id, customer);
+                                break;
+                            } catch (RemoteException e) {
+                                try {
+                                    onRMCrash(RM_FLIGHT_REF);
+                                } catch (RMTimeOutException e1) {
+                                    abort(id);
+                                    throw new RMServerDownException();
+                                }
+                            }
+                        }
+
                         return room && car && flight;
                     } catch (DeadlockException e) {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
                         throw e;
-                    } catch (NullPointerException e) {
-                        throw new TMException();
-                    } catch (InvalidTransactionException e) {
-                        throw e;
-                    } catch (RemoteException e) {
-                        onRMCrash();
-                        abort(id);
-                        throw new RMServerDownException();
                     }
                 }
             }
@@ -561,19 +874,27 @@ class MiddlewareServer implements ResourceManager {
             try {
                 m_tm.updateLastActive(id);
                 m_tm.addRM(id, ResourceManager.RM_FLIGHT_REF);
-                return m_flightRM.queryFlight(m_tm.getTransaction(id).getXID(), flightNumber);
-            } catch (DeadlockException e) {
-                logger.error(e.getMessage());
-                abort(e.GetXId());
-                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (InvalidTransactionException e) {
                 throw e;
-            } catch (RemoteException e) {
-                onRMCrash();
-                abort(id);
-                throw new RMServerDownException();
+            }
+
+            while (true) {
+                try {
+                    return m_flightRM.queryFlight(id, flightNumber);
+                } catch (DeadlockException e) {
+                    logger.error(e.getMessage());
+                    abort(e.GetXId());
+                    throw e;
+                } catch (RemoteException e) {
+                    try {
+                        onRMCrash(RM_FLIGHT_REF);
+                    } catch (RMTimeOutException e1) {
+                        abort(id);
+                        throw new RMServerDownException();
+                    }
+                }
             }
         }
     }
@@ -583,19 +904,27 @@ class MiddlewareServer implements ResourceManager {
         synchronized (lockCar) {
             try {
                 m_tm.addRM(id, ResourceManager.RM_CAR_REF);
-                return m_carRM.queryCars(m_tm.getTransaction(id).getXID(), location);
-            } catch (DeadlockException e) {
-                logger.error(e.getMessage());
-                abort(e.GetXId());
-                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (InvalidTransactionException e) {
                 throw e;
-            } catch (RemoteException e) {
-                onRMCrash();
-                abort(id);
-                throw new RMServerDownException();
+            }
+
+            while (true) {
+                try {
+                    return m_carRM.queryCars(id, location);
+                } catch (DeadlockException e) {
+                    logger.error(e.getMessage());
+                    abort(e.GetXId());
+                    throw e;
+                } catch (RemoteException e) {
+                    try {
+                        onRMCrash(RM_CAR_REF);
+                    } catch (RMTimeOutException e1) {
+                        abort(id);
+                        throw new RMServerDownException();
+                    }
+                }
             }
         }
     }
@@ -606,19 +935,27 @@ class MiddlewareServer implements ResourceManager {
             try {
                 m_tm.updateLastActive(id);
                 m_tm.addRM(id, ResourceManager.RM_ROOM_REF);
-                return m_roomRM.queryRooms(m_tm.getTransaction(id).getXID(), location);
-            } catch (DeadlockException e) {
-                logger.error(e.getMessage());
-                abort(e.GetXId());
-                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (InvalidTransactionException e) {
                 throw e;
-            } catch (RemoteException e) {
-                onRMCrash();
-                abort(id);
-                throw new RMServerDownException();
+            }
+
+            while (true) {
+                try {
+                    return m_roomRM.queryRooms(id, location);
+                } catch (DeadlockException e) {
+                    logger.error(e.getMessage());
+                    abort(e.GetXId());
+                    throw e;
+                } catch (RemoteException e) {
+                    try {
+                        onRMCrash(RM_ROOM_REF);
+                    } catch (RMTimeOutException e1) {
+                        abort(id);
+                        throw new RMServerDownException();
+                    }
+                }
             }
         }
     }
@@ -629,28 +966,67 @@ class MiddlewareServer implements ResourceManager {
             synchronized (lockCar) {
                 synchronized (lockFlight) {
                     try {
-                        m_tm.updateLastActive(id);
-                        m_tm.addRM(id, ResourceManager.RM_CAR_REF);
-                        m_tm.addRM(id, ResourceManager.RM_FLIGHT_REF);
-                        m_tm.addRM(id, ResourceManager.RM_ROOM_REF);
+                        try {
+                            m_tm.updateLastActive(id);
+                            m_tm.addRM(id, ResourceManager.RM_CAR_REF);
+                            m_tm.addRM(id, ResourceManager.RM_FLIGHT_REF);
+                            m_tm.addRM(id, ResourceManager.RM_ROOM_REF);
+                        } catch (NullPointerException e) {
+                            throw new TMException();
+                        } catch (InvalidTransactionException e) {
+                            throw e;
+                        }
+
                         StringBuilder sb = new StringBuilder();
-                        id = m_tm.getTransaction(id).getXID();
-                        sb.append("\nCar info:\n").append(m_carRM.queryCustomerInfo(id, customer))
-                                .append("\nFlight info:\n").append(m_flightRM.queryCustomerInfo(id, customer))
-                                .append("\nRoom info:\n").append(m_roomRM.queryCustomerInfo(id, customer));
+                        sb.append("\nCar info:\n");
+                        while (true) {
+                            try {
+                                sb.append(m_carRM.queryCustomerInfo(id, customer));
+                                break;
+                            } catch (RemoteException e) {
+                                try {
+                                    onRMCrash(RM_CAR_REF);
+                                } catch (RMTimeOutException e1) {
+                                    abort(id);
+                                    throw new RMServerDownException();
+                                }
+                            }
+                        }
+
+                        sb.append("\nFlight info:\n");
+                        while (true) {
+                            try {
+                                sb.append(m_flightRM.queryCustomerInfo(id, customer));
+                                break;
+                            } catch (RemoteException e) {
+                                try {
+                                    onRMCrash(RM_FLIGHT_REF);
+                                } catch (RMTimeOutException e1) {
+                                    abort(id);
+                                    throw new RMServerDownException();
+                                }
+                            }
+                        }
+
+                        sb.append("\nRoom info:\n");
+                        while (true) {
+                            try {
+                                sb.append(m_roomRM.queryCustomerInfo(id, customer));
+                                break;
+                            } catch (RemoteException e) {
+                                try {
+                                    onRMCrash(RM_ROOM_REF);
+                                } catch (RMTimeOutException e1) {
+                                    abort(id);
+                                    throw new RMServerDownException();
+                                }
+                            }
+                        }
                         return sb.toString();
                     } catch (DeadlockException e) {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
                         throw e;
-                    } catch (NullPointerException e) {
-                        throw new TMException();
-                    } catch (InvalidTransactionException e) {
-                        throw e;
-                    } catch (RemoteException e) {
-                        onRMCrash();
-                        abort(id);
-                        throw new RMServerDownException();
                     }
                 }
             }
@@ -663,19 +1039,27 @@ class MiddlewareServer implements ResourceManager {
             try {
                 m_tm.updateLastActive(id);
                 m_tm.addRM(id, ResourceManager.RM_FLIGHT_REF);
-                return m_flightRM.queryFlightPrice(m_tm.getTransaction(id).getXID(), flightNumber);
-            } catch (DeadlockException e) {
-                logger.error(e.getMessage());
-                abort(e.GetXId());
-                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (InvalidTransactionException e) {
                 throw e;
-            } catch (RemoteException e) {
-                onRMCrash();
-                abort(id);
-                throw new RMServerDownException();
+            }
+
+            while (true) {
+                try {
+                    return m_flightRM.queryFlightPrice(id, flightNumber);
+                } catch (DeadlockException e) {
+                    logger.error(e.getMessage());
+                    abort(e.GetXId());
+                    throw e;
+                } catch (RemoteException e) {
+                    try {
+                        onRMCrash(RM_FLIGHT_REF);
+                    } catch (RMTimeOutException e1) {
+                        abort(id);
+                        throw new RMServerDownException();
+                    }
+                }
             }
         }
     }
@@ -686,19 +1070,27 @@ class MiddlewareServer implements ResourceManager {
             try {
                 m_tm.updateLastActive(id);
                 m_tm.addRM(id, ResourceManager.RM_CAR_REF);
-                return m_carRM.queryCarsPrice(m_tm.getTransaction(id).getXID(), location);
-            } catch (DeadlockException e) {
-                logger.error(e.getMessage());
-                abort(e.GetXId());
-                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (InvalidTransactionException e) {
                 throw e;
-            } catch (RemoteException e) {
-                onRMCrash();
-                abort(id);
-                throw new RMServerDownException();
+            }
+
+            while (true) {
+                try {
+                    return m_carRM.queryCarsPrice(id, location);
+                } catch (DeadlockException e) {
+                    logger.error(e.getMessage());
+                    abort(e.GetXId());
+                    throw e;
+                } catch (RemoteException e) {
+                    try {
+                        onRMCrash(RM_CAR_REF);
+                    } catch (RMTimeOutException e1) {
+                        abort(id);
+                        throw new RMServerDownException();
+                    }
+                }
             }
         }
     }
@@ -709,19 +1101,27 @@ class MiddlewareServer implements ResourceManager {
             try {
                 m_tm.updateLastActive(id);
                 m_tm.addRM(id, ResourceManager.RM_ROOM_REF);
-                return m_roomRM.queryRoomsPrice(m_tm.getTransaction(id).getXID(), location);
-            } catch (DeadlockException e) {
-                logger.error(e.getMessage());
-                abort(e.GetXId());
-                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (InvalidTransactionException e) {
                 throw e;
-            } catch (RemoteException e) {
-                onRMCrash();
-                abort(id);
-                throw new RMServerDownException();
+            }
+
+            while (true) {
+                try {
+                    return m_roomRM.queryRoomsPrice(id, location);
+                } catch (DeadlockException e) {
+                    logger.error(e.getMessage());
+                    abort(e.GetXId());
+                    throw e;
+                } catch (RemoteException e) {
+                    try {
+                        onRMCrash(RM_ROOM_REF);
+                    } catch (RMTimeOutException e1) {
+                        abort(id);
+                        throw new RMServerDownException();
+                    }
+                }
             }
         }
     }
@@ -732,19 +1132,27 @@ class MiddlewareServer implements ResourceManager {
             try {
                 m_tm.updateLastActive(id);
                 m_tm.addRM(id, ResourceManager.RM_FLIGHT_REF);
-                return m_flightRM.reserveFlight(m_tm.getTransaction(id).getXID(), customer, flightNumber);
-            } catch (DeadlockException e) {
-                logger.error(e.getMessage());
-                abort(e.GetXId());
-                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (InvalidTransactionException e) {
                 throw e;
-            } catch (RemoteException e) {
-                onRMCrash();
-                abort(id);
-                throw new RMServerDownException();
+            }
+
+            while (true) {
+                try {
+                    return m_flightRM.reserveFlight(id, customer, flightNumber);
+                } catch (DeadlockException e) {
+                    logger.error(e.getMessage());
+                    abort(e.GetXId());
+                    throw e;
+                } catch (RemoteException e) {
+                    try {
+                        onRMCrash(RM_FLIGHT_REF);
+                    } catch (RMTimeOutException e1) {
+                        abort(id);
+                        throw new RMServerDownException();
+                    }
+                }
             }
         }
     }
@@ -755,19 +1163,27 @@ class MiddlewareServer implements ResourceManager {
             try {
                 m_tm.updateLastActive(id);
                 m_tm.addRM(id, ResourceManager.RM_CAR_REF);
-                return m_carRM.reserveCar(m_tm.getTransaction(id).getXID(), customer, location);
-            } catch (DeadlockException e) {
-                logger.error(e.getMessage());
-                abort(e.GetXId());
-                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (InvalidTransactionException e) {
                 throw e;
-            } catch (RemoteException e) {
-                onRMCrash();
-                abort(id);
-                throw new RMServerDownException();
+            }
+
+            while (true) {
+                try {
+                    return m_carRM.reserveCar(id, customer, location);
+                } catch (DeadlockException e) {
+                    logger.error(e.getMessage());
+                    abort(e.GetXId());
+                    throw e;
+                } catch (RemoteException e) {
+                    try {
+                        onRMCrash(RM_CAR_REF);
+                    } catch (RMTimeOutException e1) {
+                        abort(id);
+                        throw new RMServerDownException();
+                    }
+                }
             }
         }
     }
@@ -778,19 +1194,27 @@ class MiddlewareServer implements ResourceManager {
             try {
                 m_tm.updateLastActive(id);
                 m_tm.addRM(id, ResourceManager.RM_ROOM_REF);
-                return m_roomRM.reserveRoom(m_tm.getTransaction(id).getXID(), customer, locationd);
-            } catch (DeadlockException e) {
-                logger.error(e.getMessage());
-                abort(e.GetXId());
-                throw e;
             } catch (NullPointerException e) {
                 throw new TMException();
             } catch (InvalidTransactionException e) {
                 throw e;
-            } catch (RemoteException e) {
-                onRMCrash();
-                abort(id);
-                throw new RMServerDownException();
+            }
+
+            while (true) {
+                try {
+                    return m_roomRM.reserveRoom(id, customer, locationd);
+                } catch (DeadlockException e) {
+                    logger.error(e.getMessage());
+                    abort(e.GetXId());
+                    throw e;
+                } catch (RemoteException e) {
+                    try {
+                        onRMCrash(RM_ROOM_REF);
+                    } catch (RMTimeOutException e1) {
+                        abort(id);
+                        throw new RMServerDownException();
+                    }
+                }
             }
         }
     }
@@ -802,45 +1226,121 @@ class MiddlewareServer implements ResourceManager {
             synchronized (lockCar) {
                 synchronized (lockFlight) {
                     try {
-                        id = m_tm.getTransaction(id).getXID();
-                        m_tm.updateLastActive(id);
-                        m_tm.addRM(id, ResourceManager.RM_FLIGHT_REF);
-                        m_tm.addRM(id, ResourceManager.RM_CAR_REF);
-                        m_tm.addRM(id, ResourceManager.RM_ROOM_REF);
+                        try {
+                            m_tm.updateLastActive(id);
+                            m_tm.addRM(id, ResourceManager.RM_FLIGHT_REF);
+                            m_tm.addRM(id, ResourceManager.RM_CAR_REF);
+                            m_tm.addRM(id, ResourceManager.RM_ROOM_REF);
+                        } catch (NullPointerException e) {
+                            throw new TMException();
+                        } catch (InvalidTransactionException e) {
+                            throw e;
+                        }
 
                         // Check if can reserve flight
                         for (Object fNum : flightNumbers) {
-                            if (queryFlight(id, Integer.parseInt(fNum.toString())) == 0) {
-                                return false;
+                            while (true) {
+                                try {
+                                    if (queryFlight(id, Integer.parseInt(fNum.toString())) == 0) {
+                                        return false;
+                                    }
+                                    break;
+                                } catch (RemoteException e) {
+                                    try {
+                                        onRMCrash(RM_FLIGHT_REF);
+                                    } catch (RMTimeOutException e1) {
+                                        abort(id);
+                                        throw new RMServerDownException();
+                                    }
+                                }
                             }
                         }
 
-                        // Check if can reserve a car
-                        if (car && queryCars(id, location) == 0) {
-                            return false;
+                        while (true) {
+                            try {
+                                if (car && queryCars(id, location) == 0) {
+                                    return false;
+                                }
+                                break;
+                            } catch (RemoteException e) {
+                                try {
+                                    onRMCrash(RM_CAR_REF);
+                                } catch (RMTimeOutException e1) {
+                                    abort(id);
+                                    throw new RMServerDownException();
+                                }
+                            }
                         }
 
-                        // Check if can reserve room
-                        if (room && queryRooms(id, location) == 0) {
-                            return false;
+                        while (true) {
+                            try {
+                                if (room && queryRooms(id, location) == 0) {
+                                    return false;
+                                }
+                                break;
+                            } catch (RemoteException e) {
+                                try {
+                                    onRMCrash(RM_ROOM_REF);
+                                } catch (RMTimeOutException e1) {
+                                    abort(id);
+                                    throw new RMServerDownException();
+                                }
+                            }
                         }
+
 
                         // Start reserving
                         boolean success = true;
 
                         // Reserve flights
                         for (Object fNum : flightNumbers) {
-                            success &= reserveFlight(id, customer, Integer.parseInt(fNum.toString()));
+                            while (true) {
+                                try {
+                                    success &= reserveFlight(id, customer, Integer.parseInt(fNum.toString()));
+                                    break;
+                                } catch (RemoteException e) {
+                                    try {
+                                        onRMCrash(RM_FLIGHT_REF);
+                                    } catch (RMTimeOutException e1) {
+                                        abort(id);
+                                        throw new RMServerDownException();
+                                    }
+                                }
+                            }
                         }
 
                         // If should reserve a car
                         if (car) {
-                            success &= reserveCar(id, customer, location);
+                            while (true) {
+                                try {
+                                    success &= reserveCar(id, customer, location);
+                                    break;
+                                } catch (RemoteException e) {
+                                    try {
+                                        onRMCrash(RM_CAR_REF);
+                                    } catch (RMTimeOutException e1) {
+                                        abort(id);
+                                        throw new RMServerDownException();
+                                    }
+                                }
+                            }
                         }
 
                         // If should reserve a room
                         if (room) {
-                            success &= reserveRoom(id, customer, location);
+                            while (true) {
+                                try {
+                                    success &= reserveRoom(id, customer, location);
+                                    break;
+                                } catch (RemoteException e) {
+                                    try {
+                                        onRMCrash(RM_ROOM_REF);
+                                    } catch (RMTimeOutException e1) {
+                                        abort(id);
+                                        throw new RMServerDownException();
+                                    }
+                                }
+                            }
                         }
 
                         // If can reserve but was not successful
@@ -853,14 +1353,6 @@ class MiddlewareServer implements ResourceManager {
                         logger.error(e.getMessage());
                         abort(e.GetXId());
                         throw e;
-                    } catch (NullPointerException e) {
-                        throw new TMException();
-                    } catch (InvalidTransactionException e) {
-                        throw e;
-                    } catch (RemoteException e) {
-                        onRMCrash();
-                        abort(id);
-                        throw new RMServerDownException();
                     }
                 }
             }
@@ -881,7 +1373,7 @@ class MiddlewareServer implements ResourceManager {
     }
 
     @Override
-    public boolean commit(int transactionId) throws RemoteException, InvalidTransactionException, TransactionAbortedException {
+    public boolean commit(int transactionId) throws RemoteException, InvalidTransactionException {
         try {
             // Update function
             commitRF(transactionId);
@@ -925,19 +1417,19 @@ class MiddlewareServer implements ResourceManager {
             }
 
             // Apply commits
-            for (String rmStr : m_tm.getTransaction(transactionId).getRMs()) {
+            for (String rmStr : m_tm.getRMs(transactionId)) {
                 while (true) {
+                    ResourceManager rm = null;
+                    String name = "UNKNOWN";
                     try {
-                        ResourceManager rm = null;
-                        String name = "UNKNOWN";
                         if (rmStr.equals(ResourceManager.RM_CAR_REF)) {
-                            name = "Car";
+                            name = RM_CAR_REF;
                             rm = m_carRM;
                         } else if (rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
-                            name = "Flight";
+                            name = RM_FLIGHT_REF;
                             rm = m_flightRM;
                         } else if (rmStr.equals(ResourceManager.RM_ROOM_REF)) {
-                            name = "Room";
+                            name = RM_ROOM_REF;
                             rm = m_roomRM;
                         } else {
                             throw new RuntimeException("Unknown resource manager");
@@ -951,7 +1443,7 @@ class MiddlewareServer implements ResourceManager {
                         }
                         break;
                     } catch (RemoteException e) {
-                        onRMCrash();
+                        bufferDecision(name, transactionId, DECISION_COMMIT);
                     }
                 }
             }
@@ -976,22 +1468,19 @@ class MiddlewareServer implements ResourceManager {
             abortRF(transactionId);
             logger.info("Aborting transaction " + transactionId);
             m_tm.updateLastActive(transactionId);
-            for (String rmStr : m_tm.getTransaction(transactionId).getRMs()) {
-                while (true) {
-                    try {
-                        if (rmStr.equals(ResourceManager.RM_ROOM_REF)) {
-                            m_roomRM.abort(transactionId);
-                        } else if (rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
-                            m_flightRM.abort(transactionId);
-                        } else if (rmStr.equals(ResourceManager.RM_CAR_REF)) {
-                            m_carRM.abort(transactionId);
-                        } else {
-                            throw new RuntimeException("Unknow resource manager");
-                        }
-                        break;
-                    } catch (RemoteException e) {
-                        onRMCrash();
+            for (String rmStr : m_tm.getRMs(transactionId)) {
+                try {
+                    if (rmStr.equals(ResourceManager.RM_ROOM_REF)) {
+                        m_roomRM.abort(transactionId);
+                    } else if (rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
+                        m_flightRM.abort(transactionId);
+                    } else if (rmStr.equals(ResourceManager.RM_CAR_REF)) {
+                        m_carRM.abort(transactionId);
+                    } else {
+                        throw new RuntimeException("Unknown resource manager");
                     }
+                } catch (RemoteException e) {
+                    bufferDecision(rmStr, transactionId, DECISION_ABORT);
                 }
             }
             m_tm.removeTransaction(transactionId);
@@ -1018,15 +1507,16 @@ class MiddlewareServer implements ResourceManager {
                         return false;
                     }
                 }
-                boolean flight = m_flightRM.shutdown();
-                boolean car = m_carRM.shutdown();
-                boolean room = m_roomRM.shutdown();
-                if (flight && car && room) {
-                    logger.info("All RMs are shutdown. Shutting down middleware server ...");
-                } else {
-                    logger.error("Some RMs failed to shutdown");
+
+                try {
+                    m_flightRM.shutdown();
+                    m_carRM.shutdown();
+                    m_roomRM.shutdown();
+                } catch (RemoteException e) {
+                    // Shutdown return true anyway
                 }
-                return flight && car && room;
+                logger.info("All RMs are shutdown. Shutting down middleware server ...");
+                return true;
             } else {
                 logger.info("Will not shutdown because there are still transactions");
             }
@@ -1042,19 +1532,19 @@ class MiddlewareServer implements ResourceManager {
     public boolean voteRequest(int tid) throws RemoteException {
         logger.info("Commit phase 1: Sending vote request");
         try {
-            for (String rmStr : m_tm.getTransaction(tid).getRMs()) {
+            for (String rmStr : m_tm.getRMs(tid)) {
                 while (true) {
+                    String name = "UNKNOWN";
+                    ResourceManager rm = null;
                     try {
-                        String name = "UNKNOWN";
-                        ResourceManager rm = null;
                         if (rmStr.equals(ResourceManager.RM_CAR_REF)) {
-                            name = "car";
+                            name = RM_CAR_REF;
                             rm = m_carRM;
                         } else if (rmStr.equals(ResourceManager.RM_FLIGHT_REF)) {
-                            name = "flight";
+                            name = RM_FLIGHT_REF;
                             rm = m_flightRM;
                         } else if (rmStr.equals(ResourceManager.RM_ROOM_REF)) {
-                            name = "room";
+                            name = RM_ROOM_REF;
                             rm = m_roomRM;
                         } else {
                             throw new RuntimeException("Unknown resource manager");
@@ -1077,7 +1567,12 @@ class MiddlewareServer implements ResourceManager {
 
                         break;
                     } catch (RemoteException e) {
-                        onRMCrash();
+                        try {
+                            onRMCrash(name);
+                        } catch (RMTimeOutException e1) {
+                            logger.error("Could not collect vote for RM " + name + ". Will consider a NO vote");
+                            return false;
+                        }
                     }
                 }
             }

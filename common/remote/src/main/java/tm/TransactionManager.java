@@ -42,11 +42,20 @@ public class TransactionManager implements ResourceManagerActions, Serializable 
      * @return transactino
      * @exception InvalidTransactionException
      */
-    public Transaction getTransaction(int id) throws InvalidTransactionException {
+    private Transaction getTransaction(int id) throws InvalidTransactionException {
         if(!m_transactionMap.containsKey(id)) {
             throw new InvalidTransactionException("Transaction id " + id + " is not available");
         }
         return m_transactionMap.get(id);
+    }
+
+    /**
+     * Get RMs of a transactions
+     * @param tid
+     * @return set of RMs
+     */
+    public Set<String> getRMs(int tid) throws InvalidTransactionException {
+        return getTransaction(tid).getRMs();
     }
 
     public void removeTransaction(int id) throws InvalidTransactionException {
@@ -79,7 +88,7 @@ public class TransactionManager implements ResourceManagerActions, Serializable 
      * @throws InvalidTransactionException
      */
     @Override
-    public boolean commit(int transactionId) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
+    public boolean commit(int transactionId) throws RemoteException, InvalidTransactionException {
         return false;
     }
 
