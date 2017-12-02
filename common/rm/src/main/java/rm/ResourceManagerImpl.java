@@ -619,6 +619,7 @@ public class ResourceManagerImpl implements ResourceManager {
 
     @Override
     public void abort(int transactionId) throws RemoteException, InvalidTransactionException {
+        logger.info("Received an abort request for transaction " + transactionId);
         deleteTable(transactionId);
         writeTable(GLOBAL_TABLE);
         m_vrMap.put(transactionId, VR_ABORT);
