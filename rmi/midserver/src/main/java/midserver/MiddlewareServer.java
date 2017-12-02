@@ -213,7 +213,7 @@ class MiddlewareServer implements ResourceManager {
                 rm.healthCheck();
 
                 // Apply all missed commit/abort
-                RMFapply(key);
+                RMFapply(key, rm);
 
                 // Sync transactions
                 rm.syncTransactions(m_tm.getTransactionsId());
@@ -367,42 +367,29 @@ class MiddlewareServer implements ResourceManager {
 
     }
 
-    private void RMFapply(String rmName) {
+    private void RMFapply(String rmName, ResourceManager rm) {
 
         // Reapply function on transactions
-        List<String> keyList = Arrays.asList(rmName + "_" + DECISION_ABORT, rmName + "_" + DECISION_COMMIT);
+        List<String> keyList = Arrays.asList(getBufferedKey(rmName, DECISION_COMMIT),
+                getBufferedKey(rmName, DECISION_ABORT));
         for(String key: keyList) {
-            String[] keyArray = key.split("_");
-            String rm = keyArray[0];
-            String decision = keyArray[1];
             if(!m_RMFunction.containsKey(key)) {
                 continue;
             }
             Set<Integer> valueSet = new HashSet<>(m_RMFunction.get(key));
-            ResourceManager rmObj = null;
-            if(rm.equals(RM_CAR_REF)) {
-                rmObj = m_carRM;
-            } else if(rm.equals(RM_FLIGHT_REF)) {
-                rmObj = m_flightRM;
-            } else if(rm.equals(RM_ROOM_REF)) {
-                rmObj = m_roomRM;
-            } else {
-                throw new RuntimeException("Unknown resource manager");
-            }
-
             for(Integer tid : valueSet) {
                 try {
-                    if (decision.equals(DECISION_COMMIT)) {
-                        rmObj.commit(tid);
-                    } else if(decision.equals(DECISION_ABORT)) {
-                        rmObj.abort(tid);
+                    if (key.endsWith(DECISION_COMMIT)) {
+                        rm.commit(tid);
+                        unbufferDecision(rmName, tid, DECISION_COMMIT);
+                    } else if(key.endsWith(DECISION_ABORT)) {
+                        rm.abort(tid);
+                        unbufferDecision(rmName, tid, DECISION_ABORT);
                     } else {
                         throw new RuntimeException("Unknown decision");
                     }
-                    unbufferDecision(rm, tid, decision);
-                    break;
                 }catch (RemoteException e) {
-                    // Do nothing because RM is down already
+                    logger.warn("Could not apply buffered RM functions because RM is still down");
                 }
             }
         }
