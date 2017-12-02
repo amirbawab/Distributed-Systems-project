@@ -412,7 +412,7 @@ class MiddlewareServer implements ResourceManager {
      * Execute code on RM crash
      */
     public void onRMCrash(String name) throws RMTimeOutException {
-        logger.info("RM " + name + " crashed. RM health check will be performed");
+        logger.error("RM " + name + " crashed. RM health check will be performed");
         connectToAllRm();
     }
 
