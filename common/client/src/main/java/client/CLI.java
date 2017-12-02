@@ -529,7 +529,7 @@ public class CLI {
                             break;
                         }
                         Id = Integer.parseInt(arguments.elementAt(1));
-                        if(Id < 0 || Id > 13) {
+                        if(Id < 0 || Id > 14) {
                             System.err.println("Crash case id has to be valid");
                             break;
                         }
@@ -832,10 +832,11 @@ public class CLI {
                 System.out.println("\t>> 8) Recovery of the coordinator");
                 System.out.println("\tAt RM:");
                 System.out.println("\t>> 9) Crash after receive vote request but before sending answer");
-                System.out.println("\t>> 10) Which answer to send (commit/abort)");
+                System.out.println("\t>> 10) Which answer to send: commit");
                 System.out.println("\t>> 11) Crash after sending answer");
                 System.out.println("\t>> 12) Crash after receiving decision but before committing/aborting");
                 System.out.println("\t>> 13) Recovery of RM");
+                System.out.println("\t>> 14) Which answer to send: abort");
                 System.out.println("\t" + command.getName() + ",<num>");
                 break;
 

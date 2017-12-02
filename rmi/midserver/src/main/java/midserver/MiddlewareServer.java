@@ -1537,6 +1537,12 @@ class MiddlewareServer implements ResourceManager {
                             throw new RuntimeException("Unknown resource manager");
                         }
                         boolean vr = rm.voteRequest(tid);
+
+                        // Crash case: CC_14
+                        if(m_crashCase[CC_14]) {
+                            vr = false;
+                        }
+
                         logger.info("RM " + name + " replied with a " + (vr ? "YES" : "NO"));
                         if (!vr) {
                             return false;
@@ -1661,6 +1667,7 @@ class MiddlewareServer implements ResourceManager {
             case CC_10:
             case CC_11:
             case CC_12:
+            case CC_14:
                 logger.info("Will perform crash case " + id);
                 try {
                     setCrashCase(id);

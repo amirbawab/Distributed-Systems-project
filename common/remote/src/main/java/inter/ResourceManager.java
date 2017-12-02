@@ -44,6 +44,7 @@ public interface ResourceManager extends Remote, ResourceManagerActions {
     int CC_11 = 11;
     int CC_12 = 12;
     int CC_13 = 13;
+    int CC_14 = 14;
 
     // Function names
     public enum Command {
