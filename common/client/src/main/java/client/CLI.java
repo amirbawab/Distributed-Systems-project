@@ -464,8 +464,11 @@ public class CLI {
                         }
                         Id = Integer.parseInt(arguments.elementAt(1));
                         System.out.println("Committing transaction:" + Id);
-                        m_resourceManager.commit(Id);
-                        System.out.println("Transaction " + Id + " committed successfully");
+                        if(m_resourceManager.commit(Id)) {
+                            System.out.println("Transaction " + Id + " committed successfully");
+                        } else {
+                            System.out.println("Transaction " + Id + " failed to commit. Aborted!");
+                        }
                         break;
                     case ABORT:
                         if (arguments.size() != 2) {
@@ -549,7 +552,7 @@ public class CLI {
                 if(e.getCause() instanceof TMException) {
                     logger.error("Transaction manager is crashed. Please try again later.");
                 } else if(e.getCause() instanceof RMServerDownException) {
-                    logger.error("Internal server error (RM down)");
+                    logger.error("Internal server error. Aborted!");
                 } else if(e.getCause() instanceof DeadlockException) {
                     logger.error(e.getCause().getMessage());
                 } else if(e.getCause() instanceof InvalidTransactionException) {
