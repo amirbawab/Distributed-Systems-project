@@ -14,9 +14,9 @@ public class LockManager implements Serializable {
     private static int TABLE_SIZE = 2039;
     private static int DEADLOCK_TIMEOUT = 10000;
     
-    private static TPHashTable lockTable = new TPHashTable(LockManager.TABLE_SIZE);
-    private static TPHashTable stampTable = new TPHashTable(LockManager.TABLE_SIZE);
-    private static TPHashTable waitTable = new TPHashTable(LockManager.TABLE_SIZE);
+    private TPHashTable lockTable = new TPHashTable(LockManager.TABLE_SIZE);
+    private TPHashTable stampTable = new TPHashTable(LockManager.TABLE_SIZE);
+    private TPHashTable waitTable = new TPHashTable(LockManager.TABLE_SIZE);
 
     // Logger
     private static final Logger logger = LogManager.getLogger(LockManager.class);
